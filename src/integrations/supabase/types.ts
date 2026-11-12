@@ -317,6 +317,13 @@ export type Database = {
     }
     Functions: {
       bookkeeper_bonus_data: { Args: never; Returns: Json }
+      customer_bonus_rates: {
+        Args: { _customer_id?: string }
+        Returns: {
+          annual_extra_rate: number
+          customer_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

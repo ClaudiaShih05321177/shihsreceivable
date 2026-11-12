@@ -1,0 +1,2 @@
+/** Shared customer reads deliberately exclude administrator-only bonus settings. */
+export const CUSTOMER_SELECT = "id,name,tax_id,contact_person,phone,email,address,notes,created_by,created_at,updated_at,customer_code,billing_type,bookkeeping_fee,stationery_fee,settlement_fee,suspended_period,staff_code";

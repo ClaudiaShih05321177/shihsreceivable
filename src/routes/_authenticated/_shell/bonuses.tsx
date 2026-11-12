@@ -66,6 +66,10 @@ function BonusLedger() {
           <TableRow className="font-semibold"><TableCell>獎金總額</TableCell><TableCell colSpan={3} className="text-right text-primary"><Money value={g.bonus} /></TableCell><TableCell /></TableRow>
         </>}
       </TableBody></Table></div>
+      <div className="flex items-end gap-4 py-4 text-sm" aria-label={`${g.code} 確認簽名`}>
+        <span className="shrink-0">確認簽名</span>
+        <span className="h-10 w-64 max-w-full border-b border-foreground" />
+      </div>
     </section>)}
   </div>;
 }

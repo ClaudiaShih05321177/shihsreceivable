@@ -89,6 +89,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
       toast.success(customer ? "已更新客戶資料" : "已新增客戶");
       qc.invalidateQueries({ queryKey: ["customers"] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["bonuses"] });
       setOpen(false);
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
@@ -148,7 +149,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {field("staff_code", "會計專員工ID", { placeholder: "例：AC", maxLength: 10 })}
-            {field("annual_extra_rate", "年度加收獎金%（特殊客戶）", { type: "number", min: 0, step: 1, placeholder: "空白＝30%" })}
+            {me.canManageBonusRates && field("annual_extra_rate", "年度加收獎金%（特殊客戶）", { type: "number", min: 0, step: 1, placeholder: "空白＝30%" })}
             {field("suspended_period", "停業期間", { placeholder: "例：114/7-115/6", maxLength: 60 })}
             {field("contact_person", "聯絡人", { maxLength: 60 })}
             {field("phone", "電話", { maxLength: 40 })}

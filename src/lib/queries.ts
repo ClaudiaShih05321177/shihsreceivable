@@ -4,8 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { permissionsFor } from "@/lib/permissions";
 import type { BonusData } from "@/lib/bonuses";
+import { CUSTOMER_SELECT } from "@/lib/customer-fields";
 
-export type Customer = Database["public"]["Tables"]["customers"]["Row"];
+export type Customer = Omit<Database["public"]["Tables"]["customers"]["Row"], "annual_extra_rate"> & { annual_extra_rate?: number | null };
 export type Payment = Database["public"]["Tables"]["payments"]["Row"];
 export type InvoiceRow = Database["public"]["Tables"]["invoices"]["Row"];
 export type Invoice = InvoiceRow & {
@@ -42,11 +43,23 @@ export const meQuery = queryOptions({
 export const customersQuery = queryOptions({
   queryKey: ["customers"],
   queryFn: async () => {
-    const { data, error } = await supabase.from("customers").select("*").order("name");
+    const { data, error } = await supabase.from("customers").select(CUSTOMER_SELECT).order("name");
     if (error) throw error;
-    return data;
+    const rates = await customerRates();
+    return data.map((c): Customer => rates ? { ...c, annual_extra_rate: rates.get(c.id) ?? null } : c);
   },
 });
+
+async function customerRates(id?: string) {
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError || !auth.user) throw authError ?? new Error("尚未登入");
+  const { data: roles, error } = await supabase.from("user_roles").select("role").eq("user_id", auth.user.id);
+  if (error) throw error;
+  if (!permissionsFor((roles ?? []).map((r) => r.role)).canManageBonusRates) return null;
+  const result = await supabase.rpc("customer_bonus_rates", id ? { _customer_id: id } : {});
+  if (result.error) throw result.error;
+  return new Map(result.data.map((r) => [r.customer_id, r.annual_extra_rate]));
+}
 
 export const bonusesQuery = queryOptions({
   queryKey: ["bonuses"],
@@ -94,9 +107,11 @@ export const customerQuery = (id: string) =>
   queryOptions({
     queryKey: ["customers", id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("customers").select("*").eq("id", id).maybeSingle();
+      const { data, error } = await supabase.from("customers").select(CUSTOMER_SELECT).eq("id", id).maybeSingle();
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      const rates = await customerRates(id);
+      return rates ? { ...data, annual_extra_rate: rates.get(id) ?? null } : data;
     },
   });
 

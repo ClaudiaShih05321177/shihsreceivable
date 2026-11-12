@@ -25,6 +25,11 @@ describe("帳號權限", () => {
     expect(permissionsFor(["admin"]).canDelete).toBe(true);
   });
   it("待核准帳號不能查看或操作帳務", () => {
-    expect(permissionsFor([])).toEqual({ isAdmin: false, isMember: false, canView: false, canCreate: false, canEdit: false, canRecordPayment: false, canDelete: false, canManageTeam: false });
+    expect(permissionsFor([])).toEqual({ isAdmin: false, isMember: false, canView: false, canCreate: false, canEdit: false, canRecordPayment: false, canDelete: false, canManageTeam: false, canManageBonusRates: false });
+  });
+  it("only admins can view and edit special customer annual bonus percentages", () => {
+    expect(permissionsFor(["admin"]).canManageBonusRates).toBe(true);
+    expect(permissionsFor(["member"]).canManageBonusRates).toBe(false);
+    expect(permissionsFor([]).canManageBonusRates).toBe(false);
   });
 });
