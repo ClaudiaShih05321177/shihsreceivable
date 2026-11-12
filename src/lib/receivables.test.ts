@@ -140,3 +140,17 @@ describe("月份/期別 排序", () => {
     expect(rows.map((r) => r.name)).toEqual(["c", "a"]);
   });
 });
+
+import { priorVatCredit, vatDue } from "./receivables";
+describe("營業稅 銷項／進項／留抵", () => {
+  it("due = output − input − prior credit", () => expect(vatDue(50000, 20000, 5000)).toEqual({ due: 25000, carry: 0 }));
+  it("negative result means 0 due and carries credit", () => expect(vatDue(10000, 18000, 2000)).toEqual({ due: 0, carry: 10000 }));
+  it("prior credit comes from the same customer's latest earlier period", () => {
+    const rows = [
+      { id: "1", customer_id: "a", period_year: 2026, period_month: 3, period_label: null, vat_output: 1000, vat_input: 4000, vat_prior_credit: 0 },
+      { id: "2", customer_id: "a", period_year: 2026, period_month: 5, period_label: null, vat_output: 1000, vat_input: 2500, vat_prior_credit: 0 },
+      { id: "3", customer_id: "b", period_year: 2026, period_month: 5, period_label: null, vat_output: 0, vat_input: 9000, vat_prior_credit: 0 },
+    ];
+    expect(priorVatCredit({ customer_id: "a", period_year: 2026, period_month: 7, period_label: null }, rows)).toBe(1500);
+  });
+});

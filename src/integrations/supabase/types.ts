@@ -97,6 +97,9 @@ export type Database = {
           period_month: number | null
           period_year: number | null
           updated_at: string
+          vat_input: number | null
+          vat_output: number | null
+          vat_prior_credit: number | null
         }
         Insert: {
           amount: number
@@ -117,6 +120,9 @@ export type Database = {
           period_month?: number | null
           period_year?: number | null
           updated_at?: string
+          vat_input?: number | null
+          vat_output?: number | null
+          vat_prior_credit?: number | null
         }
         Update: {
           amount?: number
@@ -137,6 +143,9 @@ export type Database = {
           period_month?: number | null
           period_year?: number | null
           updated_at?: string
+          vat_input?: number | null
+          vat_output?: number | null
+          vat_prior_credit?: number | null
         }
         Relationships: [
           {

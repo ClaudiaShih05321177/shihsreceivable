@@ -12,8 +12,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { customersQuery, meQuery, type Invoice } from "@/lib/queries";
-import { applyScheduledFees, bookkeepingCollectionMonth, FEE_ITEMS, formatTWD, itemsTotal, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, type FeeItems } from "@/lib/receivables";
+import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/queries";
+import { applyScheduledFees, bookkeepingCollectionMonth, FEE_ITEMS, formatTWD, itemsTotal, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, type FeeItems } from "@/lib/receivables";
 
 const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳", "其他"];
 
@@ -27,6 +27,9 @@ type Form = {
   due_date: string;
   notes: string;
   auditor: string;
+  vat_output: string;
+  vat_input: string;
+  vat_prior: string;
   items: Record<string, string>;
 };
 
@@ -47,6 +50,9 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
     due_date: inv?.due_date ?? "",
     notes: inv?.notes ?? "",
     auditor: inv?.auditor ?? "",
+    vat_output: inv?.vat_output != null ? String(inv.vat_output) : "",
+    vat_input: inv?.vat_input != null ? String(inv.vat_input) : "",
+    vat_prior: inv?.vat_prior_credit != null ? String(inv.vat_prior_credit) : "",
     items,
   };
 }
@@ -56,11 +62,26 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   const { data: me } = useSuspenseQuery(meQuery);
   const navigate = useNavigate();
   const { data: customers } = useSuspenseQuery(customersQuery);
+  const { data: allInvoices } = useSuspenseQuery(invoicesQuery);
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [form, setForm] = useState<Form>(toForm(invoice, customerId));
   const set = (k: keyof Omit<Form, "items">) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const setItem = (k: string, v: string) => setForm((f) => ({ ...f, items: { ...f.items, [k]: v } }));
+
+  function withPrior(f: Form): Form {
+    if (invoice || !f.customer_id) return f;
+    const credit = priorVatCredit({ customer_id: f.customer_id, period_year: Number(f.roc_year) + 1911, period_month: Number(f.month), period_label: f.period_label }, allInvoices);
+    return recalcVat({ ...f, vat_prior: credit ? String(credit) : "" });
+  }
+  function recalcVat(f: Form): Form {
+    if (f.vat_output === "" && f.vat_input === "") return f;
+    const { due } = vatDue(Number(f.vat_output), Number(f.vat_input), Number(f.vat_prior));
+    return { ...f, items: { ...f.items, 營業稅: due ? String(due) : "" } };
+  }
+  const setVat = (k: "vat_output" | "vat_input" | "vat_prior") => (v: string) => setForm((f) => recalcVat({ ...f, [k]: v }));
+  const vat = vatDue(Number(form.vat_output), Number(form.vat_input), Number(form.vat_prior));
+  const hasVat = form.vat_output !== "" || form.vat_input !== "";
 
   const numericItems: FeeItems = Object.fromEntries(
     Object.entries(form.items).map(([k, v]) => [k, Math.round(Number(v) || 0)]).filter(([, v]) => v !== 0),
@@ -74,7 +95,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
       const previousCustomer = customers.find((x) => x.id === f.customer_id);
       const previous = previousCustomer ? scheduledCustomerFees(previousCustomer, Number(f.month)) : {};
       const items = c && !invoice ? applyScheduledFees(f.items, previous, scheduledCustomerFees(c, Number(f.month))) : f.items;
-      return { ...f, customer_id: id, items };
+      return withPrior({ ...f, customer_id: id, items });
     });
   }
 
@@ -83,7 +104,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
       const c = customers.find((x) => x.id === f.customer_id);
       const items = c && !invoice ? applyScheduledFees(f.items, scheduledCustomerFees(c, Number(f.month)), scheduledCustomerFees(c, Number(value))) : f.items;
       const period = !f.period_label || f.period_label === suggestPeriod(Number(f.month)) ? suggestPeriod(Number(value)) : f.period_label;
-      return { ...f, month: value, period_label: period, items };
+      return withPrior({ ...f, month: value, period_label: period, items });
     });
   }
 
@@ -104,6 +125,9 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
         due_date: form.due_date || null,
         notes: form.notes.trim() || null,
         auditor: form.auditor || null,
+        vat_output: hasVat ? Number(form.vat_output) || 0 : null,
+        vat_input: hasVat ? Number(form.vat_input) || 0 : null,
+        vat_prior_credit: hasVat ? Number(form.vat_prior) || 0 : null,
         items: numericItems,
         amount: total,
       };
@@ -135,7 +159,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
           const fresh = toForm(invoice, customerId);
           const c = customers.find((x) => x.id === fresh.customer_id);
           if (c && !invoice) fresh.items = applyScheduledFees(fresh.items, {}, scheduledCustomerFees(c, Number(fresh.month)));
-          setForm(fresh);
+          setForm(withPrior(fresh));
           setShowAll(false);
         }
       }}
@@ -238,6 +262,19 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                     />
                   </div>
                 ))}
+              </div>
+              <div className="mt-4 rounded-md border border-border bg-card p-3">
+                <p className="mb-2 text-sm font-bold">營業稅計算 <span className="font-normal text-xs text-muted-foreground">應納 = 銷項 − 進項 − 上期留抵，自動帶入營業稅</span></p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                  {([["vat_output", "銷項稅額"], ["vat_input", "進項稅額"], ["vat_prior", "上期留抵"]] as const).map(([k, l]) => (
+                    <div key={k} className="space-y-1">
+                      <Label htmlFor={`vat-${k}`} className="text-xs text-muted-foreground">{l}</Label>
+                      <Input id={`vat-${k}`} type="number" step={1} value={form[k]} onChange={(e) => setVat(k)(e.target.value)} className="tabular h-8" />
+                    </div>
+                  ))}
+                  <div className="space-y-1"><p className="text-xs text-muted-foreground">應納稅額</p><p className="tabular h-8 leading-8 font-semibold">{hasVat ? formatTWD(vat.due) : "—"}</p></div>
+                  <div className="space-y-1"><p className="text-xs text-muted-foreground">本期留抵</p><p className="tabular h-8 leading-8">{hasVat ? formatTWD(vat.carry) : "—"}</p></div>
+                </div>
               </div>
               <div className="mt-4 flex items-baseline justify-end gap-3 border-t border-border pt-3">
                 <span className="text-sm text-muted-foreground">應收帳款合計</span>

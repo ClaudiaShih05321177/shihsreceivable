@@ -1,0 +1,1 @@
+ALTER TABLE public.invoices ADD COLUMN vat_output numeric, ADD COLUMN vat_input numeric, ADD COLUMN vat_prior_credit numeric;

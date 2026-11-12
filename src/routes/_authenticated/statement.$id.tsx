@@ -5,7 +5,7 @@ import { Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { OFFICE, priorBalance } from "@/lib/billing";
 import { customersQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
-import { formatDate, formatTWD, itemEntries, rocYear, todayISO, type FeeItems } from "@/lib/receivables";
+import { formatDate, formatTWD, itemEntries, rocYear, todayISO, vatDue, type FeeItems } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/statement/$id")({
   head: () => ({
@@ -72,6 +72,21 @@ function StatementPage() {
             <tr className="border-t border-foreground font-bold"><td className="py-2">總計本期應收款項：</td><td className="text-right font-mono">{formatTWD(total)}</td></tr>
           </tbody>
         </table>
+        {inv.vat_output != null && (() => {
+          const v = vatDue(Number(inv.vat_output), Number(inv.vat_input ?? 0), Number(inv.vat_prior_credit ?? 0));
+          return (
+            <section className="mt-4 border border-foreground p-3">
+              <p className="font-medium">◎ 本期營業稅計算：</p>
+              <div className="mt-1 grid grid-cols-2 gap-x-6 pl-6 sm:grid-cols-3">
+                <p>銷項稅額：<span className="font-mono">{formatTWD(Number(inv.vat_output))}</span></p>
+                <p>進項稅額：<span className="font-mono">{formatTWD(Number(inv.vat_input ?? 0))}</span></p>
+                <p>上期留抵：<span className="font-mono">{formatTWD(Number(inv.vat_prior_credit ?? 0))}</span></p>
+                <p className="font-bold">應納稅額：<span className="font-mono">{formatTWD(v.due)}</span></p>
+                <p>本期留抵：<span className="font-mono">{formatTWD(v.carry)}</span></p>
+              </div>
+            </section>
+          );
+        })()}
         {inv.due_date && <p className="mt-2 text-right">※請於 {formatDate(inv.due_date)} 以前繳納，謝謝！</p>}
         <p className="mt-10 text-sm">{OFFICE.note}</p>
         <section className="mt-6">

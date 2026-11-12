@@ -269,3 +269,20 @@ export function taxSummary(lines: (TaxLine & { paid: boolean })[]) {
     return { label: g.label, total, paid, unpaid: total - paid };
   });
 }
+
+/** 營業稅計算：應納 = 銷項 − 進項 − 上期留抵；不足時應納為 0，差額為本期留抵。 */
+export function vatDue(output: number, input: number, priorCredit: number): { due: number; carry: number } {
+  const net = Math.round((output || 0) - (input || 0) - (priorCredit || 0));
+  return net >= 0 ? { due: net, carry: 0 } : { due: 0, carry: -net };
+}
+
+type VatLike = PeriodSortable & { id: string; customer_id: string; vat_output?: number | string | null; vat_input?: number | string | null; vat_prior_credit?: number | string | null };
+
+/** 上期留抵：同客戶、期別早於本期的最近一筆有營業稅資料帳款之本期留抵。 */
+export function priorVatCredit(current: PeriodSortable & { customer_id: string; id?: string }, invoices: VatLike[]): number {
+  const prev = invoices
+    .filter((i) => i.customer_id === current.customer_id && i.id !== current.id && i.vat_output != null && comparePeriod(i, current) < 0)
+    .sort((a, b) => comparePeriod(b, a))[0];
+  if (!prev) return 0;
+  return vatDue(Number(prev.vat_output), Number(prev.vat_input ?? 0), Number(prev.vat_prior_credit ?? 0)).carry;
+}
