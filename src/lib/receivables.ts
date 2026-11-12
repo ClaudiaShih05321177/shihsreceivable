@@ -193,7 +193,7 @@ export type FeeItem = (typeof FEE_ITEMS)[number];
 export type FeeItems = Partial<Record<string, number>>;
 
 export const PAYMENT_METHODS = ["匯款", "現金", "支票", "代墊"] as const;
-export const BILLING_TYPES = ["期收", "半年收", "年收"] as const;
+export const BILLING_TYPES = ["期收", "半年收", "年收", "停業"] as const;
 
 /** 應收帳款 for a billing row = sum of its fee items. */
 export function itemsTotal(items: FeeItems | null | undefined): number {

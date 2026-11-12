@@ -107,6 +107,12 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
   );
 
   if (!me.isAdmin) return null;
+
+  const billingOptions =
+    !form.billing_type || (BILLING_TYPES as readonly string[]).includes(form.billing_type)
+      ? [...BILLING_TYPES]
+      : [...BILLING_TYPES, form.billing_type];
+
   return (
     <Dialog
       open={open}
@@ -130,7 +136,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
               <Select value={form.billing_type} onValueChange={set("billing_type")}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {BILLING_TYPES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  {billingOptions.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>

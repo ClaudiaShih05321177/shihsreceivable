@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agingBucket, applyScheduledFees, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, isOtherKey, itemEntries, itemsTotal, monthlySeries, otherEntries, otherLabel, outstanding, scheduledCustomerFees, sortByPeriod, suggestPeriod, withOtherItems } from "./receivables";
+import { agingBucket, applyScheduledFees, BILLING_TYPES, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, isOtherKey, itemEntries, itemsTotal, monthlySeries, otherEntries, otherLabel, outstanding, scheduledCustomerFees, sortByPeriod, suggestPeriod, withOtherItems } from "./receivables";
 
 const today = "2026-11-12";
 const inv = (due_date: string, amount: number, paid: number[] = []) => ({
@@ -205,5 +205,15 @@ describe("half-year customers", () => {
   });
   it("one-click billing does not add 記帳費", () => {
     expect(scheduledCustomerFees(customer, 1)["記帳費"]).toBe(0);
+  });
+});
+
+describe("收費狀態選項", () => {
+  it("offers 停業 as a collection status", () => {
+    expect([...BILLING_TYPES]).toContain("停業");
+  });
+  it("treats 停業 customers like 期收 customers when adding a receivable", () => {
+    const customer = { bookkeeping_fee: 3000, stationery_fee: 0, settlement_fee: 0, billing_type: "停業" };
+    expect([1, 2].map((m) => scheduledCustomerFees(customer, m, "individual")["記帳費"])).toEqual([6000, 0]);
   });
 });
