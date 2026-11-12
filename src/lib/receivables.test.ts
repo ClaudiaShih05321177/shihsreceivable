@@ -197,3 +197,13 @@ describe("營業稅 銷項／進項／留抵", () => {
     expect(priorVatCredit({ customer_id: "a", period_year: 2026, period_month: 7, period_label: null }, rows)).toBe(1500);
   });
 });
+
+describe("half-year customers", () => {
+  const customer = { bookkeeping_fee: 3000, stationery_fee: 0, settlement_fee: 0, billing_type: "半年收" };
+  it("adds 記帳費 × 6 when adding a receivable, any month", () => {
+    expect([1, 4, 7].map((m) => scheduledCustomerFees(customer, m, "individual")["記帳費"])).toEqual([18000, 18000, 18000]);
+  });
+  it("one-click billing does not add 記帳費", () => {
+    expect(scheduledCustomerFees(customer, 1)["記帳費"]).toBe(0);
+  });
+});

@@ -142,7 +142,9 @@ export function suggestPeriod(month: number): string {
 
 export function scheduledCustomerFees(customer: { billing_type?: string | null; bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string }, month: number, mode: "batch" | "individual" = "batch"): FeeItems {
   return {
-    記帳費: customer.billing_type === "年收" ? (mode === "individual" ? Math.round(Number(customer.bookkeeping_fee)) || 0 : 0) : bookkeepingPeriodFee(customer.bookkeeping_fee, month),
+    記帳費: customer.billing_type === "年收" ? (mode === "individual" ? Math.round(Number(customer.bookkeeping_fee)) || 0 : 0)
+      : customer.billing_type === "半年收" ? (mode === "individual" ? Math.round((Number(customer.bookkeeping_fee) || 0) * 6) : 0)
+      : bookkeepingPeriodFee(customer.bookkeeping_fee, month),
     暫繳: month === 11 ? Number(customer.stationery_fee) || 0 : 0,
     股利2代: month === 1 ? Number(customer.settlement_fee) || 0 : 0,
   };
@@ -191,7 +193,7 @@ export type FeeItem = (typeof FEE_ITEMS)[number];
 export type FeeItems = Partial<Record<string, number>>;
 
 export const PAYMENT_METHODS = ["匯款", "現金", "支票", "代墊"] as const;
-export const BILLING_TYPES = ["期收", "年收"] as const;
+export const BILLING_TYPES = ["期收", "半年收", "年收"] as const;
 
 /** 應收帳款 for a billing row = sum of its fee items. */
 export function itemsTotal(items: FeeItems | null | undefined): number {
