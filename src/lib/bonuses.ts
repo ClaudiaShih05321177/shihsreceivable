@@ -30,9 +30,10 @@ const num = (v: unknown) => Number(v) || 0;
 const code = (s: string | null | undefined) => s?.trim() || "未指定";
 const before = (r: BonusRow, year: number, month: number) => (r.period_year ?? 0) < year || ((r.period_year ?? 0) === year && (r.period_month ?? 0) <= month);
 
-/** 每期分攤的記帳費：年收＝記帳費 ÷ 6；半年收＝（記帳費 × 6）÷ 3；其他回傳 null（依實際立帳）。 */
+/** 每期記帳費依客戶設定計入，不因尚未立帳而漏計；其他狀態依實際立帳。 */
 export function periodShare(c?: Pick<BonusCustomer, "billing_type" | "bookkeeping_fee">): number | null {
   if (!c) return null;
+  if (c.billing_type === "期收") return num(c.bookkeeping_fee) * 2;
   if (c.billing_type === "年收") return num(c.bookkeeping_fee) / 6;
   if (c.billing_type === "半年收") return (num(c.bookkeeping_fee) * 6) / 3;
   return null;
@@ -46,11 +47,11 @@ export function bonusGroups(data: BonusData, year: number, month: number) {
     if (!l) { l = { ...base, key, bookkeeping: 0, settlement: 0, annualExtra: 0, balance: 0 }; lines.set(key, l); }
     return l;
   };
-  // 年收／半年收客戶：每期固定分攤記帳費（不論是否已立帳）。
+  // 期收／年收／半年收每期依設定計入；實際立帳不重複加計。
   for (const c of customers.values()) {
     const share = periodShare(c);
     if (share == null || !share) continue;
-    lineFor(c.id, { staff: code(c.staff_code), customer_code: c.customer_code, customer_name: c.name, annual: true, rate: c.annual_extra_rate, shareLabel: c.billing_type === "年收" ? "年收 1/6" : "半年收 1/3" }).bookkeeping = share;
+    lineFor(c.id, { staff: code(c.staff_code), customer_code: c.customer_code, customer_name: c.name, annual: true, rate: c.annual_extra_rate, shareLabel: c.billing_type === "年收" ? "年收 1/6" : c.billing_type === "半年收" ? "半年收 1/3" : "期收 ×2" }).bookkeeping = share;
   }
   for (const r of data.rows) {
     const c = r.customer_id ? customers.get(r.customer_id) : undefined;

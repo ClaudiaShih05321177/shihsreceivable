@@ -23,7 +23,7 @@ describe("bookkeeper bonuses", () => {
     expect(bonusGroups(d, 2026, 3)[0]?.total).toBeCloseTo(833.333, 2);
   });
   it("uses selected month only and ignores taxes", () => {
-    const d = { staff: ["AC"], customers: [cust({})], rows: [row({ items: { 記帳費: 250000, 營業稅: 99999 } }), row({ id: "i2", period_month: 11, items: { 記帳費: 9 } })] };
+    const d = { staff: ["AC"], customers: [cust({ billing_type: "結算" })], rows: [row({ items: { 記帳費: 250000, 營業稅: 99999 } }), row({ id: "i2", period_month: 11, items: { 記帳費: 9 } })] };
     const g = bonusGroups(d, 2026, 9)[0];
     expect(g?.total).toBe(250000);
     expect(g?.bonus).toBe(15000);
@@ -32,5 +32,24 @@ describe("bookkeeper bonuses", () => {
     const d = { staff: ["AC"], customers: [cust({ billing_type: "半年收", bookkeeping_fee: 3000 })], rows: [row({ items: { 記帳費: 18000 } })] };
     expect(bonusGroups(d, 2026, 9)[0]?.total).toBe(6000);
     expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(6000);
+  });
+  it("period customers count monthly fee × 2 even without invoices", () => {
+    const d = { staff: ["AC"], customers: [cust({ bookkeeping_fee: 3000 })], rows: [] };
+    expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(6000);
+  });
+  it("period invoice bookkeeping is not counted again", () => {
+    const d = { staff: ["AC"], customers: [cust({ bookkeeping_fee: 3000 })], rows: [row({ items: { 記帳費: 6000 } })] };
+    expect(bonusGroups(d, 2026, 9)[0]?.total).toBe(6000);
+  });
+  it("half-year customers count their three-period share without invoices", () => {
+    const d = { staff: ["AC"], customers: [cust({ billing_type: "半年收", bookkeeping_fee: 3000 })], rows: [] };
+    expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(6000);
+  });
+  it("combines period, half-year and annual customers in the staff total", () => {
+    const d = { staff: ["AC"], customers: [cust({ bookkeeping_fee: 100000 }), cust({ id: "c2", billing_type: "半年收", bookkeeping_fee: 3000 }), cust({ id: "c3", billing_type: "年收", bookkeeping_fee: 6000 })], rows: [] };
+    const g = bonusGroups(d, 2026, 11)[0];
+    expect(g?.total).toBe(207000);
+    expect(g?.bookkeepingBonus).toBe(2100);
+    expect(g?.rows).toHaveLength(3);
   });
 });
