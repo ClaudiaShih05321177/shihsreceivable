@@ -31,6 +31,8 @@ use the editor.
 
 ## Project rules
 
+- Bonus rules are tested in src/lib/bonuses.ts; bonus rows are fetched only through the admin-checked SECURITY INVOKER database RPC, with a role-gated page and navigation. Why: bonus data must not be returned to ordinary members.
+
 - Receivables business rules (status, overdue, aging, fee totals, ROC dates) live in `src/lib/receivables.ts` with tests in `src/lib/receivables.test.ts`; UI must call these helpers instead of re-deriving. Why: one tested source of truth for money logic.
 - Data access goes through the browser Supabase client with RLS (`src/lib/queries.ts` queryOptions + route loaders); no server functions needed. Why: team-shared data is fully guarded by `is_member()` policies.
 - Access model: first sign-up becomes admin via the `handle_new_user` trigger; later users have no role (pending) until an admin grants one on /team. Why: financial data must not be visible to arbitrary sign-ups.

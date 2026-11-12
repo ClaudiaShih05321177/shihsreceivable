@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/_shell'
 import { Route as AuthenticatedShellAuditsRouteImport } from './routes/_authenticated/_shell/audits'
+import { Route as AuthenticatedShellBonusesRouteImport } from './routes/_authenticated/_shell/bonuses'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
 import { Route as AuthenticatedShellTaxesRouteImport } from './routes/_authenticated/_shell/taxes'
 import { Route as AuthenticatedShellTeamRouteImport } from './routes/_authenticated/_shell/team'
@@ -45,6 +46,12 @@ const AuthenticatedShellAuditsRoute =
   AuthenticatedShellAuditsRouteImport.update({
     id: '/audits',
     path: '/audits',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellBonusesRoute =
+  AuthenticatedShellBonusesRouteImport.update({
+    id: '/bonuses',
+    path: '/bonuses',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
 const AuthenticatedShellDashboardRoute =
@@ -98,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/audits': typeof AuthenticatedShellAuditsRoute
+  '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
@@ -111,6 +119,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/audits': typeof AuthenticatedShellAuditsRoute
+  '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
@@ -127,6 +136,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteWithChildren
   '/_authenticated/_shell/audits': typeof AuthenticatedShellAuditsRoute
+  '/_authenticated/_shell/bonuses': typeof AuthenticatedShellBonusesRoute
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
   '/_authenticated/_shell/taxes': typeof AuthenticatedShellTaxesRoute
   '/_authenticated/_shell/team': typeof AuthenticatedShellTeamRoute
@@ -142,6 +152,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/audits'
+    | '/bonuses'
     | '/dashboard'
     | '/taxes'
     | '/team'
@@ -155,6 +166,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/audits'
+    | '/bonuses'
     | '/dashboard'
     | '/taxes'
     | '/team'
@@ -170,6 +182,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/_shell'
     | '/_authenticated/_shell/audits'
+    | '/_authenticated/_shell/bonuses'
     | '/_authenticated/_shell/dashboard'
     | '/_authenticated/_shell/taxes'
     | '/_authenticated/_shell/team'
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       path: '/audits'
       fullPath: '/audits'
       preLoaderRoute: typeof AuthenticatedShellAuditsRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/bonuses': {
+      id: '/_authenticated/_shell/bonuses'
+      path: '/bonuses'
+      fullPath: '/bonuses'
+      preLoaderRoute: typeof AuthenticatedShellBonusesRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
     '/_authenticated/_shell/dashboard': {
@@ -284,6 +304,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedShellRouteChildren {
   AuthenticatedShellAuditsRoute: typeof AuthenticatedShellAuditsRoute
+  AuthenticatedShellBonusesRoute: typeof AuthenticatedShellBonusesRoute
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
   AuthenticatedShellTaxesRoute: typeof AuthenticatedShellTaxesRoute
   AuthenticatedShellTeamRoute: typeof AuthenticatedShellTeamRoute
@@ -295,6 +316,7 @@ interface AuthenticatedShellRouteChildren {
 
 const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellAuditsRoute: AuthenticatedShellAuditsRoute,
+  AuthenticatedShellBonusesRoute: AuthenticatedShellBonusesRoute,
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
   AuthenticatedShellTaxesRoute: AuthenticatedShellTaxesRoute,
   AuthenticatedShellTeamRoute: AuthenticatedShellTeamRoute,

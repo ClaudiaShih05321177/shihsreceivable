@@ -3,6 +3,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { permissionsFor } from "@/lib/permissions";
+import type { BonusData } from "@/lib/bonuses";
 
 export type Customer = Database["public"]["Tables"]["customers"]["Row"];
 export type Payment = Database["public"]["Tables"]["payments"]["Row"];
@@ -44,6 +45,15 @@ export const customersQuery = queryOptions({
     const { data, error } = await supabase.from("customers").select("*").order("name");
     if (error) throw error;
     return data;
+  },
+});
+
+export const bonusesQuery = queryOptions({
+  queryKey: ["bonuses"],
+  queryFn: async (): Promise<BonusData> => {
+    const { data, error } = await supabase.rpc("bookkeeper_bonus_data");
+    if (error) throw error;
+    return data as unknown as BonusData;
   },
 });
 

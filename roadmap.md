@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] 管理員專用記帳員獎金頁：依新版Excel AC李瓊如表，當期記帳費超過20萬元部分×30%；實測25萬元→1.5萬元，測試帳款已清除；無一般使用者帳號可做登入驗證。
+
 - [x] 移除應收帳款表單的到期日及單號欄位，保留既有帳款資料；已登入檢查表單。
 
 - [x] Update receivable bookkeeping defaults: monthly fee × 2 in odd collection months; create/save/reload verified without changing existing invoices.

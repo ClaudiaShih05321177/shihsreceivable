@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, Landmark, Stamp, FileText, LogOut, Users, UserCog } from "lucide-react";
+import { BarChart3, Landmark, Stamp, FileText, LogOut, Users, UserCog, BadgeDollarSign } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { BrandMark } from "@/components/ar/brand";
@@ -19,6 +19,7 @@ const nav = [
   { to: "/audits", label: "財稅簽", icon: Stamp },
   { to: "/customers", label: "客戶資料", icon: Users },
   { to: "/team", label: "團隊成員", icon: UserCog },
+  { to: "/bonuses", label: "記帳員獎金", icon: BadgeDollarSign },
 ] as const;
 
 export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
@@ -45,7 +46,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           </Button>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-1 md:flex-col md:pb-0">
-          {nav.filter((item) => item.to !== "/team" || me.isAdmin).map((item) => {
+          {nav.filter((item) => (item.to !== "/team" && item.to !== "/bonuses") || me.isAdmin).map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
               <Link
