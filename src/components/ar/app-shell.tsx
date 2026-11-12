@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BarChart3, FileText, LogOut, Users, UserCog } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -21,13 +21,16 @@ const nav = [
 
 export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: invoices } = useQuery(invoicesQuery);
   const overdue = (invoices ?? []).filter((i) => invoiceStatus(i) === "overdue").length;
 
   async function signOut() {
+    await qc.cancelQueries();
+    qc.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth" });
+    navigate({ to: "/auth", replace: true });
   }
 
   return (
@@ -40,7 +43,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           </Button>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-1 md:flex-col md:pb-0">
-          {nav.map((item) => {
+          {nav.filter((item) => item.to !== "/team" || me.isAdmin).map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
               <Link
@@ -62,10 +65,10 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
         </nav>
         <div className="hidden border-t border-sidebar-border px-5 py-4 md:block">
           <p className="truncate text-sm font-medium">{me.displayName}</p>
-          <p className="truncate text-xs text-sidebar-foreground/60">{me.isAdmin ? "管理員" : "成員"} · {me.email}</p>
-          <button onClick={signOut} className="mt-3 flex items-center gap-2 text-xs text-sidebar-foreground/70 hover:text-sidebar-primary">
+          <p className="truncate text-xs text-sidebar-foreground/60">{me.isAdmin ? "管理員" : "使用者"} · {me.email}</p>
+          <Button variant="ghost" size="sm" onClick={signOut} className="mt-3 text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-primary">
             <LogOut className="size-3.5" /> 登出
-          </button>
+          </Button>
         </div>
       </aside>
       <main className="min-w-0 flex-1 px-5 py-8 md:px-10 md:py-10">
@@ -77,6 +80,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
 
 export function PendingApproval({ email }: { email: string }) {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   return (
     <div className="flex min-h-screen items-center justify-center px-6">
       <div className="ledger-card max-w-md p-8 text-center animate-rise">
@@ -89,8 +93,10 @@ export function PendingApproval({ email }: { email: string }) {
           variant="outline"
           className="mt-6"
           onClick={async () => {
+            await qc.cancelQueries();
+            qc.clear();
             await supabase.auth.signOut();
-            navigate({ to: "/auth" });
+            navigate({ to: "/auth", replace: true });
           }}
         >
           登出

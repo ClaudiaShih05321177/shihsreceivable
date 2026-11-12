@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { customersQuery, invoiceQuery, invoicesQuery } from "@/lib/queries";
+import { customersQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import {
   daysOverdue,
   formatDate,
@@ -65,13 +65,16 @@ function InvoiceDetail() {
   const { id } = Route.useParams();
   const { data: inv } = useSuspenseQuery(invoiceQuery(id));
   const { data: customers } = useSuspenseQuery(customersQuery);
+  const { data: me } = useSuspenseQuery(meQuery);
   const qc = useQueryClient();
   const navigate = useNavigate();
 
   const removeInvoice = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("invoices").delete().eq("id", id);
+      if (!me.canDelete) throw new Error("只有管理員可以刪除資料");
+      const { data, error } = await supabase.from("invoices").delete().eq("id", id).select("id");
       if (error) throw error;
+      if (!data?.length) throw new Error("未能刪除帳款，請確認權限");
     },
     onSuccess: () => {
       toast.success("已刪除帳款");
@@ -84,8 +87,10 @@ function InvoiceDetail() {
 
   const removePayment = useMutation({
     mutationFn: async (pid: string) => {
-      const { error } = await supabase.from("payments").delete().eq("id", pid);
+      if (!me.canDelete) throw new Error("只有管理員可以刪除收款");
+      const { data, error } = await supabase.from("payments").delete().eq("id", pid).select("id");
       if (error) throw error;
+      if (!data?.length) throw new Error("未能刪除收款，請確認權限");
     },
     onSuccess: () => {
       toast.success("已刪除收款紀錄");
@@ -129,7 +134,7 @@ function InvoiceDetail() {
           <>
             <PaymentFormDialog invoiceId={inv.id} balance={balance} trigger={<Button disabled={balance <= 0}><Plus /> 登錄收款</Button>} />
             <InvoiceFormDialog invoice={inv} trigger={<Button variant="outline"><Pencil /> 編輯</Button>} />
-            <AlertDialog>
+            {me.canDelete && <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="ghost" size="icon" aria-label="刪除帳款"><Trash2 /></Button>
               </AlertDialogTrigger>
@@ -143,7 +148,7 @@ function InvoiceDetail() {
                   <AlertDialogAction onClick={() => removeInvoice.mutate()} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">刪除</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
-            </AlertDialog>
+            </AlertDialog>}
           </>
         }
       />
@@ -203,7 +208,7 @@ function InvoiceDetail() {
                     <th className="py-2 font-normal">收款日期</th>
                     <th className="py-2 font-normal">支付方式</th>
                     <th className="py-2 text-right font-normal">收款金額</th>
-                    <th />
+                    {me.canDelete && <th />}
                   </tr>
                 </thead>
                 <tbody>
@@ -217,7 +222,7 @@ function InvoiceDetail() {
                         {p.notes && <span className="block text-xs text-muted-foreground">{p.notes}</span>}
                       </td>
                       <td className="py-2.5 text-right font-semibold"><Money value={Number(p.amount)} /></td>
-                      <td className="py-2.5 text-right">
+                      {me.canDelete && <td className="py-2.5 text-right">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -228,7 +233,7 @@ function InvoiceDetail() {
                         >
                           <Trash2 className="text-muted-foreground" />
                         </Button>
-                      </td>
+                      </td>}
                     </tr>
                   ))}
                 </tbody>

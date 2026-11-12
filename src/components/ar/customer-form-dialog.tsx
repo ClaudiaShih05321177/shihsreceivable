@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import type { Customer } from "@/lib/queries";
+import { meQuery, type Customer } from "@/lib/queries";
 import { BILLING_TYPES } from "@/lib/receivables";
 
 type Form = {
@@ -50,12 +50,14 @@ function toForm(c?: Customer | null): Form {
 
 export function CustomerFormDialog({ customer, trigger }: { customer?: Customer | null; trigger: ReactNode }) {
   const qc = useQueryClient();
+  const { data: me } = useSuspenseQuery(meQuery);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(toForm(customer));
   const set = (k: keyof Form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!me.isAdmin) throw new Error("只有管理員可以管理客戶資料");
       const name = form.name.trim();
       if (!name) throw new Error("請輸入客戶名稱");
       if (form.tax_id && !/^\d{8}$/.test(form.tax_id.trim())) throw new Error("統一編號應為 8 位數字");
@@ -101,6 +103,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
     </div>
   );
 
+  if (!me.isAdmin) return null;
   return (
     <Dialog
       open={open}

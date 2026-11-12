@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -9,10 +9,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { meQuery } from "@/lib/queries";
 import { formatTWD, PAYMENT_METHODS, todayISO } from "@/lib/receivables";
 
 export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: string; balance: number; trigger: ReactNode }) {
   const qc = useQueryClient();
+  const { data: me } = useSuspenseQuery(meQuery);
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [paidDate, setPaidDate] = useState(todayISO());
@@ -22,6 +24,7 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
 
   const save = useMutation({
     mutationFn: async () => {
+      if (!me.canRecordPayment) throw new Error("只有管理員可以銷帳");
       const value = Math.round(Number(amount));
       if (!value || value <= 0) throw new Error("請輸入收款金額");
       if (!paidDate) throw new Error("請選擇收款日期");
@@ -43,6 +46,7 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
   });
 
+  if (!me.canRecordPayment) return null;
   return (
     <Dialog
       open={open}

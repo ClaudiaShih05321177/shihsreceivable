@@ -11,3 +11,4 @@
 - [ ] In-app Excel import button (not yet requested to build)
 - [x] Clear all receivables + payments, keep the 416 clients (user request)
 - [ ] (Open, needs user) 「我要重新安排」— ask what the user wants to rearrange
+- [x] Revised permissions enforced in UI and RLS: only admins settle, edit/delete and manage accounts; members view and create receivables. Permission tests passed; admin create/payment/delete/sign-out flow verified. No ordinary-user account available for a signed-in browser check.

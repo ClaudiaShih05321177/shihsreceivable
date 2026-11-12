@@ -9,7 +9,7 @@ import { InvoiceTable } from "@/components/ar/invoice-table";
 import { PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { customerQuery, invoicesQuery } from "@/lib/queries";
+import { customerQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { formatTWD, invoiceStatus, outstanding } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/_shell/customers/$id")({
@@ -43,13 +43,16 @@ function CustomerDetail() {
   const { id } = Route.useParams();
   const { data: customer } = useSuspenseQuery(customerQuery(id));
   const { data: allInvoices } = useSuspenseQuery(invoicesQuery);
+  const { data: me } = useSuspenseQuery(meQuery);
   const qc = useQueryClient();
   const navigate = useNavigate();
 
   const remove = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("customers").delete().eq("id", id);
+      if (!me.canDelete) throw new Error("只有管理員可以刪除資料");
+      const { data, error } = await supabase.from("customers").delete().eq("id", id).select("id");
       if (error) throw error;
+      if (!data?.length) throw new Error("未能刪除客戶，請確認權限");
     },
     onSuccess: () => {
       toast.success("已刪除客戶");
@@ -92,7 +95,7 @@ function CustomerDetail() {
           <>
             <InvoiceFormDialog customerId={customer.id} trigger={<Button><Plus /> 新增應收帳款</Button>} />
             <CustomerFormDialog customer={customer} trigger={<Button variant="outline"><Pencil /> 編輯</Button>} />
-            <Button
+            {me.canDelete && <Button
               variant="ghost"
               size="icon"
               aria-label="刪除客戶"
@@ -101,7 +104,7 @@ function CustomerDetail() {
               }}
             >
               <Trash2 />
-            </Button>
+            </Button>}
           </>
         }
       />

@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { HandCoins } from "lucide-react";
 
 import { PaymentFormDialog } from "@/components/ar/payment-form-dialog";
@@ -6,15 +7,15 @@ import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ar/status-badge";
 import { Money } from "@/components/ar/page-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { Invoice } from "@/lib/queries";
+import { meQuery, type Invoice } from "@/lib/queries";
 import { daysOverdue, formatDate, invoiceStatus, lastPaidDate, outstanding, periodMonthLabel, rocYear } from "@/lib/receivables";
 
 export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invoice[]; showCustomer?: boolean }) {
+  const { data: me } = useSuspenseQuery(meQuery);
   if (invoices.length === 0) {
     return (
       <div className="ledger-card ledger-lines px-6 py-16 text-center text-sm text-muted-foreground">
         <p>目前沒有符合的帳款</p>
-        <p className="mt-2 text-xs">新增應收帳款後，每一筆右邊會出現「登錄收款」按鈕，按下即可銷帳。</p>
       </div>
     );
   }
@@ -30,7 +31,7 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
             <TableHead>到期日</TableHead>
             <TableHead>收款日期</TableHead>
             <TableHead>狀態</TableHead>
-            <TableHead className="text-right">銷帳</TableHead>
+            {me.canRecordPayment && <TableHead className="text-right">銷帳</TableHead>}
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -61,7 +62,7 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
                 </TableCell>
                 <TableCell className="tabular text-sm text-muted-foreground">{formatDate(lastPaidDate(inv))}</TableCell>
                 <TableCell><StatusBadge status={status} /></TableCell>
-                <TableCell className="text-right">
+                {me.canRecordPayment && <TableCell className="text-right">
                   {balance > 0 ? (
                     <PaymentFormDialog
                       invoiceId={inv.id}
@@ -71,7 +72,7 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
                   ) : (
                     <span className="text-xs text-muted-foreground">已收訖</span>
                   )}
-                </TableCell>
+                </TableCell>}
               </TableRow>
             );
           })}

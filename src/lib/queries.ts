@@ -2,6 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { permissionsFor } from "@/lib/permissions";
 
 export type Customer = Database["public"]["Tables"]["customers"]["Row"];
 export type Payment = Database["public"]["Tables"]["payments"]["Row"];
@@ -24,14 +25,15 @@ export const meQuery = queryOptions({
       supabase.from("profiles").select("*").eq("id", user.id).maybeSingle(),
       supabase.from("user_roles").select("role").eq("user_id", user.id),
     ]);
+    if (profile.error) throw profile.error;
+    if (roles.error) throw roles.error;
     const roleList = (roles.data ?? []).map((r) => r.role);
     return {
       id: user.id,
       email: user.email ?? "",
       displayName: profile.data?.display_name ?? user.email ?? "",
       roles: roleList,
-      isMember: roleList.length > 0,
-      isAdmin: roleList.includes("admin"),
+      ...permissionsFor(roleList),
     };
   },
 });

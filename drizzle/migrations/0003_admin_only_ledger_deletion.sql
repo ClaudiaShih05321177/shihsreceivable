@@ -1,0 +1,15 @@
+DROP POLICY "Members manage customers" ON public.customers;
+CREATE POLICY "Members read customers" ON public.customers FOR SELECT TO authenticated USING (public.is_member(auth.uid()));
+CREATE POLICY "Members insert customers" ON public.customers FOR INSERT TO authenticated WITH CHECK (public.is_member(auth.uid()));
+CREATE POLICY "Members update customers" ON public.customers FOR UPDATE TO authenticated USING (public.is_member(auth.uid())) WITH CHECK (public.is_member(auth.uid()));
+CREATE POLICY "Admins delete customers" ON public.customers FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+DROP POLICY "Members manage invoices" ON public.invoices;
+CREATE POLICY "Members read invoices" ON public.invoices FOR SELECT TO authenticated USING (public.is_member(auth.uid()));
+CREATE POLICY "Members insert invoices" ON public.invoices FOR INSERT TO authenticated WITH CHECK (public.is_member(auth.uid()));
+CREATE POLICY "Members update invoices" ON public.invoices FOR UPDATE TO authenticated USING (public.is_member(auth.uid())) WITH CHECK (public.is_member(auth.uid()));
+CREATE POLICY "Admins delete invoices" ON public.invoices FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role));
+DROP POLICY "Members manage payments" ON public.payments;
+CREATE POLICY "Members read payments" ON public.payments FOR SELECT TO authenticated USING (public.is_member(auth.uid()));
+CREATE POLICY "Members insert payments" ON public.payments FOR INSERT TO authenticated WITH CHECK (public.is_member(auth.uid()));
+CREATE POLICY "Members update payments" ON public.payments FOR UPDATE TO authenticated USING (public.is_member(auth.uid())) WITH CHECK (public.is_member(auth.uid()));
+CREATE POLICY "Admins delete payments" ON public.payments FOR DELETE TO authenticated USING (public.has_role(auth.uid(), 'admin'::public.app_role));

@@ -34,5 +34,6 @@ use the editor.
 - Receivables business rules (status, overdue, aging, fee totals, ROC dates) live in `src/lib/receivables.ts` with tests in `src/lib/receivables.test.ts`; UI must call these helpers instead of re-deriving. Why: one tested source of truth for money logic.
 - Data access goes through the browser Supabase client with RLS (`src/lib/queries.ts` queryOptions + route loaders); no server functions needed. Why: team-shared data is fully guarded by `is_member()` policies.
 - Access model: first sign-up becomes admin via the `handle_new_user` trigger; later users have no role (pending) until an admin grants one on /team. Why: financial data must not be visible to arbitrary sign-ups.
+- Permissions are derived from database roles through `src/lib/permissions.ts`; RLS permits members to read ledger data and insert invoices, while customer writes, invoice edits/deletes, payments and role management require admin. Why: UI and direct data access must enforce the same permission boundary.
 - Signed-in pages live under `src/routes/_authenticated/_shell/` (shell layout shows the pending-approval screen for users without a role). Why: one place for nav and membership gating.
 - Invoice fee breakdown is stored as `invoices.items` jsonb keyed by fee name; `amount` is saved as the items total. Why: mirrors the user's ledger columns without a column per fee.

@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { customersQuery, type Invoice } from "@/lib/queries";
+import { customersQuery, meQuery, type Invoice } from "@/lib/queries";
 import { FEE_ITEMS, formatTWD, itemsTotal, rocYear, todayISO, type FeeItems } from "@/lib/receivables";
 
 const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳", "其他"];
@@ -54,6 +54,7 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
 
 export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: Invoice | null; customerId?: string; trigger: ReactNode }) {
   const qc = useQueryClient();
+  const { data: me } = useSuspenseQuery(meQuery);
   const navigate = useNavigate();
   const { data: customers = [] } = useQuery(customersQuery);
   const [open, setOpen] = useState(false);
@@ -83,6 +84,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
 
   const save = useMutation({
     mutationFn: async () => {
+      if (invoice ? !me.canEdit : !me.canCreate) throw new Error("您沒有此操作的權限");
       if (!form.customer_id) throw new Error("請選擇客戶");
       if (total <= 0) throw new Error("應收帳款金額需大於 0，請填寫費用項目");
       if (form.due_date && form.due_date < form.issue_date) throw new Error("到期日不可早於開立日期");
@@ -117,6 +119,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
   });
 
+  if (invoice ? !me.canEdit : !me.canCreate) return null;
   return (
     <Dialog
       open={open}

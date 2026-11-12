@@ -22,6 +22,20 @@
       "when": 1794465802648,
       "tag": "0002_optional_due_date",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794474513810,
+      "tag": "0003_admin_only_ledger_deletion",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794474567279,
+      "tag": "0004_admin_only_settlement_and_editing",
+      "breakpoints": true
     }
   ]
 }

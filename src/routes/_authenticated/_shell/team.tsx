@@ -19,17 +19,27 @@ export const Route = createFileRoute("/_authenticated/_shell/team")({
       { name: "twitter:card", content: "summary" },
     ],
   }),
-  loader: ({ context }) => context.queryClient.ensureQueryData(teamQuery),
+  loader: async ({ context }) => {
+    const me = await context.queryClient.ensureQueryData(meQuery);
+    if (me.canManageTeam) await context.queryClient.ensureQueryData(teamQuery);
+  },
   component: TeamPage,
 });
 
 function TeamPage() {
+  const { data: me } = useSuspenseQuery(meQuery);
+  if (!me.canManageTeam) return <PageHeader title="無權限存取" description="只有管理員可以管理團隊成員。" />;
+  return <TeamManagement />;
+}
+
+function TeamManagement() {
   const { data: team } = useSuspenseQuery(teamQuery);
   const { data: me } = useSuspenseQuery(meQuery);
   const qc = useQueryClient();
 
   const grant = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
+      if (!me.canManageTeam) throw new Error("只有管理員可以管理權限");
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
       if (error) throw error;
     },
@@ -42,6 +52,7 @@ function TeamPage() {
 
   const revoke = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role?: AppRole }) => {
+      if (!me.canManageTeam) throw new Error("只有管理員可以管理權限");
       let q = supabase.from("user_roles").delete().eq("user_id", userId);
       if (role) q = q.eq("role", role);
       const { error } = await q;
@@ -56,6 +67,7 @@ function TeamPage() {
 
   const demote = useMutation({
     mutationFn: async (userId: string) => {
+      if (!me.canManageTeam) throw new Error("只有管理員可以管理權限");
       const row = team.find((m) => m.id === userId);
       if (row && !row.roles.includes("member")) {
         const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "member" });
@@ -117,7 +129,7 @@ function TeamPage() {
                   <p className="text-xs text-muted-foreground">{m.email}</p>
                 </div>
                 <span className={`rounded-full px-2.5 py-0.5 text-xs ${isAdmin ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
-                  {isAdmin ? "管理員" : "成員"}
+                  {isAdmin ? "管理員" : "使用者"}
                 </span>
                 {me.isAdmin && !isSelf && (
                   <div className="flex gap-1">
