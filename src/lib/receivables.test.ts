@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agingBucket, applyScheduledFees, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, itemsTotal, monthlySeries, outstanding, scheduledCustomerFees, sortByPeriod, suggestPeriod } from "./receivables";
+import { agingBucket, applyScheduledFees, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, isOtherKey, itemEntries, itemsTotal, monthlySeries, otherEntries, otherLabel, outstanding, scheduledCustomerFees, sortByPeriod, suggestPeriod, withOtherItems } from "./receivables";
 
 const today = "2026-11-12";
 const inv = (due_date: string, amount: number, paid: number[] = []) => ({
@@ -138,6 +138,34 @@ describe("月份/期別 排序", () => {
     const rows = [p(2026, 3, null, "c"), p(2025, 1, null, "a")];
     sortByPeriod(rows);
     expect(rows.map((r) => r.name)).toEqual(["c", "a"]);
+  });
+});
+
+describe("其他自訂項目", () => {
+  it("以「其他：說明」存入並取回說明", () => {
+    expect(otherLabel("其他：代墊規費")).toBe("代墊規費");
+    expect(isOtherKey("其他：代墊規費")).toBe(true);
+    expect(isOtherKey("記帳費")).toBe(false);
+  });
+
+  it("併入費用項目：空白說明或 0 金額不存", () => {
+    expect(
+      withOtherItems({ 記帳費: 6000 }, [
+        { label: "代墊規費", amount: "300" },
+        { label: "", amount: "100" },
+        { label: "零元", amount: "0" },
+      ]),
+    ).toEqual({ 記帳費: 6000, "其他：代墊規費": 300 });
+  });
+
+  it("讀回已存的自訂項目供編輯", () => {
+    expect(otherEntries({ 記帳費: 6000, "其他：代墊規費": 300 })).toEqual([{ key: "其他：代墊規費", label: "代墊規費", amount: "300" }]);
+  });
+
+  it("自訂項目計入合計與明細", () => {
+    const items = withOtherItems({ 記帳費: 6000 }, [{ label: "代墊規費", amount: "300" }]);
+    expect(itemsTotal(items)).toBe(6300);
+    expect(itemEntries(items).map((i) => i.name)).toContain("其他：代墊規費");
   });
 });
 

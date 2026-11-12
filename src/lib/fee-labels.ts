@@ -33,9 +33,10 @@ export const FEE_LABELS: Record<string, string> = {
 /** 不出現在費用項目裡的欄位；已經填過金額的仍會顯示，不會漏帳。 */
 export const HIDDEN_FEE_ITEMS: readonly string[] = ["前期餘額"];
 
-/** 顯示名稱：預設名稱 > 欄位代碼。 */
+/** 顯示名稱：預設名稱 > 欄位代碼；自訂「其他：說明」項目顯示說明文字。 */
 export function feeLabel(key: string): string {
-  return FEE_LABELS[key] ?? key;
+  const k = key.startsWith("其他：") ? key.slice(3) : key;
+  return FEE_LABELS[k] ?? k;
 }
 
 export function isFeeHidden(key: string): boolean {

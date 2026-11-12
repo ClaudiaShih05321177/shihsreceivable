@@ -209,6 +209,40 @@ export function itemEntries(items: FeeItems | null | undefined): { name: string;
   return [...known, ...extra];
 }
 
+/** 自訂「其他」項目的鍵值前綴：items 裡存成「其他：說明」。 */
+export const OTHER_PREFIX = "其他：";
+
+export function isOtherKey(key: string): boolean {
+  return key.startsWith(OTHER_PREFIX);
+}
+
+/** 自訂項目的說明文字（去掉「其他：」前綴）。 */
+export function otherLabel(key: string): string {
+  return isOtherKey(key) ? key.slice(OTHER_PREFIX.length) : key;
+}
+
+export function otherKey(label: string): string {
+  return `${OTHER_PREFIX}${label.trim()}`;
+}
+
+/** 已存的自訂「其他」項目（說明 + 金額字串，供表單編輯）。 */
+export function otherEntries(items: FeeItems | null | undefined): { key: string; label: string; amount: string }[] {
+  return Object.entries(items ?? {})
+    .filter(([k, v]) => isOtherKey(k) && Number(v))
+    .map(([k, v]) => ({ key: k, label: otherLabel(k), amount: String(v) }));
+}
+
+/** 把表單的自訂「其他」列併入費用項目：說明空白或金額為 0 的列不存。 */
+export function withOtherItems(items: FeeItems, others: { label: string; amount: string }[]): FeeItems {
+  const base = Object.fromEntries(Object.entries(items).filter(([k]) => !isOtherKey(k)));
+  for (const o of others) {
+    const label = o.label.trim();
+    const amount = Math.round(Number(o.amount) || 0);
+    if (label && amount !== 0) base[otherKey(label)] = amount;
+  }
+  return base;
+}
+
 /** Label for 月份: 0 or null means 前期 (carried from last year). */
 export function periodMonthLabel(month: number | null | undefined): string {
   return !month ? "前期" : `${month}月`;

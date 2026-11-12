@@ -1,7 +1,7 @@
 import { AUDITORS } from "@/lib/auditors";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -14,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/queries";
 import { feeItemCount, feeLabel, visibleFeeItems } from "@/lib/fee-labels";
-import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, itemsTotal, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, type FeeItems } from "@/lib/receivables";
+import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems } from "@/lib/receivables";
 
 const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳"];
 
@@ -32,6 +32,7 @@ type Form = {
   vat_input: string;
   vat_prior: string;
   items: Record<string, string>;
+  others: { label: string; amount: string }[];
 };
 
 function toForm(inv?: Invoice | null, customerId?: string): Form {
@@ -40,7 +41,7 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
   const collectionMonth = bookkeepingCollectionMonth(now.getMonth() + 1);
   const month = inv ? inv.period_month ?? 0 : collectionMonth === 13 ? 1 : collectionMonth;
   const items: Record<string, string> = {};
-  for (const [k, v] of Object.entries((inv?.items as FeeItems) ?? {})) if (v) items[k] = String(v);
+  for (const [k, v] of Object.entries((inv?.items as FeeItems) ?? {})) if (v && !isOtherKey(k)) items[k] = String(v);
   return {
     customer_id: inv?.customer_id ?? customerId ?? "",
     roc_year: String(rocYear(inv?.period_year ?? now.getFullYear() + (collectionMonth === 13 ? 1 : 0))),
@@ -55,6 +56,7 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
     vat_input: inv?.vat_input != null ? String(inv.vat_input) : "",
     vat_prior: inv?.vat_prior_credit != null ? String(inv.vat_prior_credit) : "",
     items,
+    others: otherEntries(inv?.items as FeeItems),
   };
 }
 
@@ -84,10 +86,15 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   const vat = vatDue(Number(form.vat_output), Number(form.vat_input), Number(form.vat_prior));
   const hasVat = form.vat_output !== "" || form.vat_input !== "";
 
-  const numericItems: FeeItems = Object.fromEntries(
+  const baseItems: FeeItems = Object.fromEntries(
     Object.entries(form.items).map(([k, v]) => [k, Math.round(Number(v) || 0)]).filter(([, v]) => v !== 0),
   );
+  const numericItems = withOtherItems(baseItems, form.others);
   const total = itemsTotal(numericItems);
+  const setOther = (i: number, k: "label" | "amount", v: string) =>
+    setForm((f) => ({ ...f, others: f.others.map((o, j) => (j === i ? { ...o, [k]: v } : o)) }));
+  const addOther = () => setForm((f) => ({ ...f, others: [...f.others, { label: "", amount: "" }] }));
+  const removeOther = (i: number) => setForm((f) => ({ ...f, others: f.others.filter((_, j) => j !== i) }));
   const hasValue = (k: string) => Number(form.items[k]) > 0;
   const visible = visibleFeeItems({ showAll, common: COMMON_ITEMS, hasValue });
 
@@ -252,6 +259,19 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                   </button>
                 </div>
               </div>
+              <div className="mb-4 rounded-md border border-border bg-card p-3">
+                <p className="mb-2 text-sm font-bold">營業稅計算 <span className="font-normal text-xs text-muted-foreground">應納 = 銷項 − 進項 − 上期留抵，自動帶入營業稅</span></p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
+                  {([["vat_output", "銷項稅額"], ["vat_input", "進項稅額"], ["vat_prior", "上期留抵"]] as const).map(([k, l]) => (
+                    <div key={k} className="space-y-1">
+                      <Label htmlFor={`vat-${k}`} className="text-xs text-muted-foreground">{l}</Label>
+                      <Input id={`vat-${k}`} type="number" step={1} value={form[k]} onChange={(e) => setVat(k)(e.target.value)} className="tabular h-8" />
+                    </div>
+                  ))}
+                  <div className="space-y-1"><p className="text-xs text-muted-foreground">應納稅額</p><p className="tabular h-8 leading-8 font-semibold">{hasVat ? formatTWD(vat.due) : "—"}</p></div>
+                  <div className="space-y-1"><p className="text-xs text-muted-foreground">本期留抵</p><p className="tabular h-8 leading-8">{hasVat ? formatTWD(vat.carry) : "—"}</p></div>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {visible.map((k) => (
                   <div key={k} className="space-y-1">
@@ -268,17 +288,42 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                 ))}
               </div>
               <div className="mt-4 rounded-md border border-border bg-card p-3">
-                <p className="mb-2 text-sm font-bold">營業稅計算 <span className="font-normal text-xs text-muted-foreground">應納 = 銷項 − 進項 − 上期留抵，自動帶入營業稅</span></p>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-                  {([["vat_output", "銷項稅額"], ["vat_input", "進項稅額"], ["vat_prior", "上期留抵"]] as const).map(([k, l]) => (
-                    <div key={k} className="space-y-1">
-                      <Label htmlFor={`vat-${k}`} className="text-xs text-muted-foreground">{l}</Label>
-                      <Input id={`vat-${k}`} type="number" step={1} value={form[k]} onChange={(e) => setVat(k)(e.target.value)} className="tabular h-8" />
-                    </div>
-                  ))}
-                  <div className="space-y-1"><p className="text-xs text-muted-foreground">應納稅額</p><p className="tabular h-8 leading-8 font-semibold">{hasVat ? formatTWD(vat.due) : "—"}</p></div>
-                  <div className="space-y-1"><p className="text-xs text-muted-foreground">本期留抵</p><p className="tabular h-8 leading-8">{hasVat ? formatTWD(vat.carry) : "—"}</p></div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <p className="text-sm font-bold">其他項目 <span className="font-normal text-xs text-muted-foreground">可自行增列說明與金額</span></p>
+                  <button type="button" onClick={addOther} className="flex items-center gap-1 text-xs text-primary hover:underline">
+                    <Plus className="size-3.5" />新增其他項目
+                  </button>
                 </div>
+                {form.others.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">沒有其他項目。</p>
+                ) : (
+                  <div className="space-y-2">
+                    {form.others.map((o, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <Input
+                          aria-label={`其他項目 ${i + 1} 說明`}
+                          placeholder="說明（例：代墊規費）"
+                          value={o.label}
+                          onChange={(e) => setOther(i, "label", e.target.value)}
+                          className="h-8 flex-1"
+                          maxLength={40}
+                        />
+                        <Input
+                          aria-label={`其他項目 ${i + 1} 金額`}
+                          type="number"
+                          step={1}
+                          placeholder="金額"
+                          value={o.amount}
+                          onChange={(e) => setOther(i, "amount", e.target.value)}
+                          className="tabular h-8 w-32"
+                        />
+                        <button type="button" onClick={() => removeOther(i)} aria-label={`刪除其他項目 ${i + 1}`} className="text-muted-foreground hover:text-destructive">
+                          <Trash2 className="size-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               <div className="mt-4 flex items-baseline justify-end gap-3 border-t border-border pt-3">
                 <span className="text-sm text-muted-foreground">應收帳款合計</span>

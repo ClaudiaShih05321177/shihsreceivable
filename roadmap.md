@@ -14,6 +14,9 @@
 - [ ] In-app Excel import button (not yet requested to build)
 - [x] Clear all receivables + payments, keep the 416 clients (user request)
 - [ ] (Open, needs user) 「我要重新安排」— ask what the user wants to rearrange
+- [x] 「其他」自訂項目：應收帳款可自行增列說明＋金額（存 items jsonb，鍵「其他：說明」），表單/明細/請款單顯示；測試通過、瀏覽器驗證（測試帳款已刪）
+- [x] 營業稅計算區塊移到費用項目最上方（營業稅附近）
+- [ ] (Open, needs user) 工商代辦費（=文具欄位）11月自動帶入文具費、印章代刻（=結算欄位）1月自動帶入結算費——已向使用者說明標籤與自動帶入規則分開，等使用者決定是否調整
 - [x] Revised permissions enforced in UI and RLS: only admins settle, edit/delete and manage accounts; members view and create receivables. Permission tests passed; admin create/payment/delete/sign-out flow verified. No ordinary-user account available for a signed-in browser check.
 - [x] Sort by 月份/期別: clickable column header on the receivables list and the tax detail page (由新到舊 → 由舊到新 → 回復原序), comparator tested in receivables.test.ts; verified in the signed-in UI with temporary rows that were then deleted.
 - [x] 扣繳稅額 彙總範圍確認：22-1申報 不列入稅額明細；二代健保維持獨立一類。
