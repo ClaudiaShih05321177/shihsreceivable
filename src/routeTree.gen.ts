@@ -17,6 +17,7 @@ import { Route as AuthenticatedShellAuditsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
 import { Route as AuthenticatedShellTaxesRouteImport } from './routes/_authenticated/_shell/taxes'
 import { Route as AuthenticatedShellTeamRouteImport } from './routes/_authenticated/_shell/team'
+import { Route as AuthenticatedStatementIdRouteImport } from './routes/_authenticated/statement.$id'
 import { Route as AuthenticatedShellCustomersIndexRouteImport } from './routes/_authenticated/_shell/customers.index'
 import { Route as AuthenticatedShellCustomersIdRouteImport } from './routes/_authenticated/_shell/customers.$id'
 import { Route as AuthenticatedShellInvoicesIndexRouteImport } from './routes/_authenticated/_shell/invoices.index'
@@ -62,6 +63,12 @@ const AuthenticatedShellTeamRoute = AuthenticatedShellTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedShellRoute,
 } as any)
+const AuthenticatedStatementIdRoute =
+  AuthenticatedStatementIdRouteImport.update({
+    id: '/statement/$id',
+    path: '/statement/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedShellCustomersIndexRoute =
   AuthenticatedShellCustomersIndexRouteImport.update({
     id: '/customers/',
@@ -94,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
+  '/statement/$id': typeof AuthenticatedStatementIdRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
   '/invoices/$id': typeof AuthenticatedShellInvoicesIdRoute
   '/customers/': typeof AuthenticatedShellCustomersIndexRoute
@@ -106,6 +114,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
+  '/statement/$id': typeof AuthenticatedStatementIdRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
   '/invoices/$id': typeof AuthenticatedShellInvoicesIdRoute
   '/customers': typeof AuthenticatedShellCustomersIndexRoute
@@ -121,6 +130,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
   '/_authenticated/_shell/taxes': typeof AuthenticatedShellTaxesRoute
   '/_authenticated/_shell/team': typeof AuthenticatedShellTeamRoute
+  '/_authenticated/statement/$id': typeof AuthenticatedStatementIdRoute
   '/_authenticated/_shell/customers/$id': typeof AuthenticatedShellCustomersIdRoute
   '/_authenticated/_shell/invoices/$id': typeof AuthenticatedShellInvoicesIdRoute
   '/_authenticated/_shell/customers/': typeof AuthenticatedShellCustomersIndexRoute
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/taxes'
     | '/team'
+    | '/statement/$id'
     | '/customers/$id'
     | '/invoices/$id'
     | '/customers/'
@@ -147,6 +158,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/taxes'
     | '/team'
+    | '/statement/$id'
     | '/customers/$id'
     | '/invoices/$id'
     | '/customers'
@@ -161,6 +173,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/dashboard'
     | '/_authenticated/_shell/taxes'
     | '/_authenticated/_shell/team'
+    | '/_authenticated/statement/$id'
     | '/_authenticated/_shell/customers/$id'
     | '/_authenticated/_shell/invoices/$id'
     | '/_authenticated/_shell/customers/'
@@ -231,6 +244,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellTeamRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/statement/$id': {
+      id: '/_authenticated/statement/$id'
+      path: '/statement/$id'
+      fullPath: '/statement/$id'
+      preLoaderRoute: typeof AuthenticatedStatementIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/_shell/customers/': {
       id: '/_authenticated/_shell/customers/'
       path: '/customers'
@@ -289,10 +309,12 @@ const AuthenticatedShellRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedShellRoute: typeof AuthenticatedShellRouteWithChildren
+  AuthenticatedStatementIdRoute: typeof AuthenticatedStatementIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShellRoute: AuthenticatedShellRouteWithChildren,
+  AuthenticatedStatementIdRoute: AuthenticatedStatementIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

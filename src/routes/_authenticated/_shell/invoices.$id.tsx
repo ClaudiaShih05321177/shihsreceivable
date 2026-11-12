@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowLeft, Pencil, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Pencil, Plus, Printer, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { InvoiceFormDialog } from "@/components/ar/invoice-form-dialog";
@@ -133,6 +133,7 @@ function InvoiceDetail() {
         actions={
           <>
             <PaymentFormDialog invoiceId={inv.id} balance={balance} trigger={<Button disabled={balance <= 0}><Plus /> 登錄收款</Button>} />
+            <Button variant="outline" asChild><Link to="/statement/$id" params={{ id: inv.id }} target="_blank"><Printer /> 請款單</Link></Button>
             <InvoiceFormDialog invoice={inv} trigger={<Button variant="outline"><Pencil /> 編輯</Button>} />
             {me.canDelete && <AlertDialog>
               <AlertDialogTrigger asChild>

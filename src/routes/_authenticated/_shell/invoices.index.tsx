@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { BatchInvoiceDialog } from "@/components/ar/batch-invoice-dialog";
 import { InvoiceFormDialog } from "@/components/ar/invoice-form-dialog";
 import { InvoiceTable } from "@/components/ar/invoice-table";
 import { PageHeader } from "@/components/ar/page-header";
@@ -71,7 +72,7 @@ function InvoicesPage() {
         eyebrow="總帳"
         title="應收帳款"
         description={`共 ${rows.length} 筆，應收餘額 ${formatTWD(total)}`}
-        actions={<InvoiceFormDialog trigger={<Button><Plus /> 新增應收帳款</Button>} />}
+        actions={<><BatchInvoiceDialog /><InvoiceFormDialog trigger={<Button><Plus /> 新增應收帳款</Button>} /></>}
       />
       <div className="mb-4 flex flex-wrap gap-2">
         {FILTERS.map((f) => (

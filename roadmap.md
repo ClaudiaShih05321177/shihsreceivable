@@ -18,3 +18,5 @@
 - [x] Sort by 月份/期別: clickable column header on the receivables list and the tax detail page (由新到舊 → 由舊到新 → 回復原序), comparator tested in receivables.test.ts; verified in the signed-in UI with temporary rows that were then deleted.
 - [x] 扣繳稅額 彙總範圍確認：22-1申報 不列入稅額明細；二代健保維持獨立一類。
 - [x] 股利2代 從二代健保拆出，在稅額明細獨立為「股利二代」稅目；TAX_GROUPS 更新、稅目篩選與合計卡片自動帶入，測試通過、build OK。
+- [x] 財稅簽頁：三位會計師（秉誠、詮益、眾智）分列、合計、收款狀態、已付會計師勾選與日期；應收帳款可選會計師。
+- [x] 自動請款：一鍵立帳（依收款月份排定費用）＋可列印請款單（照事務所樣本，含前期未收餘額與匯款帳號）。

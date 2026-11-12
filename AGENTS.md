@@ -38,3 +38,4 @@ use the editor.
 - Signed-in pages live under `src/routes/_authenticated/_shell/` (shell layout shows the pending-approval screen for users without a role). Why: one place for nav and membership gating.
 - Invoice fee breakdown is stored as `invoices.items` jsonb keyed by fee name; `amount` is saved as the items total. Why: mirrors the user's ledger columns without a column per fee.
 - Invoice creation uses tested collection-month and fee helpers from `receivables.ts`; editing preserves saved amounts and manual overrides. Why: billing defaults must not silently rewrite existing financial records.
+- Office letterhead and bank details for 請款單 live in OFFICE in src/lib/billing.ts; batch invoice creation and prior-balance logic are tested there. Why: one source for statement content.
