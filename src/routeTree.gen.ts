@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/_shell'
+import { Route as AuthenticatedShellAuditsRouteImport } from './routes/_authenticated/_shell/audits'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
 import { Route as AuthenticatedShellTaxesRouteImport } from './routes/_authenticated/_shell/taxes'
 import { Route as AuthenticatedShellTeamRouteImport } from './routes/_authenticated/_shell/team'
@@ -39,6 +40,12 @@ const AuthenticatedShellRoute = AuthenticatedShellRouteImport.update({
   id: '/_shell',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedShellAuditsRoute =
+  AuthenticatedShellAuditsRouteImport.update({
+    id: '/audits',
+    path: '/audits',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
 const AuthenticatedShellDashboardRoute =
   AuthenticatedShellDashboardRouteImport.update({
     id: '/dashboard',
@@ -83,6 +90,7 @@ const AuthenticatedShellInvoicesIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/audits': typeof AuthenticatedShellAuditsRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
@@ -94,6 +102,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/audits': typeof AuthenticatedShellAuditsRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
@@ -108,6 +117,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteWithChildren
+  '/_authenticated/_shell/audits': typeof AuthenticatedShellAuditsRoute
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
   '/_authenticated/_shell/taxes': typeof AuthenticatedShellTaxesRoute
   '/_authenticated/_shell/team': typeof AuthenticatedShellTeamRoute
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/audits'
     | '/dashboard'
     | '/taxes'
     | '/team'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/audits'
     | '/dashboard'
     | '/taxes'
     | '/team'
@@ -145,6 +157,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/_shell'
+    | '/_authenticated/_shell/audits'
     | '/_authenticated/_shell/dashboard'
     | '/_authenticated/_shell/taxes'
     | '/_authenticated/_shell/team'
@@ -189,6 +202,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedShellRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/_shell/audits': {
+      id: '/_authenticated/_shell/audits'
+      path: '/audits'
+      fullPath: '/audits'
+      preLoaderRoute: typeof AuthenticatedShellAuditsRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
     }
     '/_authenticated/_shell/dashboard': {
       id: '/_authenticated/_shell/dashboard'
@@ -243,6 +263,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedShellRouteChildren {
+  AuthenticatedShellAuditsRoute: typeof AuthenticatedShellAuditsRoute
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
   AuthenticatedShellTaxesRoute: typeof AuthenticatedShellTaxesRoute
   AuthenticatedShellTeamRoute: typeof AuthenticatedShellTeamRoute
@@ -253,6 +274,7 @@ interface AuthenticatedShellRouteChildren {
 }
 
 const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
+  AuthenticatedShellAuditsRoute: AuthenticatedShellAuditsRoute,
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
   AuthenticatedShellTaxesRoute: AuthenticatedShellTaxesRoute,
   AuthenticatedShellTeamRoute: AuthenticatedShellTeamRoute,

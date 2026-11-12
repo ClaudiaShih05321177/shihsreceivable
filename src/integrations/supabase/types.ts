@@ -80,6 +80,9 @@ export type Database = {
       invoices: {
         Row: {
           amount: number
+          auditor: string | null
+          auditor_paid: boolean
+          auditor_paid_date: string | null
           created_at: string
           created_by: string | null
           customer_id: string
@@ -97,6 +100,9 @@ export type Database = {
         }
         Insert: {
           amount: number
+          auditor?: string | null
+          auditor_paid?: boolean
+          auditor_paid_date?: string | null
           created_at?: string
           created_by?: string | null
           customer_id: string
@@ -114,6 +120,9 @@ export type Database = {
         }
         Update: {
           amount?: number
+          auditor?: string | null
+          auditor_paid?: boolean
+          auditor_paid_date?: string | null
           created_at?: string
           created_by?: string | null
           customer_id?: string

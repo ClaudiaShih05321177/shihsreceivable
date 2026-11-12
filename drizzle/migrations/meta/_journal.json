@@ -43,6 +43,13 @@
       "when": 1794475571367,
       "tag": "0005_tax_filings",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794491220511,
+      "tag": "0006_invoice_auditor",
+      "breakpoints": true
     }
   ]
 }

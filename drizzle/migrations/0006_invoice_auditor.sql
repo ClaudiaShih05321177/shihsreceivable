@@ -1,0 +1,1 @@
+ALTER TABLE public.invoices ADD COLUMN auditor text, ADD COLUMN auditor_paid boolean NOT NULL DEFAULT false, ADD COLUMN auditor_paid_date date;

@@ -1,3 +1,4 @@
+import { AUDITORS } from "@/lib/auditors";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown } from "lucide-react";
@@ -25,6 +26,7 @@ type Form = {
   issue_date: string;
   due_date: string;
   notes: string;
+  auditor: string;
   items: Record<string, string>;
 };
 
@@ -44,6 +46,7 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
     issue_date: inv?.issue_date ?? today,
     due_date: inv?.due_date ?? "",
     notes: inv?.notes ?? "",
+    auditor: inv?.auditor ?? "",
     items,
   };
 }
@@ -100,6 +103,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
         issue_date: form.issue_date,
         due_date: form.due_date || null,
         notes: form.notes.trim() || null,
+        auditor: form.auditor || null,
         items: numericItems,
         amount: total,
       };
@@ -199,6 +203,16 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
               <div className="space-y-1.5">
                 <Label htmlFor="i-no">單號</Label>
                 <Input id="i-no" value={form.invoice_no} onChange={(e) => set("invoice_no")(e.target.value)} maxLength={40} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>簽證會計師</Label>
+                <Select value={form.auditor || "none"} onValueChange={(v) => set("auditor")(v === "none" ? "" : v)}>
+                  <SelectTrigger aria-label="簽證會計師"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">未指定</SelectItem>
+                    {AUDITORS.map((a) => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
