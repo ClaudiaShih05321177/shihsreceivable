@@ -16,4 +16,4 @@
 - [ ] (Open, needs user) 「我要重新安排」— ask what the user wants to rearrange
 - [x] Revised permissions enforced in UI and RLS: only admins settle, edit/delete and manage accounts; members view and create receivables. Permission tests passed; admin create/payment/delete/sign-out flow verified. No ordinary-user account available for a signed-in browser check.
 - [x] Sort by 月份/期別: clickable column header on the receivables list and the tax detail page (由新到舊 → 由舊到新 → 回復原序), comparator tested in receivables.test.ts; verified in the signed-in UI with temporary rows that were then deleted.
-- [ ] (Open, needs user) 扣繳稅額 彙總範圍：22-1申報 是否併入、二代健保項目是否也併入（用戶：「還有二代」）。
+- [x] 扣繳稅額 彙總範圍確認：22-1申報 不列入稅額明細；二代健保六項維持獨立一類（用戶回覆「維持不列入」「維持獨立一類」，無需改程式）。
