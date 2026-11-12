@@ -64,6 +64,13 @@
       "when": 1794494730486,
       "tag": "0008_fee_labels",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1794495539782,
+      "tag": "0009_deprecate_fee_labels",
+      "breakpoints": true
     }
   ]
 }

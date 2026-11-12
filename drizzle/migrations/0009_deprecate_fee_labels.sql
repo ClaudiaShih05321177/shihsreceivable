@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.fee_labels IS 'DEPRECATED: 欄位名稱功能已移除，費用欄位顯示名稱改由程式 src/lib/fee-labels.ts 的 FEE_LABELS 維護；此表不再被應用讀取。'

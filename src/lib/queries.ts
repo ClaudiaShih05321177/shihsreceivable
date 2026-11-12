@@ -108,15 +108,6 @@ export const teamQuery = queryOptions({
 
 export type TaxFiling = Database["public"]["Tables"]["tax_filings"]["Row"];
 
-export const feeLabelsQuery = queryOptions({
-  queryKey: ["fee_labels"],
-  queryFn: async () => {
-    const { data, error } = await supabase.from("fee_labels").select("*").order("key");
-    if (error) throw error;
-    return data;
-  },
-});
-
 export const taxFilingsQuery = queryOptions({
   queryKey: ["tax_filings"],
   queryFn: async () => {

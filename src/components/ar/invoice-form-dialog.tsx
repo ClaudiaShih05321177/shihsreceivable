@@ -1,11 +1,10 @@
 import { AUDITORS } from "@/lib/auditors";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronDown, PencilLine } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { FeeLabelDialog } from "@/components/ar/fee-label-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -13,11 +12,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { customersQuery, feeLabelsQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/queries";
-import { feeItemCount, feeLabel, feeLabelMap, visibleFeeItems } from "@/lib/fee-labels";
+import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/queries";
+import { feeItemCount, feeLabel, visibleFeeItems } from "@/lib/fee-labels";
 import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, itemsTotal, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, type FeeItems } from "@/lib/receivables";
 
-const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳", "其他"];
+const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳"];
 
 type Form = {
   customer_id: string;
@@ -65,7 +64,6 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   const navigate = useNavigate();
   const { data: customers } = useSuspenseQuery(customersQuery);
   const { data: allInvoices } = useSuspenseQuery(invoicesQuery);
-  const { data: labelRows } = useSuspenseQuery(feeLabelsQuery);
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [form, setForm] = useState<Form>(toForm(invoice, customerId));
@@ -90,9 +88,8 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
     Object.entries(form.items).map(([k, v]) => [k, Math.round(Number(v) || 0)]).filter(([, v]) => v !== 0),
   );
   const total = itemsTotal(numericItems);
-  const labelMap = feeLabelMap(labelRows);
   const hasValue = (k: string) => Number(form.items[k]) > 0;
-  const visible = visibleFeeItems(labelMap, { showAll, common: COMMON_ITEMS, hasValue });
+  const visible = visibleFeeItems({ showAll, common: COMMON_ITEMS, hasValue });
 
   function pickCustomer(id: string) {
     const c = customers.find((x) => x.id === id);
@@ -249,17 +246,8 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
               <div className="mb-3 flex items-center justify-between gap-3">
                 <h3 className="text-base font-bold">費用項目</h3>
                 <div className="flex items-center gap-3">
-                  {me.canEdit && (
-                    <FeeLabelDialog
-                      trigger={
-                        <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-2 text-xs text-primary">
-                          <PencilLine className="size-3.5" /> 欄位名稱
-                        </Button>
-                      }
-                    />
-                  )}
                   <button type="button" onClick={() => setShowAll((s) => !s)} className="flex items-center gap-1 text-xs text-primary hover:underline">
-                    {showAll ? "只顯示常用項目" : `顯示全部 ${feeItemCount(labelMap)} 項`}
+                    {showAll ? "只顯示常用項目" : `顯示全部 ${feeItemCount()} 項`}
                     <ChevronDown className={`size-3.5 transition-transform ${showAll ? "rotate-180" : ""}`} />
                   </button>
                 </div>
@@ -267,7 +255,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {visible.map((k) => (
                   <div key={k} className="space-y-1">
-                    <Label htmlFor={`item-${k}`} className="text-xs text-muted-foreground">{feeLabel(k, labelMap)}</Label>
+                    <Label htmlFor={`item-${k}`} className="text-xs text-muted-foreground">{feeLabel(k)}</Label>
                     <Input
                       id={`item-${k}`}
                       type="number"

@@ -187,7 +187,6 @@ export const FEE_ITEMS = [
   "年度加收",
   "匯費",
   "前期餘額",
-  "其他",
 ] as const;
 export type FeeItem = (typeof FEE_ITEMS)[number];
 export type FeeItems = Partial<Record<string, number>>;
