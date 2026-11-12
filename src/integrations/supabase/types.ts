@@ -77,6 +77,33 @@ export type Database = {
         }
         Relationships: []
       }
+      fee_labels: {
+        Row: {
+          hidden: boolean
+          key: string
+          label: string
+          position: number | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          hidden?: boolean
+          key: string
+          label: string
+          position?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          hidden?: boolean
+          key?: string
+          label?: string
+          position?: number | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           amount: number

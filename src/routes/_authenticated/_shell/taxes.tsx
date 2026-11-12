@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { invoicesQuery, meQuery, taxFilingsQuery } from "@/lib/queries";
+import { feeLabelsQuery, invoicesQuery, meQuery, taxFilingsQuery } from "@/lib/queries";
+import { feeLabel, feeLabelMap } from "@/lib/fee-labels";
 import { comparePeriod, formatDate, periodMonthLabel, rocYear, TAX_GROUPS, taxLines, taxSummary, todayISO, type FeeItems, type SortDirection } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
@@ -26,7 +27,11 @@ export const Route = createFileRoute("/_authenticated/_shell/taxes")({
     ],
   }),
   loader: ({ context }) =>
-    Promise.all([context.queryClient.ensureQueryData(invoicesQuery), context.queryClient.ensureQueryData(taxFilingsQuery)]),
+    Promise.all([
+      context.queryClient.ensureQueryData(invoicesQuery),
+      context.queryClient.ensureQueryData(taxFilingsQuery),
+      context.queryClient.ensureQueryData(feeLabelsQuery),
+    ]),
   component: TaxesPage,
 });
 
@@ -36,6 +41,8 @@ function TaxesPage() {
   const { data: invoices } = useSuspenseQuery(invoicesQuery);
   const { data: filings } = useSuspenseQuery(taxFilingsQuery);
   const { data: me } = useSuspenseQuery(meQuery);
+  const { data: labelRows } = useSuspenseQuery(feeLabelsQuery);
+  const labelMap = feeLabelMap(labelRows);
   const qc = useQueryClient();
   const [group, setGroup] = useState("all");
   const [status, setStatus] = useState("all");
@@ -169,7 +176,7 @@ function TaxesPage() {
                   </TableCell>
                   <TableCell className="text-sm">{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</TableCell>
                   <TableCell className="text-sm">{l.group}</TableCell>
-                  <TableCell className="text-sm">{l.item}</TableCell>
+                  <TableCell className="text-sm">{feeLabel(l.item, labelMap)}</TableCell>
                   <TableCell className="text-right"><Money value={l.amount} /></TableCell>
                   <TableCell>
                     <Checkbox

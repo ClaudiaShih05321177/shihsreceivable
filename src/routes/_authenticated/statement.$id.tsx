@@ -4,7 +4,8 @@ import { Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { OFFICE, priorBalance } from "@/lib/billing";
-import { customersQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
+import { customersQuery, feeLabelsQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
+import { feeLabel, feeLabelMap } from "@/lib/fee-labels";
 import { formatDate, formatTWD, itemEntries, rocYear, todayISO, vatDue, type FeeItems } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/statement/$id")({
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/statement/$id")({
       context.queryClient.ensureQueryData(invoicesQuery),
       context.queryClient.ensureQueryData(customersQuery),
       context.queryClient.ensureQueryData(meQuery),
+      context.queryClient.ensureQueryData(feeLabelsQuery),
     ]);
     if (!inv) throw notFound();
   },
@@ -37,7 +39,9 @@ function StatementPage() {
   const { data: invoices } = useSuspenseQuery(invoicesQuery);
   const { data: customers } = useSuspenseQuery(customersQuery);
   const { data: me } = useSuspenseQuery(meQuery);
+  const { data: labelRows } = useSuspenseQuery(feeLabelsQuery);
   if (!inv) return null;
+  const labelMap = feeLabelMap(labelRows);
   const customer = customers.find((c) => c.id === inv.customer_id);
   const items = itemEntries(inv.items as FeeItems);
   const prior = priorBalance(inv, invoices);
@@ -66,7 +70,7 @@ function StatementPage() {
         <table className="mt-3 w-full">
           <tbody>
             {items.map((i) => (
-              <tr key={i.name}><td className="py-1 pl-6">{period ? `${period}` : ""}{i.name}：</td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
+              <tr key={i.name}><td className="py-1 pl-6">{period ? `${period}` : ""}{feeLabel(i.name, labelMap)}：</td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
             ))}
             {prior > 0 && <tr><td className="py-1 pl-6">前期未收餘額：</td><td className="text-right font-mono">{formatTWD(prior)}</td></tr>}
             <tr className="border-t border-foreground font-bold"><td className="py-2">總計本期應收款項：</td><td className="text-right font-mono">{formatTWD(total)}</td></tr>

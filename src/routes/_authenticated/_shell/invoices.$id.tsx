@@ -20,7 +20,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { customersQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
+import { customersQuery, feeLabelsQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
+import { feeLabel, feeLabelMap } from "@/lib/fee-labels";
 import {
   daysOverdue,
   formatDate,
@@ -49,6 +50,7 @@ export const Route = createFileRoute("/_authenticated/_shell/invoices/$id")({
     const [inv] = await Promise.all([
       context.queryClient.ensureQueryData(invoiceQuery(params.id)),
       context.queryClient.ensureQueryData(customersQuery),
+      context.queryClient.ensureQueryData(feeLabelsQuery),
     ]);
     if (!inv) throw notFound();
   },
@@ -66,6 +68,8 @@ function InvoiceDetail() {
   const { data: inv } = useSuspenseQuery(invoiceQuery(id));
   const { data: customers } = useSuspenseQuery(customersQuery);
   const { data: me } = useSuspenseQuery(meQuery);
+  const { data: labelRows } = useSuspenseQuery(feeLabelsQuery);
+  const labelMap = feeLabelMap(labelRows);
   const qc = useQueryClient();
   const navigate = useNavigate();
 
@@ -182,7 +186,7 @@ function InvoiceDetail() {
           <dl className="mt-4 divide-y divide-dashed divide-border text-sm">
             {items.map((it) => (
               <div key={it.name} className="flex justify-between py-2">
-                <dt className="text-muted-foreground">{it.name}</dt>
+                <dt className="text-muted-foreground">{feeLabel(it.name, labelMap)}</dt>
                 <dd><Money value={it.amount} /></dd>
               </div>
             ))}
