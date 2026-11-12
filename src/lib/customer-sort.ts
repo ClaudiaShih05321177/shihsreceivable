@@ -1,0 +1,31 @@
+export type StaffSortable = {
+  staff_code: string | null;
+  customer_code: string | null;
+  name: string;
+};
+
+const collator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: "base" });
+
+/** 記帳員排前面，未指派記帳員的排最後；同記帳員再依客戶ID、客戶名稱排序。 */
+export function byStaffCode(a: StaffSortable, b: StaffSortable): number {
+  const sa = a.staff_code?.trim() ?? "";
+  const sb = b.staff_code?.trim() ?? "";
+  if (!sa !== !sb) return sa ? -1 : 1;
+  if (sa && sb) {
+    const byStaff = collator.compare(sa, sb);
+    if (byStaff !== 0) return byStaff;
+  }
+  const ca = a.customer_code?.trim() ?? "";
+  const cb = b.customer_code?.trim() ?? "";
+  if (!ca !== !cb) return ca ? -1 : 1;
+  if (ca && cb) {
+    const byCode = collator.compare(ca, cb);
+    if (byCode !== 0) return byCode;
+  }
+  return collator.compare(a.name, b.name);
+}
+
+/** 依記帳員排序（回傳新陣列，不影響原本順序）。 */
+export function sortByStaff<T extends StaffSortable>(rows: readonly T[]): T[] {
+  return [...rows].sort(byStaffCode);
+}
