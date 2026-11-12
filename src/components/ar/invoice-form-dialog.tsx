@@ -230,14 +230,6 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                 <Input id="i-issue" type="date" value={form.issue_date} onChange={(e) => set("issue_date")(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="i-due">到期日</Label>
-                <Input id="i-due" type="date" value={form.due_date} onChange={(e) => set("due_date")(e.target.value)} />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="i-no">單號</Label>
-                <Input id="i-no" value={form.invoice_no} onChange={(e) => set("invoice_no")(e.target.value)} maxLength={40} />
-              </div>
-              <div className="space-y-1.5">
                 <Label>簽證會計師</Label>
                 <Select value={form.auditor || "none"} onValueChange={(v) => set("auditor")(v === "none" ? "" : v)}>
                   <SelectTrigger aria-label="簽證會計師"><SelectValue /></SelectTrigger>

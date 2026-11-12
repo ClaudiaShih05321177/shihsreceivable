@@ -1,5 +1,7 @@
 # Roadmap
 
+- [x] 移除應收帳款表單的到期日及單號欄位，保留既有帳款資料；已登入檢查表單。
+
 - [x] Update receivable bookkeeping defaults: monthly fee × 2 in odd collection months; create/save/reload verified without changing existing invoices.
 - [x] Prefill stationery only in November and settlement only in January; schedules tested and verified in signed-in UI.
 
