@@ -185,7 +185,6 @@ export const FEE_ITEMS = [
   "暫繳",
   "股利2代",
   "年度加收",
-  "匯費",
   "前期餘額",
 ] as const;
 export type FeeItem = (typeof FEE_ITEMS)[number];
