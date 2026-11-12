@@ -1,5 +1,8 @@
 import { Link } from "@tanstack/react-router";
+import { HandCoins } from "lucide-react";
 
+import { PaymentFormDialog } from "@/components/ar/payment-form-dialog";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ar/status-badge";
 import { Money } from "@/components/ar/page-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,7 +11,12 @@ import { daysOverdue, formatDate, invoiceStatus, lastPaidDate, outstanding, peri
 
 export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invoice[]; showCustomer?: boolean }) {
   if (invoices.length === 0) {
-    return <div className="ledger-card ledger-lines px-6 py-16 text-center text-sm text-muted-foreground">目前沒有符合的帳款</div>;
+    return (
+      <div className="ledger-card ledger-lines px-6 py-16 text-center text-sm text-muted-foreground">
+        <p>目前沒有符合的帳款</p>
+        <p className="mt-2 text-xs">新增應收帳款後，每一筆右邊會出現「登錄收款」按鈕，按下即可銷帳。</p>
+      </div>
+    );
   }
   return (
     <div className="ledger-card overflow-hidden">
@@ -22,12 +30,14 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
             <TableHead>到期日</TableHead>
             <TableHead>收款日期</TableHead>
             <TableHead>狀態</TableHead>
+            <TableHead className="text-right">銷帳</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {invoices.map((inv) => {
             const status = invoiceStatus(inv);
             const late = daysOverdue(inv);
+            const balance = outstanding(inv);
             return (
               <TableRow key={inv.id} className="group">
                 {showCustomer && (
@@ -51,6 +61,17 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
                 </TableCell>
                 <TableCell className="tabular text-sm text-muted-foreground">{formatDate(lastPaidDate(inv))}</TableCell>
                 <TableCell><StatusBadge status={status} /></TableCell>
+                <TableCell className="text-right">
+                  {balance > 0 ? (
+                    <PaymentFormDialog
+                      invoiceId={inv.id}
+                      balance={balance}
+                      trigger={<Button size="sm" variant="outline"><HandCoins /> 登錄收款</Button>}
+                    />
+                  ) : (
+                    <span className="text-xs text-muted-foreground">已收訖</span>
+                  )}
+                </TableCell>
               </TableRow>
             );
           })}
