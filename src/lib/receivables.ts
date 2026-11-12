@@ -7,7 +7,7 @@ export type PaymentLike = { amount: number | string; paid_date: string };
 export type InvoiceLike = {
   amount: number | string;
   issue_date: string;
-  due_date: string;
+  due_date: string | null;
   payments?: PaymentLike[] | null;
 };
 
@@ -38,15 +38,16 @@ export function outstanding(invoice: InvoiceLike): number {
 }
 
 /** Days past the due date (negative = days until due). */
-export function daysOverdue(invoice: InvoiceLike, today: string = todayISO()): number {
+export function daysOverdue(invoice: InvoiceLike, today: string = todayISO()): number | null {
+  if (!invoice.due_date) return null;
   return differenceInCalendarDays(parseISO(today), parseISO(invoice.due_date));
 }
 
 export function invoiceStatus(invoice: InvoiceLike, today: string = todayISO()): InvoiceStatus {
   if (outstanding(invoice) <= 0) return "paid";
   const late = daysOverdue(invoice, today);
-  if (late > 0) return "overdue";
-  if (-late <= DUE_SOON_DAYS) return "due_soon";
+  if (late !== null && late > 0) return "overdue";
+  if (late !== null && -late <= DUE_SOON_DAYS) return "due_soon";
   if (paidTotal(invoice) > 0) return "partial";
   return "unpaid";
 }
@@ -68,7 +69,7 @@ export const AGING_LABEL: Record<AgingBucket, string> = {
 
 export function agingBucket(invoice: InvoiceLike, today: string = todayISO()): AgingBucket {
   const late = daysOverdue(invoice, today);
-  if (late <= 0) return "current";
+  if (late === null || late <= 0) return "current";
   if (late <= 30) return "1-30";
   if (late <= 60) return "31-60";
   if (late <= 90) return "61-90";

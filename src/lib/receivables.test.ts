@@ -71,3 +71,11 @@ describe("ledger conventions", () => {
     expect(itemsTotal({ 記帳費: 5000, 營業稅: 83719, 發票: 140, 結算: 2500 })).toBe(91359);
   });
 });
+
+describe("invoices without a due date", () => {
+  it("are never overdue or due soon", () => {
+    const i = { amount: 1000, issue_date: "2026-01-01", due_date: null, payments: [] };
+    expect(invoiceStatus(i, "2026-12-31")).toBe("unpaid");
+    expect(agingBucket(i, "2026-12-31")).toBe("current");
+  });
+});

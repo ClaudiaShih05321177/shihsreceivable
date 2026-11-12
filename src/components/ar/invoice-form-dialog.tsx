@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { customersQuery, type Invoice } from "@/lib/queries";
-import { addDaysISO, FEE_ITEMS, formatTWD, itemsTotal, rocYear, todayISO, type FeeItems } from "@/lib/receivables";
+import { FEE_ITEMS, formatTWD, itemsTotal, rocYear, todayISO, type FeeItems } from "@/lib/receivables";
 
 const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳", "其他"];
 
@@ -46,7 +46,7 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
     period_label: inv ? inv.period_label ?? "" : suggestPeriod(month),
     invoice_no: inv?.invoice_no ?? "",
     issue_date: inv?.issue_date ?? today,
-    due_date: inv?.due_date ?? addDaysISO(today, 30),
+    due_date: inv?.due_date ?? "",
     notes: inv?.notes ?? "",
     items,
   };
@@ -85,8 +85,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
     mutationFn: async () => {
       if (!form.customer_id) throw new Error("請選擇客戶");
       if (total <= 0) throw new Error("應收帳款金額需大於 0，請填寫費用項目");
-      if (!form.due_date) throw new Error("請選擇到期日");
-      if (form.due_date < form.issue_date) throw new Error("到期日不可早於開立日期");
+      if (form.due_date && form.due_date < form.issue_date) throw new Error("到期日不可早於開立日期");
       const year = Number(form.roc_year) + 1911;
       const payload = {
         customer_id: form.customer_id,
@@ -95,7 +94,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
         period_month: Number(form.month),
         period_label: form.period_label.trim() || null,
         issue_date: form.issue_date,
-        due_date: form.due_date,
+        due_date: form.due_date || null,
         notes: form.notes.trim() || null,
         items: numericItems,
         amount: total,
@@ -187,7 +186,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="i-due">到期日 *</Label>
-                <Input id="i-due" type="date" required value={form.due_date} onChange={(e) => set("due_date")(e.target.value)} />
+                <Input id="i-due" type="date" value={form.due_date} onChange={(e) => set("due_date")(e.target.value)} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="i-no">單號</Label>

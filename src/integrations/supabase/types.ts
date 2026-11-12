@@ -84,7 +84,7 @@ export type Database = {
           created_by: string | null
           customer_id: string
           description: string | null
-          due_date: string
+          due_date: string | null
           id: string
           invoice_no: string
           issue_date: string
@@ -101,7 +101,7 @@ export type Database = {
           created_by?: string | null
           customer_id: string
           description?: string | null
-          due_date: string
+          due_date?: string | null
           id?: string
           invoice_no?: string
           issue_date?: string
@@ -118,7 +118,7 @@ export type Database = {
           created_by?: string | null
           customer_id?: string
           description?: string | null
-          due_date?: string
+          due_date?: string | null
           id?: string
           invoice_no?: string
           issue_date?: string

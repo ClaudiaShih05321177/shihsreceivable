@@ -37,7 +37,7 @@ function Dashboard() {
   const { data: me } = useSuspenseQuery(meQuery);
   const today = todayISO();
   const open = invoices.filter((i) => outstanding(i) > 0);
-  const overdue = open.filter((i) => invoiceStatus(i, today) === "overdue").sort((a, b) => a.due_date.localeCompare(b.due_date));
+  const overdue = open.filter((i) => invoiceStatus(i, today) === "overdue").sort((a, b) => (a.due_date ?? "").localeCompare(b.due_date ?? ""));
   const dueSoon = open.filter((i) => invoiceStatus(i, today) === "due_soon");
   const sum = (list: typeof invoices) => list.reduce((s, i) => s + outstanding(i), 0);
   const month = today.slice(0, 7);
