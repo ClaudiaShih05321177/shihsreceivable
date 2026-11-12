@@ -110,7 +110,69 @@ export function formatTWD(value: number | string): string {
   return `NT$ ${twd.format(Number(value))}`;
 }
 
+/** Show a YYYY-MM-DD date in ROC (民國) form, e.g. 2026-01-15 → 115/1/15. */
 export function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
-  return format(parseISO(value), "yyyy/MM/dd");
+  const [y, m, d] = value.slice(0, 10).split("-").map(Number);
+  return `${y - 1911}/${m}/${d}`;
+}
+
+export function rocYear(year: number): number {
+  return year - 1911;
+}
+
+/** Fee line items, in the order of the user's ledger (總帳). */
+export const FEE_ITEMS = [
+  "記帳費",
+  "營業稅",
+  "發票",
+  "文具",
+  "結算",
+  "工商",
+  "22-1申報",
+  "印章",
+  "印花稅",
+  "2代A-B",
+  "2代-4X獎金",
+  "租金2代",
+  "個人2代",
+  "員工酬勞2代",
+  "租金扣繳",
+  "薪資扣繳",
+  "勞務扣繳",
+  "其他扣繳",
+  "財稅簽證",
+  "營所稅",
+  "未加徵",
+  "暫繳",
+  "股利2代",
+  "年度加收",
+  "匯費",
+  "前期餘額",
+  "其他",
+] as const;
+export type FeeItem = (typeof FEE_ITEMS)[number];
+export type FeeItems = Partial<Record<string, number>>;
+
+export const PAYMENT_METHODS = ["匯款", "現金", "支票", "代墊"] as const;
+export const BILLING_TYPES = ["期收", "年收"] as const;
+
+/** 應收帳款 for a billing row = sum of its fee items. */
+export function itemsTotal(items: FeeItems | null | undefined): number {
+  return Object.values(items ?? {}).reduce<number>((sum, v) => sum + (Number(v) || 0), 0);
+}
+
+/** Non-zero fee items in ledger order. */
+export function itemEntries(items: FeeItems | null | undefined): { name: string; amount: number }[] {
+  const src = items ?? {};
+  const known = FEE_ITEMS.filter((k) => Number(src[k]) ? true : false).map((k) => ({ name: k, amount: Number(src[k]) }));
+  const extra = Object.keys(src)
+    .filter((k) => !(FEE_ITEMS as readonly string[]).includes(k) && Number(src[k]))
+    .map((k) => ({ name: k, amount: Number(src[k]) }));
+  return [...known, ...extra];
+}
+
+/** Label for 月份: 0 or null means 前期 (carried from last year). */
+export function periodMonthLabel(month: number | null | undefined): string {
+  return !month ? "前期" : `${month}月`;
 }

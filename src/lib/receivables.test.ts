@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agingBucket, invoiceStatus, monthlySeries, outstanding } from "./receivables";
+import { agingBucket, formatDate, invoiceStatus, itemsTotal, monthlySeries, outstanding } from "./receivables";
 
 const today = "2026-11-12";
 const inv = (due_date: string, amount: number, paid: number[] = []) => ({
@@ -59,5 +59,15 @@ describe("monthly series", () => {
       { month: "2026-10", label: "10月", billed: 8000, collected: 0 },
       { month: "2026-11", label: "11月", billed: 0, collected: 3000 },
     ]);
+  });
+});
+
+describe("ledger conventions", () => {
+  it("shows dates in ROC year form", () => {
+    expect(formatDate("2026-01-15")).toBe("115/1/15");
+  });
+
+  it("totals a billing row from its fee items", () => {
+    expect(itemsTotal({ 記帳費: 5000, 營業稅: 83719, 發票: 140, 結算: 2500 })).toBe(91359);
   });
 });

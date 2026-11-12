@@ -17,40 +17,61 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          billing_type: string
+          bookkeeping_fee: number
           contact_person: string | null
           created_at: string
           created_by: string | null
+          customer_code: string | null
           email: string | null
           id: string
           name: string
           notes: string | null
           phone: string | null
+          settlement_fee: number
+          staff_code: string | null
+          stationery_fee: number
+          suspended_period: string | null
           tax_id: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          billing_type?: string
+          bookkeeping_fee?: number
           contact_person?: string | null
           created_at?: string
           created_by?: string | null
+          customer_code?: string | null
           email?: string | null
           id?: string
           name: string
           notes?: string | null
           phone?: string | null
+          settlement_fee?: number
+          staff_code?: string | null
+          stationery_fee?: number
+          suspended_period?: string | null
           tax_id?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          billing_type?: string
+          bookkeeping_fee?: number
           contact_person?: string | null
           created_at?: string
           created_by?: string | null
+          customer_code?: string | null
           email?: string | null
           id?: string
           name?: string
           notes?: string | null
           phone?: string | null
+          settlement_fee?: number
+          staff_code?: string | null
+          stationery_fee?: number
+          suspended_period?: string | null
           tax_id?: string | null
           updated_at?: string
         }
@@ -67,7 +88,11 @@ export type Database = {
           id: string
           invoice_no: string
           issue_date: string
+          items: Json
           notes: string | null
+          period_label: string | null
+          period_month: number | null
+          period_year: number | null
           updated_at: string
         }
         Insert: {
@@ -78,9 +103,13 @@ export type Database = {
           description?: string | null
           due_date: string
           id?: string
-          invoice_no: string
+          invoice_no?: string
           issue_date?: string
+          items?: Json
           notes?: string | null
+          period_label?: string | null
+          period_month?: number | null
+          period_year?: number | null
           updated_at?: string
         }
         Update: {
@@ -93,7 +122,11 @@ export type Database = {
           id?: string
           invoice_no?: string
           issue_date?: string
+          items?: Json
           notes?: string | null
+          period_label?: string | null
+          period_month?: number | null
+          period_year?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -116,6 +149,7 @@ export type Database = {
           method: string | null
           notes: string | null
           paid_date: string
+          posted_date: string | null
         }
         Insert: {
           amount: number
@@ -126,6 +160,7 @@ export type Database = {
           method?: string | null
           notes?: string | null
           paid_date?: string
+          posted_date?: string | null
         }
         Update: {
           amount?: number
@@ -136,6 +171,7 @@ export type Database = {
           method?: string | null
           notes?: string | null
           paid_date?: string
+          posted_date?: string | null
         }
         Relationships: [
           {

@@ -1,0 +1,131 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { toast } from "sonner";
+
+import { PageHeader } from "@/components/ar/page-header";
+import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { meQuery, teamQuery, type AppRole } from "@/lib/queries";
+import { formatDate } from "@/lib/receivables";
+
+export const Route = createFileRoute("/_authenticated/_shell/team")({
+  head: () => ({
+    meta: [
+      { title: "團隊成員 · 帳房" },
+      { name: "description", content: "管理可使用應收帳款系統的團隊成員，核准新成員加入。" },
+      { property: "og:title", content: "團隊成員 · 帳房" },
+      { property: "og:description", content: "管理可使用應收帳款系統的團隊成員，核准新成員加入。" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(teamQuery),
+  component: TeamPage,
+});
+
+function TeamPage() {
+  const { data: team } = useSuspenseQuery(teamQuery);
+  const { data: me } = useSuspenseQuery(meQuery);
+  const qc = useQueryClient();
+
+  const grant = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: AppRole }) => {
+      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("已更新權限");
+      qc.invalidateQueries({ queryKey: ["team"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "更新失敗"),
+  });
+
+  const revoke = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role?: AppRole }) => {
+      let q = supabase.from("user_roles").delete().eq("user_id", userId);
+      if (role) q = q.eq("role", role);
+      const { error } = await q;
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("已更新權限");
+      qc.invalidateQueries({ queryKey: ["team"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "更新失敗"),
+  });
+
+  const pending = team.filter((m) => m.roles.length === 0);
+  const members = team.filter((m) => m.roles.length > 0);
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="權限"
+        title="團隊成員"
+        description={me.isAdmin ? "新成員註冊後，需由管理員核准才能查看帳款。" : "只有管理員可以核准或移除成員。"}
+      />
+      {pending.length > 0 && (
+        <section className="mb-8">
+          <h2 className="mb-3 text-lg font-bold">待核准 <span className="tabular text-sm text-muted-foreground">{pending.length}</span></h2>
+          <div className="ledger-card divide-y divide-border border-warning/50">
+            {pending.map((m) => (
+              <div key={m.id} className="flex flex-wrap items-center gap-3 p-4">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">{m.display_name}</p>
+                  <p className="text-xs text-muted-foreground">{m.email} · 註冊於 {formatDate(m.created_at.slice(0, 10))}</p>
+                </div>
+                {me.isAdmin && (
+                  <Button size="sm" onClick={() => grant.mutate({ userId: m.id, role: "member" })} disabled={grant.isPending}>
+                    核准加入
+                  </Button>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      <section>
+        <h2 className="mb-3 text-lg font-bold">成員 <span className="tabular text-sm text-muted-foreground">{members.length}</span></h2>
+        <div className="ledger-card divide-y divide-border">
+          {members.map((m) => {
+            const isAdmin = m.roles.includes("admin");
+            const isSelf = m.id === me.id;
+            return (
+              <div key={m.id} className="flex flex-wrap items-center gap-3 p-4">
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium">
+                    {m.display_name}
+                    {isSelf && <span className="ml-2 text-xs text-muted-foreground">（您）</span>}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{m.email}</p>
+                </div>
+                <span className={`rounded-full px-2.5 py-0.5 text-xs ${isAdmin ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
+                  {isAdmin ? "管理員" : "成員"}
+                </span>
+                {me.isAdmin && !isSelf && (
+                  <div className="flex gap-1">
+                    {isAdmin ? (
+                      <Button size="sm" variant="ghost" onClick={() => revoke.mutate({ userId: m.id, role: "admin" })}>取消管理員</Button>
+                    ) : (
+                      <Button size="sm" variant="ghost" onClick={() => grant.mutate({ userId: m.id, role: "admin" })}>設為管理員</Button>
+                    )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => {
+                        if (confirm(`移除 ${m.display_name} 的使用權限？`)) revoke.mutate({ userId: m.id });
+                      }}
+                    >
+                      移除
+                    </Button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+    </>
+  );
+}
