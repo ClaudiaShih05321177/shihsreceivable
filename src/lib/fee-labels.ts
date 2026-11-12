@@ -17,7 +17,6 @@ export const DEFAULT_FEE_LABELS: Record<string, string> = {
   印章: "租金扣繳",
   印花稅: "薪資扣繳",
   "2代A-B": "勞務扣繳",
-  "2代-4X獎金": "",
 };
 
 export function feeLabelMap(rows: readonly FeeLabelRow[]): FeeLabelMap {
