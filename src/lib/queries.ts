@@ -48,12 +48,19 @@ export const customersQuery = queryOptions({
 export const invoicesQuery = queryOptions({
   queryKey: ["invoices"],
   queryFn: async () => {
-    const { data, error } = await supabase
-      .from("invoices")
-      .select(INVOICE_SELECT)
-      .order("due_date", { ascending: true });
-    if (error) throw error;
-    return data as unknown as Invoice[];
+    // The backend returns at most 1000 rows per request, so read in pages.
+    const all: Invoice[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select(INVOICE_SELECT)
+        .order("due_date", { ascending: true, nullsFirst: false })
+        .order("id")
+        .range(from, from + 999);
+      if (error) throw error;
+      all.push(...(data as unknown as Invoice[]));
+      if (data.length < 1000) return all;
+    }
   },
 });
 
