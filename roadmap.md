@@ -15,3 +15,4 @@
 - [x] Clear all receivables + payments, keep the 416 clients (user request)
 - [ ] (Open, needs user) 「我要重新安排」— ask what the user wants to rearrange
 - [x] Revised permissions enforced in UI and RLS: only admins settle, edit/delete and manage accounts; members view and create receivables. Permission tests passed; admin create/payment/delete/sign-out flow verified. No ordinary-user account available for a signed-in browser check.
+- [x] Sort by 月份/期別: clickable column header on the receivables list and the tax detail page (由新到舊 → 由舊到新 → 回復原序), comparator tested in receivables.test.ts; verified in the signed-in UI with temporary rows that were then deleted.

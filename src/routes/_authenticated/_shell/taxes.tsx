@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -10,7 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { invoicesQuery, meQuery, taxFilingsQuery } from "@/lib/queries";
-import { formatDate, periodMonthLabel, rocYear, TAX_GROUPS, taxLines, taxSummary, todayISO, type FeeItems } from "@/lib/receivables";
+import { comparePeriod, formatDate, periodMonthLabel, rocYear, TAX_GROUPS, taxLines, taxSummary, todayISO, type FeeItems, type SortDirection } from "@/lib/receivables";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_shell/taxes")({
   head: () => ({
@@ -37,6 +39,7 @@ function TaxesPage() {
   const qc = useQueryClient();
   const [group, setGroup] = useState("all");
   const [status, setStatus] = useState("all");
+  const [sort, setSort] = useState<SortDirection | null>(null);
 
   const periods = useMemo(() => {
     const m = new Map<string, { key: string; label: string; sort: number }>();
@@ -68,6 +71,10 @@ function TaxesPage() {
   const shown = lines.filter(
     (l) => (group === "all" || l.group === group) && (status === "all" || (status === "paid" ? l.paid : !l.paid)),
   );
+  /** 期別排序：未排序 → 由新到舊 → 由舊到新。 */
+  const ordered = sort
+    ? [...shown].sort((a, b) => (sort === "desc" ? -1 : 1) * comparePeriod(a.inv, b.inv))
+    : shown;
 
   const save = useMutation({
     mutationFn: async (v: { invoice_id: string; item: string; paid: boolean; paid_date: string | null }) => {
@@ -133,7 +140,20 @@ function TaxesPage() {
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
                 <TableHead>客戶名稱</TableHead>
-                <TableHead>期別</TableHead>
+                <TableHead>
+                  <button
+                    type="button"
+                    onClick={() => setSort((s) => (s === null ? "desc" : s === "desc" ? "asc" : null))}
+                    aria-label="依期別排序"
+                    className={cn(
+                      "-ml-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm font-medium transition-colors hover:bg-accent",
+                      sort ? "text-primary" : "text-foreground",
+                    )}
+                  >
+                    期別
+                    {sort === "asc" ? <ArrowUp className="size-3.5" /> : sort === "desc" ? <ArrowDown className="size-3.5" /> : <ArrowUpDown className="size-3.5 opacity-40" />}
+                  </button>
+                </TableHead>
                 <TableHead>稅目</TableHead>
                 <TableHead>項目</TableHead>
                 <TableHead className="text-right">稅額</TableHead>
@@ -142,12 +162,12 @@ function TaxesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {shown.map((l) => (
+              {ordered.map((l) => (
                 <TableRow key={`${l.inv.id}-${l.item}`}>
                   <TableCell className="font-medium">
                     <Link to="/invoices/$id" params={{ id: l.inv.id }} className="hover:text-primary hover:underline">{l.inv.customer?.name ?? "—"}</Link>
                   </TableCell>
-                  <TableCell className="text-sm">{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</TableCell>
+                  <TableCell className="text-sm">{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</TableCell>
                   <TableCell className="text-sm">{l.group}</TableCell>
                   <TableCell className="text-sm">{l.item}</TableCell>
                   <TableCell className="text-right"><Money value={l.amount} /></TableCell>

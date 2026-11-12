@@ -215,6 +215,31 @@ export function periodMonthLabel(month: number | null | undefined): string {
   return !month ? "前期" : `${month}月`;
 }
 
+const periodCollator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: "base" });
+
+export type PeriodSortable = {
+  period_year: number | null;
+  period_month: number | null;
+  period_label: string | null;
+};
+
+/** 期間先后：年 → 月（前期排在該年 1 月之前）→ 期別。 */
+export function comparePeriod(a: PeriodSortable, b: PeriodSortable): number {
+  const byYear = (a.period_year ?? 0) - (b.period_year ?? 0);
+  if (byYear !== 0) return byYear;
+  const byMonth = (a.period_month ?? 0) - (b.period_month ?? 0);
+  if (byMonth !== 0) return byMonth;
+  return periodCollator.compare(a.period_label ?? "", b.period_label ?? "");
+}
+
+export type SortDirection = "asc" | "desc";
+
+/** 依月份/期別排序（回傳新陣列，不影響原本順序）。 */
+export function sortByPeriod<T extends PeriodSortable>(rows: readonly T[], direction: SortDirection = "asc"): T[] {
+  const dir = direction === "desc" ? -1 : 1;
+  return [...rows].sort((a, b) => dir * comparePeriod(a, b));
+}
+
 /** Tax categories shown on the 稅額明細 page, each grouping fee items. */
 export const TAX_GROUPS = [
   { key: "vat", label: "營業稅", items: ["營業稅"] },

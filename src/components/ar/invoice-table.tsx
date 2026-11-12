@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { HandCoins } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, HandCoins } from "lucide-react";
+import { useState } from "react";
 
 import { PaymentFormDialog } from "@/components/ar/payment-form-dialog";
 import { Button } from "@/components/ui/button";
@@ -8,10 +9,29 @@ import { StatusBadge } from "@/components/ar/status-badge";
 import { Money } from "@/components/ar/page-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { meQuery, type Invoice } from "@/lib/queries";
-import { daysOverdue, formatDate, invoiceStatus, lastPaidDate, outstanding, periodMonthLabel, rocYear } from "@/lib/receivables";
+import {
+  daysOverdue,
+  formatDate,
+  invoiceStatus,
+  lastPaidDate,
+  outstanding,
+  periodMonthLabel,
+  rocYear,
+  sortByPeriod,
+  type SortDirection,
+} from "@/lib/receivables";
+import { cn } from "@/lib/utils";
+
+/** 月份/期別的排序狀態：未排序 → 由新到舊 → 由舊到新。 */
+type PeriodSort = SortDirection | null;
+
+const nextSort = (s: PeriodSort): PeriodSort => (s === null ? "desc" : s === "desc" ? "asc" : null);
 
 export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invoice[]; showCustomer?: boolean }) {
   const { data: me } = useSuspenseQuery(meQuery);
+  const [sort, setSort] = useState<PeriodSort>(null);
+  const rows = sort ? sortByPeriod(invoices, sort) : invoices;
+
   if (invoices.length === 0) {
     return (
       <div className="ledger-card ledger-lines px-6 py-16 text-center text-sm text-muted-foreground">
@@ -25,7 +45,20 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
         <TableHeader>
           <TableRow className="bg-muted/60 hover:bg-muted/60">
             {showCustomer && <TableHead>客戶名稱</TableHead>}
-            <TableHead>月份 / 期別</TableHead>
+            <TableHead>
+              <button
+                type="button"
+                onClick={() => setSort(nextSort)}
+                aria-label="依月份/期別排序"
+                className={cn(
+                  "-ml-1.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-sm font-medium transition-colors hover:bg-accent",
+                  sort ? "text-primary" : "text-foreground",
+                )}
+              >
+                月份 / 期別
+                {sort === "asc" ? <ArrowUp className="size-3.5" /> : sort === "desc" ? <ArrowDown className="size-3.5" /> : <ArrowUpDown className="size-3.5 opacity-40" />}
+              </button>
+            </TableHead>
             <TableHead className="text-right">應收帳款</TableHead>
             <TableHead className="text-right">應收餘額</TableHead>
             <TableHead>到期日</TableHead>
@@ -35,7 +68,7 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
           </TableRow>
         </TableHeader>
         <TableBody>
-          {invoices.map((inv) => {
+          {rows.map((inv) => {
             const status = invoiceStatus(inv);
             const late = daysOverdue(inv);
             const balance = outstanding(inv);

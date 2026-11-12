@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agingBucket, applyScheduledFees, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, itemsTotal, monthlySeries, outstanding, scheduledCustomerFees, suggestPeriod } from "./receivables";
+import { agingBucket, applyScheduledFees, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, itemsTotal, monthlySeries, outstanding, scheduledCustomerFees, sortByPeriod, suggestPeriod } from "./receivables";
 
 const today = "2026-11-12";
 const inv = (due_date: string, amount: number, paid: number[] = []) => ({
@@ -108,5 +108,35 @@ describe("scheduled customer fees", () => {
   });
   it("moves automatic amounts with the month but keeps manual amounts", () => {
     expect(applyScheduledFees({ 記帳費: "6000", 文具: "500", 結算: "900" }, scheduledCustomerFees(customer, 11), scheduledCustomerFees(customer, 1))).toEqual({ 記帳費: "6000", 文具: "", 結算: "900" });
+  });
+});
+
+describe("月份/期別 排序", () => {
+  const p = (period_year: number | null, period_month: number | null, period_label: string | null = null, name = "") => ({ period_year, period_month, period_label, name });
+
+  it("依年份、月份排序，前期排在該年 1 月之前", () => {
+    const sorted = sortByPeriod([
+      p(2026, 2, "1-2", "115/2月"),
+      p(2026, 0, null, "115前期"),
+      p(2025, 12, "11-12", "114/12月"),
+      p(2026, 1, "11-12", "115/1月"),
+    ]);
+    expect(sorted.map((r) => r.name)).toEqual(["114/12月", "115前期", "115/1月", "115/2月"]);
+  });
+
+  it("desc 由新到舊", () => {
+    const sorted = sortByPeriod([p(2025, 12, "11-12", "a"), p(2026, 1, "11-12", "b"), p(2026, 3, "1-2", "c")], "desc");
+    expect(sorted.map((r) => r.name)).toEqual(["c", "b", "a"]);
+  });
+
+  it("同月份依期別排序", () => {
+    const sorted = sortByPeriod([p(2026, 3, "5-6", "後"), p(2026, 3, "1-2", "前")]);
+    expect(sorted.map((r) => r.name)).toEqual(["前", "後"]);
+  });
+
+  it("不改變原本陣列的順序", () => {
+    const rows = [p(2026, 3, null, "c"), p(2025, 1, null, "a")];
+    sortByPeriod(rows);
+    expect(rows.map((r) => r.name)).toEqual(["c", "a"]);
   });
 });
