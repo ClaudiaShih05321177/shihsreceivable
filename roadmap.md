@@ -6,7 +6,8 @@
 - [x] Pages: dashboard (overdue reminders, charts), receivables list + detail, customers list + detail, team approvals
 - [x] ROC date display (115/1/15)
 - [x] Verify end-to-end in browser, commit
-- [ ] (Open, needs user) Import existing rows from 應收帳款Sample.xlsx — sample names are blanked ("0"); waiting for real data / confirmation
-- [ ] (Open, needs user) Confirm default due-date rule (currently 開立日期 + 30 天)
+- [x] Due date optional, no default (user: 不用預設到期日)
 - [x] Import 115應收帳款.xlsx (客戶資料 + 總帳); due dates left blank per user
 - [ ] In-app Excel import button (not yet requested to build)
+- [ ] Clear all receivables + payments, keep the 416 clients (user request)
+- [ ] (Open, needs user) 「我要重新安排」— ask what the user wants to rearrange
