@@ -12,7 +12,7 @@ export const OFFICE = {
   note: "PS：自即日起因銀行交換票據需3天兌現，如用票據支付，票據日期請開繳費日三天前的日期，以免耽誤到您繳稅的時間，或用現金支付或匯款，謝謝！",
 };
 
-type CustomerLike = { id: string; bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string };
+type CustomerLike = { id: string; billing_type?: string | null; bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string };
 type InvoiceLike = { id: string; customer_id: string; period_year: number | null; period_month: number | null; period_label: string | null; amount: number | string; payments?: { amount: number | string }[] | null };
 
 /** 一鍵立帳：為該收款月份尚無帳款、且排定費用大於 0 的客戶產生帳款草稿。 */

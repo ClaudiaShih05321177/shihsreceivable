@@ -100,6 +100,12 @@ describe("bimonthly bookkeeping collection", () => {
 
 describe("scheduled customer fees", () => {
   const customer = { bookkeeping_fee: 3000, stationery_fee: 500, settlement_fee: 2000 };
+  it("never prefills bookkeeping for annual customers in any month", () => {
+    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees({ ...customer, billing_type: "年收" }, i + 1)["記帳費"])).toEqual(Array(12).fill(0));
+  });
+  it("keeps bimonthly bookkeeping for period customers", () => {
+    expect(scheduledCustomerFees({ ...customer, billing_type: "期收" }, 11)["記帳費"]).toBe(6000);
+  });
   it("charges stationery in November only", () => {
     expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["暫繳"])).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0]);
   });

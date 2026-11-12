@@ -5,6 +5,12 @@ const c = (id: string, fee: number) => ({ id, bookkeeping_fee: fee, stationery_f
 const inv = (id: string, customer_id: string, m: number, amount: number, paid = 0) => ({ id, customer_id, period_year: 2026, period_month: m, period_label: null, amount, payments: paid ? [{ amount: paid }] : [] });
 
 describe("batchInvoiceDrafts", () => {
+  it("does not bill annual bookkeeping but retains scheduled stationery and settlement", () => {
+    const annual = { ...c("annual", 30000), billing_type: "年收" };
+    expect(batchInvoiceDrafts([annual], [], 2026, 3)).toEqual([]);
+    expect(batchInvoiceDrafts([annual], [], 2026, 11)[0]?.items).toEqual({ 暫繳: 2500 });
+    expect(batchInvoiceDrafts([annual], [], 2026, 1)[0]?.items).toEqual({ 股利2代: 6000 });
+  });
   it("creates 記帳費×2 + 文具 in November and skips customers already billed or with no fee", () => {
     const d = batchInvoiceDrafts([c("a", 2500), c("b", 3000), { id: "z", bookkeeping_fee: 0, stationery_fee: 0, settlement_fee: 0 }], [inv("x", "b", 11, 1)], 2026, 11);
     expect(d).toEqual([{ customer_id: "a", period_year: 2026, period_month: 11, period_label: "9-10", items: { 記帳費: 5000, 暫繳: 2500 }, amount: 7500 }]);
