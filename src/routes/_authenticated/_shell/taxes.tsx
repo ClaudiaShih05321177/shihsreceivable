@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/_shell/taxes")({
   head: () => ({
     meta: [
       { title: "稅額明細 · 帳房" },
-      { name: "description", content: "每一期營業稅、營所稅、暫繳、扣繳與二代健保的明細、合計與繳費狀態。" },
+      { name: "description", content: "每一期營業稅、營所稅、暫繳、扣繳、二代健保與股利二代的明細、合計與繳費狀態。" },
       { property: "og:title", content: "稅額明細 · 帳房" },
       { property: "og:description", content: "每一期稅額明細、合計與繳費狀態。" },
       { property: "og:type", content: "website" },
@@ -90,7 +90,7 @@ function TaxesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳與二代健保，勾選已繳費並填寫繳費日期。" />
+      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期。" />
 
       <div className="flex flex-wrap gap-3">
         <Select value={period} onValueChange={setPeriod}>
