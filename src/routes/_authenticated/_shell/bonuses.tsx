@@ -51,14 +51,14 @@ function BonusLedger() {
       <div className="ledger-card p-4"><p className="text-sm text-muted-foreground">獎金總額</p><Money value={selected.reduce((s,g) => s+g.bonus,0)} className="text-2xl font-semibold text-primary" /></div>
     </div>
     <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
-      <li>記帳費獎金＝（記帳費合計－200,000）× 30%；年收客戶每期以年記帳費 ÷ 6 計入。</li>
+      <li>記帳費獎金＝（記帳費合計－200,000）× 30%；年收客戶每期以記帳費 ÷ 6、半年收客戶每期以（記帳費 × 6）÷ 3 計入。</li>
       <li>結算費獎金：1月為（結算費合計－100,000）× 30%；其他月份直接 × 30%。</li>
       <li>年度加收獎金＝特殊客戶 × 自訂%＋其他客戶 × 30%。</li>
     </ul>
     {selected.map((g) => <section key={g.code} className="space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 className="font-display text-xl">{g.code}</h2><p className="text-sm">獎金總額 <Money value={g.bonus} className="font-semibold text-primary" /></p></div>
       <div className="overflow-x-auto border border-border rounded-md"><Table><TableHeader><TableRow><TableHead>公司名稱</TableHead><TableHead className="text-right">記帳費</TableHead><TableHead className="text-right">結算費</TableHead><TableHead className="text-right">年度加收</TableHead><TableHead className="text-right">應收餘額</TableHead></TableRow></TableHeader><TableBody>
-        {g.rows.map((r) => <TableRow key={r.key}><TableCell className="whitespace-nowrap">{r.customer_code} · {r.customer_name}{r.annual && <span className="ml-1 text-xs text-muted-foreground">（年收 1/6）</span>}{r.rate != null && <span className="ml-1 text-xs text-primary">（加收 {r.rate}%）</span>}</TableCell>{[r.bookkeeping,r.settlement,r.annualExtra,r.balance].map((amount,i) => <TableCell key={i} className="text-right whitespace-nowrap"><Money value={Math.round(amount)} /></TableCell>)}</TableRow>)}
+        {g.rows.map((r) => <TableRow key={r.key}><TableCell className="whitespace-nowrap">{r.customer_code} · {r.customer_name}{r.annual && <span className="ml-1 text-xs text-muted-foreground">（{r.shareLabel}）</span>}{r.rate != null && <span className="ml-1 text-xs text-primary">（加收 {r.rate}%）</span>}</TableCell>{[r.bookkeeping,r.settlement,r.annualExtra,r.balance].map((amount,i) => <TableCell key={i} className="text-right whitespace-nowrap"><Money value={Math.round(amount)} /></TableCell>)}</TableRow>)}
         {!g.rows.length && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">本期無帳款</TableCell></TableRow>}
         {!!g.rows.length && <>
           <TableRow className="font-semibold"><TableCell>合計</TableCell>{[g.total,g.settlement,g.annualExtra,g.balance].map((a,i) => <TableCell key={i} className="text-right"><Money value={Math.round(a)} /></TableCell>)}</TableRow>

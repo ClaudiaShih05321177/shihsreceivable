@@ -24,11 +24,19 @@ export function annualExtraBonus(lines: { amount: number; rate: number | null }[
   return Math.round(lines.reduce((s, l) => s + l.amount * (l.rate == null ? BONUS_RATE : l.rate / 100), 0));
 }
 
-export type BonusLine = { key: string; customer_code: string | null; customer_name: string; annual: boolean; bookkeeping: number; settlement: number; annualExtra: number; rate: number | null; balance: number };
+export type BonusLine = { key: string; customer_code: string | null; customer_name: string; annual: boolean; bookkeeping: number; settlement: number; annualExtra: number; rate: number | null; balance: number; shareLabel?: string };
 
 const num = (v: unknown) => Number(v) || 0;
 const code = (s: string | null | undefined) => s?.trim() || "未指定";
 const before = (r: BonusRow, year: number, month: number) => (r.period_year ?? 0) < year || ((r.period_year ?? 0) === year && (r.period_month ?? 0) <= month);
+
+/** 每期分攤的記帳費：年收＝記帳費 ÷ 6；半年收＝（記帳費 × 6）÷ 3；其他回傳 null（依實際立帳）。 */
+export function periodShare(c?: Pick<BonusCustomer, "billing_type" | "bookkeeping_fee">): number | null {
+  if (!c) return null;
+  if (c.billing_type === "年收") return num(c.bookkeeping_fee) / 6;
+  if (c.billing_type === "半年收") return (num(c.bookkeeping_fee) * 6) / 3;
+  return null;
+}
 
 export function bonusGroups(data: BonusData, year: number, month: number) {
   const customers = new Map((data.customers ?? []).map((c) => [c.id, c]));
@@ -38,17 +46,18 @@ export function bonusGroups(data: BonusData, year: number, month: number) {
     if (!l) { l = { ...base, key, bookkeeping: 0, settlement: 0, annualExtra: 0, balance: 0 }; lines.set(key, l); }
     return l;
   };
-  // 年收客戶：每期固定分攤年記帳費 ÷ 6（不論是否已立帳）。
+  // 年收／半年收客戶：每期固定分攤記帳費（不論是否已立帳）。
   for (const c of customers.values()) {
-    if (c.billing_type !== "年收" || !num(c.bookkeeping_fee)) continue;
-    lineFor(c.id, { staff: code(c.staff_code), customer_code: c.customer_code, customer_name: c.name, annual: true, rate: c.annual_extra_rate }).bookkeeping = num(c.bookkeeping_fee) / 6;
+    const share = periodShare(c);
+    if (share == null || !share) continue;
+    lineFor(c.id, { staff: code(c.staff_code), customer_code: c.customer_code, customer_name: c.name, annual: true, rate: c.annual_extra_rate, shareLabel: c.billing_type === "年收" ? "年收 1/6" : "半年收 1/3" }).bookkeeping = share;
   }
   for (const r of data.rows) {
     const c = r.customer_id ? customers.get(r.customer_id) : undefined;
     const key = r.customer_id ?? r.id;
     const inPeriod = r.period_year === year && r.period_month === month;
     if (!inPeriod && !(lines.has(key) && before(r, year, month))) continue;
-    const l = lineFor(key, { staff: code(c?.staff_code ?? r.staff_code), customer_code: r.customer_code, customer_name: r.customer_name, annual: c?.billing_type === "年收", rate: c?.annual_extra_rate ?? null });
+    const l = lineFor(key, { staff: code(c?.staff_code ?? r.staff_code), customer_code: r.customer_code, customer_name: r.customer_name, annual: periodShare(c) != null, rate: c?.annual_extra_rate ?? null });
     if (!inPeriod) continue;
     if (!l.annual) l.bookkeeping += num(r.items?.["記帳費"]);
     l.settlement += num(r.items?.[SETTLEMENT_KEY]);

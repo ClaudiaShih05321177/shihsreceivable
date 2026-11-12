@@ -28,4 +28,9 @@ describe("bookkeeper bonuses", () => {
     expect(g?.total).toBe(250000);
     expect(g?.bonus).toBe(15000);
   });
+  it("half-year customers count (fee × 6) ÷ 3 every period, invoice fee not double counted", () => {
+    const d = { staff: ["AC"], customers: [cust({ billing_type: "半年收", bookkeeping_fee: 3000 })], rows: [row({ items: { 記帳費: 18000 } })] };
+    expect(bonusGroups(d, 2026, 9)[0]?.total).toBe(6000);
+    expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(6000);
+  });
 });
