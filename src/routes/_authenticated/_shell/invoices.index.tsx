@@ -43,7 +43,7 @@ function InvoicesPage() {
   const staffCodes = [...new Set(customers.map((c) => c.staff_code).filter(Boolean))].sort() as string[];
 
   const counts = useMemo(() => {
-    const c: Record<string, number> = { all: invoices.length, open: 0 };
+    const c: Record<string, number> & { open: number } = { all: invoices.length, open: 0 };
     for (const inv of invoices) {
       const s = invoiceStatus(inv);
       c[s] = (c[s] ?? 0) + 1;

@@ -53,7 +53,7 @@ export function invoiceStatus(invoice: InvoiceLike, today: string = todayISO()):
 
 export function lastPaidDate(invoice: InvoiceLike): string | null {
   const dates = (invoice.payments ?? []).map((p) => p.paid_date).sort();
-  return dates.length ? dates[dates.length - 1] : null;
+  return dates.at(-1) ?? null;
 }
 
 export type AgingBucket = "current" | "1-30" | "31-60" | "61-90" | "90+";
@@ -113,7 +113,7 @@ export function formatTWD(value: number | string): string {
 /** Show a YYYY-MM-DD date in ROC (民國) form, e.g. 2026-01-15 → 115/1/15. */
 export function formatDate(value: string | null | undefined): string {
   if (!value) return "—";
-  const [y, m, d] = value.slice(0, 10).split("-").map(Number);
+  const [y = 0, m = 0, d = 0] = value.slice(0, 10).split("-").map(Number);
   return `${y - 1911}/${m}/${d}`;
 }
 

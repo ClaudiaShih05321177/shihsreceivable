@@ -54,6 +54,23 @@ function TeamPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "更新失敗"),
   });
 
+  const demote = useMutation({
+    mutationFn: async (userId: string) => {
+      const row = team.find((m) => m.id === userId);
+      if (row && !row.roles.includes("member")) {
+        const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: "member" });
+        if (error) throw error;
+      }
+      const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role", "admin");
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("已更新權限");
+      qc.invalidateQueries({ queryKey: ["team"] });
+    },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "更新失敗"),
+  });
+
   const pending = team.filter((m) => m.roles.length === 0);
   const members = team.filter((m) => m.roles.length > 0);
 
@@ -105,7 +122,7 @@ function TeamPage() {
                 {me.isAdmin && !isSelf && (
                   <div className="flex gap-1">
                     {isAdmin ? (
-                      <Button size="sm" variant="ghost" onClick={() => revoke.mutate({ userId: m.id, role: "admin" })}>取消管理員</Button>
+                      <Button size="sm" variant="ghost" onClick={() => demote.mutate(m.id)}>取消管理員</Button>
                     ) : (
                       <Button size="sm" variant="ghost" onClick={() => grant.mutate({ userId: m.id, role: "admin" })}>設為管理員</Button>
                     )}

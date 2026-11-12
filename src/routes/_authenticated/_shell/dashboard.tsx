@@ -56,7 +56,7 @@ function Dashboard() {
     byCustomer.set(inv.customer.id, row);
   }
   const topCustomers = [...byCustomer.values()].sort((a, b) => b.amount - a.amount).slice(0, 5);
-  const [y, m, d] = today.split("-").map(Number);
+  const [y = 0, m = 0, d = 0] = today.split("-").map(Number);
 
   return (
     <>
@@ -140,7 +140,7 @@ function Dashboard() {
           <ChartContainer config={agingConfig} className="mt-4 h-64 w-full">
             <BarChart data={aging} layout="vertical" margin={{ left: 12 }}>
               <XAxis type="number" hide />
-              <YAxis type="category" dataKey="label" tickLine={false} axisLine={false} width={96} fontSize={11} />
+              <YAxis type="category" dataKey="label" tickLine={false} axisLine={false} width={112} fontSize={11} />
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="amount" fill="var(--color-amount)" radius={3} />
             </BarChart>
