@@ -102,8 +102,8 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
     const c = customers.find((x) => x.id === id);
     setForm((f) => {
       const previousCustomer = customers.find((x) => x.id === f.customer_id);
-      const previous = previousCustomer ? scheduledCustomerFees(previousCustomer, Number(f.month)) : {};
-      const items = c && !invoice ? applyScheduledFees(f.items, previous, scheduledCustomerFees(c, Number(f.month))) : f.items;
+      const previous = previousCustomer ? scheduledCustomerFees(previousCustomer, Number(f.month), "individual") : {};
+      const items = c && !invoice ? applyScheduledFees(f.items, previous, scheduledCustomerFees(c, Number(f.month), "individual")) : f.items;
       return withPrior({ ...f, customer_id: id, items });
     });
   }
@@ -111,7 +111,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   function pickMonth(value: string) {
     setForm((f) => {
       const c = customers.find((x) => x.id === f.customer_id);
-      const items = c && !invoice ? applyScheduledFees(f.items, scheduledCustomerFees(c, Number(f.month)), scheduledCustomerFees(c, Number(value))) : f.items;
+      const items = c && !invoice ? applyScheduledFees(f.items, scheduledCustomerFees(c, Number(f.month), "individual"), scheduledCustomerFees(c, Number(value), "individual")) : f.items;
       const period = !f.period_label || f.period_label === suggestPeriod(Number(f.month)) ? suggestPeriod(Number(value)) : f.period_label;
       return withPrior({ ...f, month: value, period_label: period, items });
     });
@@ -167,7 +167,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
         if (o) {
           const fresh = toForm(invoice, customerId);
           const c = customers.find((x) => x.id === fresh.customer_id);
-          if (c && !invoice) fresh.items = applyScheduledFees(fresh.items, {}, scheduledCustomerFees(c, Number(fresh.month)));
+          if (c && !invoice) fresh.items = applyScheduledFees(fresh.items, {}, scheduledCustomerFees(c, Number(fresh.month), "individual"));
           setForm(withPrior(fresh));
           setShowAll(false);
         }

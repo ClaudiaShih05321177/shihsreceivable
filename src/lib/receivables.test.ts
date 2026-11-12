@@ -100,6 +100,9 @@ describe("bimonthly bookkeeping collection", () => {
 
 describe("scheduled customer fees", () => {
   const customer = { bookkeeping_fee: 3000, stationery_fee: 500, settlement_fee: 2000 };
+  it("prefills the original annual fee only for individual creation, regardless of month", () => {
+    expect([1, 2, 11].map((month) => scheduledCustomerFees({ ...customer, billing_type: "年收" }, month, "individual")["記帳費"])).toEqual([3000, 3000, 3000]);
+  });
   it("never prefills bookkeeping for annual customers in any month", () => {
     expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees({ ...customer, billing_type: "年收" }, i + 1)["記帳費"])).toEqual(Array(12).fill(0));
   });
