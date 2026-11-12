@@ -7,7 +7,10 @@ const inv = (id: string, customer_id: string, m: number, amount: number, paid = 
 describe("batchInvoiceDrafts", () => {
   it("creates 記帳費×2 + 文具 in November and skips customers already billed or with no fee", () => {
     const d = batchInvoiceDrafts([c("a", 2500), c("b", 3000), { id: "z", bookkeeping_fee: 0, stationery_fee: 0, settlement_fee: 0 }], [inv("x", "b", 11, 1)], 2026, 11);
-    expect(d).toEqual([{ customer_id: "a", period_year: 2026, period_month: 11, period_label: "9-10", items: { 記帳費: 5000, 文具: 2500 }, amount: 7500 }]);
+    expect(d).toEqual([{ customer_id: "a", period_year: 2026, period_month: 11, period_label: "9-10", items: { 記帳費: 5000, 暫繳: 2500 }, amount: 7500 }]);
+  });
+  it("places January settlement in the settlement fee field", () => {
+    expect(batchInvoiceDrafts([c("a", 2500)], [], 2026, 1)).toEqual([{ customer_id: "a", period_year: 2026, period_month: 1, period_label: "11-12", items: { 記帳費: 5000, 股利2代: 6000 }, amount: 11000 }]);
   });
   it("creates nothing in an even month", () => {
     expect(batchInvoiceDrafts([c("a", 2500)], [], 2026, 4)).toEqual([]);

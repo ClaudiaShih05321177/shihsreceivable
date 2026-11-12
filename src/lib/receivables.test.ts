@@ -101,13 +101,19 @@ describe("bimonthly bookkeeping collection", () => {
 describe("scheduled customer fees", () => {
   const customer = { bookkeeping_fee: 3000, stationery_fee: 500, settlement_fee: 2000 };
   it("charges stationery in November only", () => {
-    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["文具"])).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0]);
+    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["暫繳"])).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0]);
   });
   it("charges settlement in January only", () => {
-    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["結算"])).toEqual([2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["股利2代"])).toEqual([2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
   });
   it("moves automatic amounts with the month but keeps manual amounts", () => {
-    expect(applyScheduledFees({ 記帳費: "6000", 文具: "500", 結算: "900" }, scheduledCustomerFees(customer, 11), scheduledCustomerFees(customer, 1))).toEqual({ 記帳費: "6000", 文具: "", 結算: "900" });
+    expect(applyScheduledFees({ 記帳費: "6000", 暫繳: "500", 股利2代: "900", 文具: "300", 結算: "400" }, scheduledCustomerFees(customer, 11), scheduledCustomerFees(customer, 1))).toEqual({ 記帳費: "6000", 暫繳: "", 股利2代: "900", 文具: "300", 結算: "400" });
+  });
+  it("does not automatically fill agency or seal fees", () => {
+    for (const month of [1, 11]) {
+      expect(scheduledCustomerFees(customer, month)).not.toHaveProperty("文具");
+      expect(scheduledCustomerFees(customer, month)).not.toHaveProperty("結算");
+    }
   });
 });
 

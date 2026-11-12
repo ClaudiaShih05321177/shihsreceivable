@@ -143,8 +143,8 @@ export function suggestPeriod(month: number): string {
 export function scheduledCustomerFees(customer: { bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string }, month: number): FeeItems {
   return {
     記帳費: bookkeepingPeriodFee(customer.bookkeeping_fee, month),
-    文具: month === 11 ? Number(customer.stationery_fee) || 0 : 0,
-    結算: month === 1 ? Number(customer.settlement_fee) || 0 : 0,
+    暫繳: month === 11 ? Number(customer.stationery_fee) || 0 : 0,
+    股利2代: month === 1 ? Number(customer.settlement_fee) || 0 : 0,
   };
 }
 

@@ -16,7 +16,7 @@ import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/quer
 import { feeItemCount, feeLabel, visibleFeeItems } from "@/lib/fee-labels";
 import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems } from "@/lib/receivables";
 
-const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳"];
+const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳", "股利2代"];
 
 type Form = {
   customer_id: string;
