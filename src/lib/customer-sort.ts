@@ -6,7 +6,7 @@ export type StaffSortable = {
 
 const collator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: "base" });
 
-/** 記帳員排前面，未指派記帳員的排最後；同記帳員再依客戶ID、客戶名稱排序。 */
+/** 會計專員排前面，未指派會計專員的排最後；同會計專員再依客戶ID、客戶名稱排序。 */
 export function byStaffCode(a: StaffSortable, b: StaffSortable): number {
   const sa = a.staff_code?.trim() ?? "";
   const sb = b.staff_code?.trim() ?? "";
@@ -25,7 +25,7 @@ export function byStaffCode(a: StaffSortable, b: StaffSortable): number {
   return collator.compare(a.name, b.name);
 }
 
-/** 依記帳員排序（回傳新陣列，不影響原本順序）。 */
+/** 依會計專員排序（回傳新陣列，不影響原本順序）。 */
 export function sortByStaff<T extends StaffSortable>(rows: readonly T[]): T[] {
   return [...rows].sort(byStaffCode);
 }

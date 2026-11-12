@@ -18,9 +18,9 @@ export const Route = createFileRoute("/_authenticated/_shell/invoices/")({
   head: () => ({
     meta: [
       { title: "應收帳款 · 帳房" },
-      { name: "description", content: "所有應收帳款清單，依狀態、記帳員與客戶篩選。" },
+      { name: "description", content: "所有應收帳款清單，依狀態、會計專員與客戶篩選。" },
       { property: "og:title", content: "應收帳款 · 帳房" },
-      { property: "og:description", content: "所有應收帳款清單，依狀態、記帳員與客戶篩選。" },
+      { property: "og:description", content: "所有應收帳款清單，依狀態、會計專員與客戶篩選。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -97,8 +97,8 @@ function InvoicesPage() {
           <Select value={staff} onValueChange={setStaff}>
             <SelectTrigger className="bg-card sm:w-44"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">全部記帳員</SelectItem>
-              {staffCodes.map((s) => <SelectItem key={s} value={s}>記帳員 {s}</SelectItem>)}
+              <SelectItem value="all">全部會計專員</SelectItem>
+              {staffCodes.map((s) => <SelectItem key={s} value={s}>會計專員 {s}</SelectItem>)}
             </SelectContent>
           </Select>
         )}

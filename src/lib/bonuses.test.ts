@@ -1,15 +1,31 @@
 import { describe, expect, it } from "vitest";
-import { bookkeeperBonus, bonusGroups, type BonusRow } from "./bonuses";
+import { annualExtraBonus, bookkeeperBonus, bonusGroups, settlementBonus, type BonusCustomer, type BonusRow } from "./bonuses";
+
+const cust = (o: Partial<BonusCustomer>): BonusCustomer => ({ id: "c1", name: "客戶", customer_code: "AC01", staff_code: "AC", billing_type: "期收", bookkeeping_fee: 0, annual_extra_rate: null, ...o });
+const row = (o: Partial<BonusRow>): BonusRow => ({ id: "i1", customer_id: "c1", customer_name: "客戶", customer_code: "AC01", staff_code: "AC", period_year: 2026, period_month: 9, items: {}, amount: 0, paid_amount: 0, ...o });
+
 describe("bookkeeper bonuses", () => {
-  it("pays 30% only above 200000", () => {
+  it("bookkeeping pays 30% only above 200000", () => {
     expect([0, 199999, 200000, 250000].map(bookkeeperBonus)).toEqual([0, 0, 0, 15000]);
     expect(bookkeeperBonus(247366.66666666666)).toBe(14210);
   });
-  it("uses selected odd collection month and bookkeeping only, not payment or taxes", () => {
-    const row: BonusRow = { id: "a", customer_name: "客戶", customer_code: null, staff_code: "AC", period_year: 2026, period_month: 9, items: { 記帳費: 250000, 營業稅: 99999 }, amount: 349999, paid_amount: 0 };
-    const groups = bonusGroups({ staff: ["AC"], rows: [row, { ...row, id: "b", period_month: 11 }] }, 2026, 9);
-    expect(groups[0]?.total).toBe(250000);
-    expect(groups[0]?.bonus).toBe(15000);
-    expect(groups[0]?.rows).toHaveLength(1);
+  it("settlement: January above 100000 × 30%, other months straight 30%", () => {
+    expect(settlementBonus(100000, 1)).toBe(0);
+    expect(settlementBonus(150000, 1)).toBe(15000);
+    expect(settlementBonus(10000, 5)).toBe(3000);
+  });
+  it("annual extra: special customers use own %, others 30%, then summed", () => {
+    expect(annualExtraBonus([{ amount: 10000, rate: 20 }, { amount: 10000, rate: null }])).toBe(5000);
+  });
+  it("annual customers count yearly fee ÷ 6 every period and invoice fee is not double counted", () => {
+    const d = { staff: ["AC"], customers: [cust({ billing_type: "年收", bookkeeping_fee: 5000 })], rows: [row({ items: { 記帳費: 5000 } })] };
+    expect(bonusGroups(d, 2026, 9)[0]?.total).toBeCloseTo(833.333, 2);
+    expect(bonusGroups(d, 2026, 3)[0]?.total).toBeCloseTo(833.333, 2);
+  });
+  it("uses selected month only and ignores taxes", () => {
+    const d = { staff: ["AC"], customers: [cust({})], rows: [row({ items: { 記帳費: 250000, 營業稅: 99999 } }), row({ id: "i2", period_month: 11, items: { 記帳費: 9 } })] };
+    const g = bonusGroups(d, 2026, 9)[0];
+    expect(g?.total).toBe(250000);
+    expect(g?.bonus).toBe(15000);
   });
 });

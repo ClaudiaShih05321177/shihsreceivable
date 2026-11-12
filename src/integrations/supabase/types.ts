@@ -17,6 +17,7 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          annual_extra_rate: number | null
           billing_type: string
           bookkeeping_fee: number
           contact_person: string | null
@@ -37,6 +38,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          annual_extra_rate?: number | null
           billing_type?: string
           bookkeeping_fee?: number
           contact_person?: string | null
@@ -57,6 +59,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          annual_extra_rate?: number | null
           billing_type?: string
           bookkeeping_fee?: number
           contact_person?: string | null

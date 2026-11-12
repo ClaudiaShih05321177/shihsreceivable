@@ -16,9 +16,9 @@ export const Route = createFileRoute("/_authenticated/_shell/customers/")({
   head: () => ({
     meta: [
       { title: "客戶資料 · 帳房" },
-      { name: "description", content: "客戶名冊：統一編號、收費狀態、記帳費與記帳員，以及各客戶應收餘額。" },
+      { name: "description", content: "客戶名冊：統一編號、收費狀態、記帳費與會計專員，以及各客戶應收餘額。" },
       { property: "og:title", content: "客戶資料 · 帳房" },
-      { property: "og:description", content: "客戶名冊：統一編號、收費狀態、記帳費與記帳員，以及各客戶應收餘額。" },
+      { property: "og:description", content: "客戶名冊：統一編號、收費狀態、記帳費與會計專員，以及各客戶應收餘額。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -52,12 +52,12 @@ function CustomersPage() {
       <PageHeader
         eyebrow="客戶名冊"
         title="客戶資料"
-        description={`共 ${customers.length} 位客戶 · 依記帳員排序`}
+        description={`共 ${customers.length} 位客戶 · 依會計專員排序`}
         actions={<CustomerFormDialog trigger={<Button><Plus /> 新增客戶</Button>} />}
       />
       <div className="relative mb-5">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="搜尋客戶名稱、客戶ID、統一編號、記帳員…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
+        <Input placeholder="搜尋客戶名稱、客戶ID、統一編號、會計專員…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
       </div>
       {rows.length === 0 ? (
         <div className="ledger-card ledger-lines px-6 py-16 text-center text-sm text-muted-foreground">
@@ -73,7 +73,7 @@ function CustomersPage() {
                 <TableHead>統一編號</TableHead>
                 <TableHead>收費狀態</TableHead>
                 <TableHead className="text-right">記帳費</TableHead>
-                <TableHead>記帳員</TableHead>
+                <TableHead>會計專員</TableHead>
                 <TableHead className="text-right">應收餘額</TableHead>
                 <TableHead className="text-right">逾期</TableHead>
               </TableRow>

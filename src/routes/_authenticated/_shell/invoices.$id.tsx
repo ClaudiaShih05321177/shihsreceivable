@@ -127,7 +127,7 @@ function InvoiceDetail() {
         description={
           <>
             {customer?.billing_type ?? "期收"}
-            {customer?.staff_code ? ` · 記帳員 ${customer.staff_code}` : ""}
+            {customer?.staff_code ? ` · 會計專員 ${customer.staff_code}` : ""}
             {inv.invoice_no ? ` · 單號 ${inv.invoice_no}` : ""}
           </>
         }

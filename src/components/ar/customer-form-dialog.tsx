@@ -22,6 +22,7 @@ type Form = {
   settlement_fee: string;
   suspended_period: string;
   staff_code: string;
+  annual_extra_rate: string;
   contact_person: string;
   phone: string;
   email: string;
@@ -40,6 +41,7 @@ function toForm(c?: Customer | null): Form {
     settlement_fee: c ? String(c.settlement_fee ?? 0) : "",
     suspended_period: c?.suspended_period ?? "",
     staff_code: c?.staff_code ?? "",
+    annual_extra_rate: c?.annual_extra_rate != null ? String(c.annual_extra_rate) : "",
     contact_person: c?.contact_person ?? "",
     phone: c?.phone ?? "",
     email: c?.email ?? "",
@@ -71,6 +73,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
         settlement_fee: Number(form.settlement_fee) || 0,
         suspended_period: form.suspended_period.trim() || null,
         staff_code: form.staff_code.trim().toUpperCase() || null,
+        annual_extra_rate: form.annual_extra_rate.trim() === "" ? null : Number(form.annual_extra_rate),
         contact_person: form.contact_person.trim() || null,
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
@@ -138,7 +141,8 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
             {field("settlement_fee", "結算費", { type: "number", min: 0, step: 1 })}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {field("staff_code", "記帳員工ID", { placeholder: "例：AC", maxLength: 10 })}
+            {field("staff_code", "會計專員工ID", { placeholder: "例：AC", maxLength: 10 })}
+            {field("annual_extra_rate", "年度加收獎金%（特殊客戶）", { type: "number", min: 0, step: 1, placeholder: "空白＝30%" })}
             {field("suspended_period", "停業期間", { placeholder: "例：114/7-115/6", maxLength: 60 })}
             {field("contact_person", "聯絡人", { maxLength: 60 })}
             {field("phone", "電話", { maxLength: 40 })}

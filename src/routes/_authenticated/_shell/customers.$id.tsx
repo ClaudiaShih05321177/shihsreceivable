@@ -74,7 +74,7 @@ function CustomerDetail() {
     ["記帳費", formatTWD(Number(customer.bookkeeping_fee))],
     ["文具費", formatTWD(Number(customer.stationery_fee))],
     ["結算費", formatTWD(Number(customer.settlement_fee))],
-    ["記帳員工ID", customer.staff_code],
+    ["會計專員工ID", customer.staff_code],
     ["停業期間", customer.suspended_period],
     ["聯絡人", customer.contact_person],
     ["電話", customer.phone],

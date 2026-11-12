@@ -19,7 +19,7 @@ const nav = [
   { to: "/audits", label: "財稅簽", icon: Stamp },
   { to: "/customers", label: "客戶資料", icon: Users },
   { to: "/team", label: "團隊成員", icon: UserCog },
-  { to: "/bonuses", label: "記帳員獎金", icon: BadgeDollarSign },
+  { to: "/bonuses", label: "會計專員獎金", icon: BadgeDollarSign },
 ] as const;
 
 export function AppShell({ me, children }: { me: Me; children: ReactNode }) {

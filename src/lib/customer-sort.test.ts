@@ -3,13 +3,13 @@ import { sortByStaff } from "./customer-sort";
 
 const c = (staff_code: string | null, customer_code: string | null, name: string) => ({ staff_code, customer_code, name });
 
-describe("客戶依記帳員排序", () => {
-  it("有記帳員的排在前面，未指派的排最後", () => {
+describe("客戶依會計專員排序", () => {
+  it("有會計專員的排在前面，未指派的排最後", () => {
     const sorted = sortByStaff([c(null, "ZZ01", "甲"), c("AC", "AA01", "乙"), c("", "MM01", "丙")]);
     expect(sorted.map((r) => r.name)).toEqual(["乙", "丙", "甲"]);
   });
 
-  it("依記帳員代碼排序，同記帳員再依客戶ID", () => {
+  it("依會計專員代碼排序，同會計專員再依客戶ID", () => {
     const sorted = sortByStaff([
       c("B", "B32", "全通實業社"),
       c("AC", "AC13", "宇光"),
