@@ -9,5 +9,5 @@
 - [x] Due date optional, no default (user: 不用預設到期日)
 - [x] Import 115應收帳款.xlsx (客戶資料 + 總帳); due dates left blank per user
 - [ ] In-app Excel import button (not yet requested to build)
-- [ ] Clear all receivables + payments, keep the 416 clients (user request)
+- [x] Clear all receivables + payments, keep the 416 clients (user request)
 - [ ] (Open, needs user) 「我要重新安排」— ask what the user wants to rearrange
