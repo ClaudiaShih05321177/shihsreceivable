@@ -16,6 +16,15 @@ import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/quer
 import { applyScheduledFees, bookkeepingCollectionMonth, FEE_ITEMS, formatTWD, itemsTotal, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, type FeeItems } from "@/lib/receivables";
 
 const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳", "其他"];
+const FEE_ITEM_LABELS: Record<string, string> = {
+  文具: "工商代辦費",
+  發票: "發票費用",
+  結算: "印章代刻",
+  工商: "公司2代健保(A-B)\n",
+  營所稅: "2代-4倍獎金",
+  暫繳: "租金2代",
+  其他: "個人2代",
+};
 
 type Form = {
   customer_id: string;
@@ -251,7 +260,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {visible.map((k) => (
                   <div key={k} className="space-y-1">
-                    <Label htmlFor={`item-${k}`} className="text-xs text-muted-foreground">{k}</Label>
+                    <Label htmlFor={`item-${k}`} className="text-xs text-muted-foreground">{FEE_ITEM_LABELS[k] ?? k}</Label>
                     <Input
                       id={`item-${k}`}
                       type="number"
