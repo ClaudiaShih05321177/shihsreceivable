@@ -122,6 +122,43 @@ export function rocYear(year: number): number {
   return year - 1911;
 }
 
+/** Default collection month is this month if odd, otherwise the next odd month. */
+export function bookkeepingCollectionMonth(month: number): number {
+  return month % 2 === 1 ? month : month + 1;
+}
+
+/** Two monthly fees collected in each odd month; no automatic fee for other rows. */
+export function bookkeepingPeriodFee(monthlyFee: number | string, month: number): number {
+  if (month < 1 || month > 12 || month % 2 === 0) return 0;
+  return Math.round(Number(monthlyFee) * 2) || 0;
+}
+
+/** Ledger periods precede collection: January collects November–December. */
+export function suggestPeriod(month: number): string {
+  if (month === 0 || month === 1) return "11-12";
+  if (month >= 3 && month <= 11 && month % 2 === 1) return `${month - 2}-${month - 1}`;
+  return "";
+}
+
+export function scheduledCustomerFees(customer: { bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string }, month: number): FeeItems {
+  return {
+    記帳費: bookkeepingPeriodFee(customer.bookkeeping_fee, month),
+    文具: month === 11 ? Number(customer.stationery_fee) || 0 : 0,
+    結算: month === 1 ? Number(customer.settlement_fee) || 0 : 0,
+  };
+}
+
+/** Refresh automatic defaults while preserving manually changed amounts. */
+export function applyScheduledFees(items: Record<string, string>, previous: FeeItems, next: FeeItems): Record<string, string> {
+  const result = { ...items };
+  for (const key of Object.keys(next)) {
+    if (!items[key] || Number(items[key]) === Number(previous[key] ?? 0)) {
+      result[key] = next[key] ? String(next[key]) : "";
+    }
+  }
+  return result;
+}
+
 /** Fee line items, in the order of the user's ledger (總帳). */
 export const FEE_ITEMS = [
   "記帳費",

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agingBucket, formatDate, invoiceStatus, itemsTotal, monthlySeries, outstanding } from "./receivables";
+import { agingBucket, applyScheduledFees, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, itemsTotal, monthlySeries, outstanding, scheduledCustomerFees, suggestPeriod } from "./receivables";
 
 const today = "2026-11-12";
 const inv = (due_date: string, amount: number, paid: number[] = []) => ({
@@ -77,5 +77,36 @@ describe("invoices without a due date", () => {
     const i = { amount: 1000, issue_date: "2026-01-01", due_date: null, payments: [] };
     expect(invoiceStatus(i, "2026-12-31")).toBe("unpaid");
     expect(agingBucket(i, "2026-12-31")).toBe("current");
+  });
+});
+
+describe("bimonthly bookkeeping collection", () => {
+  it("collects two monthly fees in every odd month", () => {
+    expect([1, 3, 5, 7, 9, 11].map((month) => bookkeepingPeriodFee(3000, month))).toEqual([6000, 6000, 6000, 6000, 6000, 6000]);
+  });
+
+  it("does not prefill bookkeeping fees in even months or carried balances", () => {
+    expect([0, 2, 4, 6, 8, 10, 12].map((month) => bookkeepingPeriodFee(3000, month))).toEqual([0, 0, 0, 0, 0, 0, 0]);
+  });
+
+  it("defaults to the next odd collection month", () => {
+    expect([1, 2, 10, 11, 12].map(bookkeepingCollectionMonth)).toEqual([1, 3, 11, 11, 13]);
+  });
+
+  it("keeps the preceding two-month ledger period", () => {
+    expect([1, 3, 5, 7, 9, 11].map(suggestPeriod)).toEqual(["11-12", "1-2", "3-4", "5-6", "7-8", "9-10"]);
+  });
+});
+
+describe("scheduled customer fees", () => {
+  const customer = { bookkeeping_fee: 3000, stationery_fee: 500, settlement_fee: 2000 };
+  it("charges stationery in November only", () => {
+    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["文具"])).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0]);
+  });
+  it("charges settlement in January only", () => {
+    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["結算"])).toEqual([2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+  });
+  it("moves automatic amounts with the month but keeps manual amounts", () => {
+    expect(applyScheduledFees({ 記帳費: "6000", 文具: "500", 結算: "900" }, scheduledCustomerFees(customer, 11), scheduledCustomerFees(customer, 1))).toEqual({ 記帳費: "6000", 文具: "", 結算: "900" });
   });
 });

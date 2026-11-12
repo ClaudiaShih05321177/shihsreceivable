@@ -1,5 +1,8 @@
 # Roadmap
 
+- [x] Update receivable bookkeeping defaults: monthly fee × 2 in odd collection months; create/save/reload verified without changing existing invoices.
+- [x] Prefill stationery only in November and settlement only in January; schedules tested and verified in signed-in UI.
+
 - [x] Lovable Cloud, sign-in (email, Google, Lovable), team approval (first user = admin)
 - [x] Receivables rules + tests (status, overdue, aging, monthly series)
 - [x] Match the user's 應收帳款Sample.xlsx: client fields (客戶ID, 統編, 年收/期收, 記帳費/文具費/結算費, 停業期間, 記帳員工ID), billing rows with 月份/期別 and itemized fees (記帳費…其他), payments with 登帳日期/收款日期/支付方式(現金/支票/匯款/代墊)/收款金額

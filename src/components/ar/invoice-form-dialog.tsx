@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronDown } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
@@ -12,15 +12,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { customersQuery, meQuery, type Invoice } from "@/lib/queries";
-import { FEE_ITEMS, formatTWD, itemsTotal, rocYear, todayISO, type FeeItems } from "@/lib/receivables";
+import { applyScheduledFees, bookkeepingCollectionMonth, FEE_ITEMS, formatTWD, itemsTotal, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, type FeeItems } from "@/lib/receivables";
 
 const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳", "其他"];
-
-function suggestPeriod(month: number): string {
-  if (month === 0) return "11-12";
-  if (month >= 3 && month % 2 === 1) return `${month - 2}-${month - 1}`;
-  return "";
-}
 
 type Form = {
   customer_id: string;
@@ -36,12 +30,14 @@ type Form = {
 
 function toForm(inv?: Invoice | null, customerId?: string): Form {
   const today = todayISO();
-  const month = inv ? inv.period_month ?? 0 : new Date().getMonth() + 1;
+  const now = new Date();
+  const collectionMonth = bookkeepingCollectionMonth(now.getMonth() + 1);
+  const month = inv ? inv.period_month ?? 0 : collectionMonth === 13 ? 1 : collectionMonth;
   const items: Record<string, string> = {};
   for (const [k, v] of Object.entries((inv?.items as FeeItems) ?? {})) if (v) items[k] = String(v);
   return {
     customer_id: inv?.customer_id ?? customerId ?? "",
-    roc_year: String(rocYear(inv?.period_year ?? new Date().getFullYear())),
+    roc_year: String(rocYear(inv?.period_year ?? now.getFullYear() + (collectionMonth === 13 ? 1 : 0))),
     month: String(month),
     period_label: inv ? inv.period_label ?? "" : suggestPeriod(month),
     invoice_no: inv?.invoice_no ?? "",
@@ -56,7 +52,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   const qc = useQueryClient();
   const { data: me } = useSuspenseQuery(meQuery);
   const navigate = useNavigate();
-  const { data: customers = [] } = useQuery(customersQuery);
+  const { data: customers } = useSuspenseQuery(customersQuery);
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [form, setForm] = useState<Form>(toForm(invoice, customerId));
@@ -72,13 +68,19 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   function pickCustomer(id: string) {
     const c = customers.find((x) => x.id === id);
     setForm((f) => {
-      const items = { ...f.items };
-      if (c && !invoice) {
-        if (!items["記帳費"] && Number(c.bookkeeping_fee)) items["記帳費"] = String(c.bookkeeping_fee);
-        if (!items["文具"] && Number(c.stationery_fee)) items["文具"] = String(c.stationery_fee);
-        if (!items["結算"] && Number(c.settlement_fee)) items["結算"] = String(c.settlement_fee);
-      }
+      const previousCustomer = customers.find((x) => x.id === f.customer_id);
+      const previous = previousCustomer ? scheduledCustomerFees(previousCustomer, Number(f.month)) : {};
+      const items = c && !invoice ? applyScheduledFees(f.items, previous, scheduledCustomerFees(c, Number(f.month))) : f.items;
       return { ...f, customer_id: id, items };
+    });
+  }
+
+  function pickMonth(value: string) {
+    setForm((f) => {
+      const c = customers.find((x) => x.id === f.customer_id);
+      const items = c && !invoice ? applyScheduledFees(f.items, scheduledCustomerFees(c, Number(f.month)), scheduledCustomerFees(c, Number(value))) : f.items;
+      const period = !f.period_label || f.period_label === suggestPeriod(Number(f.month)) ? suggestPeriod(Number(value)) : f.period_label;
+      return { ...f, month: value, period_label: period, items };
     });
   }
 
@@ -126,7 +128,10 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
       onOpenChange={(o) => {
         setOpen(o);
         if (o) {
-          setForm(toForm(invoice, customerId));
+          const fresh = toForm(invoice, customerId);
+          const c = customers.find((x) => x.id === fresh.customer_id);
+          if (c && !invoice) fresh.items = applyScheduledFees(fresh.items, {}, scheduledCustomerFees(c, Number(fresh.month)));
+          setForm(fresh);
           setShowAll(false);
         }
       }}
@@ -165,10 +170,10 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                 <Input id="i-year" type="number" value={form.roc_year} onChange={(e) => set("roc_year")(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label>月份</Label>
+                <Label>收款月份</Label>
                 <Select
                   value={form.month}
-                  onValueChange={(v) => setForm((f) => ({ ...f, month: v, period_label: f.period_label || suggestPeriod(Number(v)) }))}
+                  onValueChange={pickMonth}
                 >
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -188,7 +193,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                 <Input id="i-issue" type="date" value={form.issue_date} onChange={(e) => set("issue_date")(e.target.value)} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="i-due">到期日 *</Label>
+                <Label htmlFor="i-due">到期日</Label>
                 <Input id="i-due" type="date" value={form.due_date} onChange={(e) => set("due_date")(e.target.value)} />
               </div>
               <div className="space-y-1.5">
