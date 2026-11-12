@@ -28,10 +28,10 @@ describe("bookkeeper bonuses", () => {
     expect(g?.total).toBe(250000);
     expect(g?.bonus).toBe(15000);
   });
-  it("half-year customers count (fee × 6) ÷ 3 every period, invoice fee not double counted", () => {
-    const d = { staff: ["AC"], customers: [cust({ billing_type: "半年收", bookkeeping_fee: 3000 })], rows: [row({ items: { 記帳費: 18000 } })] };
-    expect(bonusGroups(d, 2026, 9)[0]?.total).toBe(6000);
-    expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(6000);
+  it("AE25 half-year total 12000 is shared as 4000 per period without double counting invoices", () => {
+    const d = { staff: ["AE"], customers: [cust({ customer_code: "AE25", staff_code: "AE", name: "華珍製材工廠", billing_type: "半年收", bookkeeping_fee: 12000 })], rows: [row({ items: { 記帳費: 12000 } })] };
+    expect(bonusGroups(d, 2026, 9).find((g) => g.code === "AE")?.total).toBe(4000);
+    expect(bonusGroups(d, 2026, 11).find((g) => g.code === "AE")?.total).toBe(4000);
   });
   it("period customers count monthly fee × 2 even without invoices", () => {
     const d = { staff: ["AC"], customers: [cust({ bookkeeping_fee: 3000 })], rows: [] };
@@ -43,13 +43,13 @@ describe("bookkeeper bonuses", () => {
   });
   it("half-year customers count their three-period share without invoices", () => {
     const d = { staff: ["AC"], customers: [cust({ billing_type: "半年收", bookkeeping_fee: 3000 })], rows: [] };
-    expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(6000);
+    expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(1000);
   });
   it("combines period, half-year and annual customers in the staff total", () => {
     const d = { staff: ["AC"], customers: [cust({ bookkeeping_fee: 100000 }), cust({ id: "c2", billing_type: "半年收", bookkeeping_fee: 3000 }), cust({ id: "c3", billing_type: "年收", bookkeeping_fee: 6000 })], rows: [] };
     const g = bonusGroups(d, 2026, 11)[0];
-    expect(g?.total).toBe(207000);
-    expect(g?.bookkeepingBonus).toBe(2100);
+    expect(g?.total).toBe(202000);
+    expect(g?.bookkeepingBonus).toBe(600);
     expect(g?.rows).toHaveLength(3);
   });
 });

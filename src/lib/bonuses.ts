@@ -35,7 +35,7 @@ export function periodShare(c?: Pick<BonusCustomer, "billing_type" | "bookkeepin
   if (!c) return null;
   if (c.billing_type === "期收") return num(c.bookkeeping_fee) * 2;
   if (c.billing_type === "年收") return num(c.bookkeeping_fee) / 6;
-  if (c.billing_type === "半年收") return (num(c.bookkeeping_fee) * 6) / 3;
+  if (c.billing_type === "半年收") return num(c.bookkeeping_fee) / 3;
   return null;
 }
 

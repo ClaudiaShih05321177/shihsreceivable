@@ -51,7 +51,7 @@ function BonusLedger() {
       <div className="ledger-card p-4"><p className="text-sm text-muted-foreground">獎金總額</p><Money value={selected.reduce((s,g) => s+g.bonus,0)} className="text-2xl font-semibold text-primary" /></div>
     </div>
     <ul className="text-sm text-muted-foreground list-disc pl-5 space-y-1">
-      <li>記帳費獎金＝（記帳費合計－200,000）× 30%；期收每期以月費 × 2、年收以記帳費 ÷ 6、半年收以（記帳費 × 6）÷ 3 計入。</li>
+      <li>記帳費獎金＝（記帳費合計－200,000）× 30%；期收每期以月費 × 2、年收以記帳費 ÷ 6、半年收以半年記帳費總額 ÷ 3 計入。</li>
       <li>結算費獎金：1月為（結算費合計－100,000）× 30%；其他月份直接 × 30%。</li>
       <li>年度加收獎金＝特殊客戶 × 自訂%＋其他客戶 × 30%。</li>
     </ul>
