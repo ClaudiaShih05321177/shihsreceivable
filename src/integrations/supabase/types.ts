@@ -204,6 +204,44 @@ export type Database = {
         }
         Relationships: []
       }
+      tax_filings: {
+        Row: {
+          id: string
+          invoice_id: string
+          item: string
+          paid: boolean
+          paid_date: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          invoice_id: string
+          item: string
+          paid?: boolean
+          paid_date?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          invoice_id?: string
+          item?: string
+          paid?: boolean
+          paid_date?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tax_filings_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

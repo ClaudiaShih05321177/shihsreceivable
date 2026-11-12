@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, FileText, LogOut, Users, UserCog } from "lucide-react";
+import { BarChart3, Landmark, FileText, LogOut, Users, UserCog } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { BrandMark } from "@/components/ar/brand";
@@ -15,6 +15,7 @@ type Me = { displayName: string; email: string; isAdmin: boolean };
 const nav = [
   { to: "/dashboard", label: "總覽", icon: BarChart3 },
   { to: "/invoices", label: "應收帳款", icon: FileText },
+  { to: "/taxes", label: "稅額明細", icon: Landmark },
   { to: "/customers", label: "客戶資料", icon: Users },
   { to: "/team", label: "團隊成員", icon: UserCog },
 ] as const;

@@ -177,3 +177,32 @@ export function itemEntries(items: FeeItems | null | undefined): { name: string;
 export function periodMonthLabel(month: number | null | undefined): string {
   return !month ? "前期" : `${month}月`;
 }
+
+/** Tax categories shown on the 稅額明細 page, each grouping fee items. */
+export const TAX_GROUPS = [
+  { key: "vat", label: "營業稅", items: ["營業稅"] },
+  { key: "income", label: "營所稅", items: ["營所稅", "未加徵"] },
+  { key: "provisional", label: "暫繳稅額", items: ["暫繳"] },
+  { key: "withholding", label: "扣繳稅額", items: ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳"] },
+  { key: "nhi", label: "二代健保", items: ["2代A-B", "2代-4X獎金", "租金2代", "個人2代", "員工酬勞2代", "股利2代"] },
+] as const;
+
+export type TaxLine = { group: string; item: string; amount: number };
+
+/** Non-zero tax lines of one billing row, in TAX_GROUPS order. */
+export function taxLines(items: FeeItems | null | undefined): TaxLine[] {
+  const src = items ?? {};
+  return TAX_GROUPS.flatMap((g) =>
+    g.items.filter((i) => Number(src[i])).map((i) => ({ group: g.label, item: i, amount: Number(src[i]) })),
+  );
+}
+
+/** Per-group totals with the paid portion. */
+export function taxSummary(lines: (TaxLine & { paid: boolean })[]) {
+  return TAX_GROUPS.map((g) => {
+    const rows = lines.filter((l) => l.group === g.label);
+    const total = rows.reduce((s, l) => s + l.amount, 0);
+    const paid = rows.filter((l) => l.paid).reduce((s, l) => s + l.amount, 0);
+    return { label: g.label, total, paid, unpaid: total - paid };
+  });
+}

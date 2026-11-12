@@ -105,3 +105,18 @@ export const teamQuery = queryOptions({
     }));
   },
 });
+
+export type TaxFiling = Database["public"]["Tables"]["tax_filings"]["Row"];
+
+export const taxFilingsQuery = queryOptions({
+  queryKey: ["tax_filings"],
+  queryFn: async () => {
+    const all: TaxFiling[] = [];
+    for (let from = 0; ; from += 1000) {
+      const { data, error } = await supabase.from("tax_filings").select("*").order("id").range(from, from + 999);
+      if (error) throw error;
+      all.push(...data);
+      if (data.length < 1000) return all;
+    }
+  },
+});

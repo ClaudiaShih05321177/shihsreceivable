@@ -36,6 +36,13 @@
       "when": 1794474567279,
       "tag": "0004_admin_only_settlement_and_editing",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794475571367,
+      "tag": "0005_tax_filings",
+      "breakpoints": true
     }
   ]
 }

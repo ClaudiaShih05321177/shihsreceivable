@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/_shell'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
+import { Route as AuthenticatedShellTaxesRouteImport } from './routes/_authenticated/_shell/taxes'
 import { Route as AuthenticatedShellTeamRouteImport } from './routes/_authenticated/_shell/team'
 import { Route as AuthenticatedShellCustomersIndexRouteImport } from './routes/_authenticated/_shell/customers.index'
 import { Route as AuthenticatedShellCustomersIdRouteImport } from './routes/_authenticated/_shell/customers.$id'
@@ -44,6 +45,11 @@ const AuthenticatedShellDashboardRoute =
     path: '/dashboard',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
+const AuthenticatedShellTaxesRoute = AuthenticatedShellTaxesRouteImport.update({
+  id: '/taxes',
+  path: '/taxes',
+  getParentRoute: () => AuthenticatedShellRoute,
+} as any)
 const AuthenticatedShellTeamRoute = AuthenticatedShellTeamRouteImport.update({
   id: '/team',
   path: '/team',
@@ -78,6 +84,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
   '/invoices/$id': typeof AuthenticatedShellInvoicesIdRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
   '/invoices/$id': typeof AuthenticatedShellInvoicesIdRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteWithChildren
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/_authenticated/_shell/taxes': typeof AuthenticatedShellTaxesRoute
   '/_authenticated/_shell/team': typeof AuthenticatedShellTeamRoute
   '/_authenticated/_shell/customers/$id': typeof AuthenticatedShellCustomersIdRoute
   '/_authenticated/_shell/invoices/$id': typeof AuthenticatedShellInvoicesIdRoute
@@ -113,6 +122,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/taxes'
     | '/team'
     | '/customers/$id'
     | '/invoices/$id'
@@ -123,6 +133,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/taxes'
     | '/team'
     | '/customers/$id'
     | '/invoices/$id'
@@ -135,6 +146,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/_shell'
     | '/_authenticated/_shell/dashboard'
+    | '/_authenticated/_shell/taxes'
     | '/_authenticated/_shell/team'
     | '/_authenticated/_shell/customers/$id'
     | '/_authenticated/_shell/invoices/$id'
@@ -185,6 +197,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellDashboardRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/_shell/taxes': {
+      id: '/_authenticated/_shell/taxes'
+      path: '/taxes'
+      fullPath: '/taxes'
+      preLoaderRoute: typeof AuthenticatedShellTaxesRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
     '/_authenticated/_shell/team': {
       id: '/_authenticated/_shell/team'
       path: '/team'
@@ -225,6 +244,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedShellRouteChildren {
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
+  AuthenticatedShellTaxesRoute: typeof AuthenticatedShellTaxesRoute
   AuthenticatedShellTeamRoute: typeof AuthenticatedShellTeamRoute
   AuthenticatedShellCustomersIdRoute: typeof AuthenticatedShellCustomersIdRoute
   AuthenticatedShellInvoicesIdRoute: typeof AuthenticatedShellInvoicesIdRoute
@@ -234,6 +254,7 @@ interface AuthenticatedShellRouteChildren {
 
 const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
+  AuthenticatedShellTaxesRoute: AuthenticatedShellTaxesRoute,
   AuthenticatedShellTeamRoute: AuthenticatedShellTeamRoute,
   AuthenticatedShellCustomersIdRoute: AuthenticatedShellCustomersIdRoute,
   AuthenticatedShellInvoicesIdRoute: AuthenticatedShellInvoicesIdRoute,
