@@ -1,7 +1,7 @@
 import { AUDITORS } from "@/lib/auditors";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import { Check, ChevronDown, Plus, Trash2, X } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -16,6 +16,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/queries";
 import { feeItemCount, feeLabel, visibleFeeItems } from "@/lib/fee-labels";
 import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems } from "@/lib/receivables";
+
+const PICK_GROUPS = [
+  { title: "各類扣繳", items: ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳"] },
+  { title: "二代健保", items: ["租金2代", "股利2代", "2代-4X獎金", "個人2代", "2代A-B", "員工酬勞2代"] },
+] as const;
+const PICK_KEYS: readonly string[] = PICK_GROUPS.flatMap((g) => g.items);
+/** 標籤顯示用：去掉「扣繳-」「二代健保-」前綴。 */
+const shortLabel = (k: string) => feeLabel(k).replace(/^(扣繳|二代健保)-/, "");
 
 const COMMON_ITEMS = ["記帳費", "營業稅", "發票", "文具", "結算", "工商", "營所稅", "暫繳", "股利2代"];
 
@@ -97,7 +105,15 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   const addOther = () => setForm((f) => ({ ...f, others: [...f.others, { label: "", amount: "" }] }));
   const removeOther = (i: number) => setForm((f) => ({ ...f, others: f.others.filter((_, j) => j !== i) }));
   const hasValue = (k: string) => Number(form.items[k]) > 0;
-  const visible = visibleFeeItems({ showAll, common: COMMON_ITEMS, hasValue });
+  const visible = visibleFeeItems({ showAll, common: COMMON_ITEMS, hasValue }).filter((k) => !PICK_KEYS.includes(k));
+  const [picked, setPicked] = useState<string[]>(() => PICK_KEYS.filter((k) => Number(toForm(invoice, customerId).items[k]) > 0));
+  const isPicked = (k: string) => picked.includes(k) || hasValue(k);
+  const togglePick = (k: string) => {
+    if (isPicked(k)) {
+      setPicked((p) => p.filter((x) => x !== k));
+      setItem(k, "");
+    } else setPicked((p) => [...p, k]);
+  };
 
   function pickCustomer(id: string) {
     const c = customers.find((x) => x.id === id);
@@ -280,6 +296,43 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                   </div>
                 ))}
               </div>
+              {PICK_GROUPS.map((g) => {
+                const sub = g.items.reduce((t, k) => t + (Math.round(Number(form.items[k]) || 0)), 0);
+                const shown = g.items.filter(isPicked);
+                return (
+                  <div key={g.title} className="mt-4 rounded-md border border-border bg-card p-3">
+                    <div className="mb-2 flex items-center justify-between gap-3">
+                      <p className="text-sm font-bold">{g.title}</p>
+                      <p className="tabular text-xs text-muted-foreground">小計：{formatTWD(sub)}</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs text-muted-foreground">點擊加選：</span>
+                      {g.items.map((k) => {
+                        const on = isPicked(k);
+                        return (
+                          <button key={k} type="button" aria-pressed={on} onClick={() => togglePick(k)}
+                            className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:bg-accent"}`}>
+                            {on ? <Check className="size-3" /> : <Plus className="size-3" />}{shortLabel(k)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {shown.length > 0 && (
+                      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                        {shown.map((k) => (
+                          <div key={k} className="space-y-1">
+                            <Label htmlFor={`item-${k}`} className="text-xs text-muted-foreground">{feeLabel(k)}</Label>
+                            <div className="flex items-center gap-1">
+                              <Input id={`item-${k}`} type="number" step={1} autoFocus={!hasValue(k)} value={form.items[k] ?? ""} onChange={(e) => setItem(k, e.target.value)} className="tabular h-8" />
+                              <button type="button" aria-label={`移除${feeLabel(k)}`} onClick={() => togglePick(k)} className="text-muted-foreground hover:text-destructive"><X className="size-4" /></button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
               <div className="mt-4 rounded-md border border-border bg-card p-3">
                 <div className="mb-2 flex items-center justify-between gap-3">
                   <p className="text-sm font-bold">其他項目 <span className="font-normal text-xs text-muted-foreground">可自行增列說明與金額</span></p>
