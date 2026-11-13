@@ -45,14 +45,14 @@ describe("bookkeeper bonuses", () => {
     const d = { staff: ["AC"], customers: [cust({ billing_type: "半年收", bookkeeping_fee: 3000 })], rows: [] };
     expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(1000);
   });
-  it("BF09 counts one fixed 40000 per period even with two same-code customers, invoices not double counted", () => {
+  it("BF09 counts one fixed 50000 per period even with two same-code customers, invoices not double counted", () => {
     const a = cust({ id: "c1", customer_code: "BF09", staff_code: "BF", name: "誠鍚科技企業(報表)-勤豐", billing_type: "期收", bookkeeping_fee: 30000 });
     const b = cust({ id: "c2", customer_code: "BF09", staff_code: "BF", name: "誠鍚科技企業(薪資)-勤豐", billing_type: "期收", bookkeeping_fee: 25000 });
     const d = { staff: ["BF"], customers: [a, b], rows: [row({ customer_code: "BF09", staff_code: "BF", items: { 記帳費: 60000 } })] };
     for (const m of [1, 3, 9, 11]) {
       const g = bonusGroups(d, 2026, m).find((x) => x.code === "BF");
-      expect(g?.total).toBe(40000);
-      expect(g?.rows.filter((r) => r.bookkeeping === 40000)).toHaveLength(1);
+      expect(g?.total).toBe(50000);
+      expect(g?.rows.filter((r) => r.bookkeeping === 50000)).toHaveLength(1);
     }
   });
   it("combines period, half-year and annual customers in the staff total", () => {
