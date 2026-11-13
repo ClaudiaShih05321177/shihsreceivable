@@ -211,6 +211,13 @@
       "when": 1794574458850,
       "tag": "0029_filings_suspended_period",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1794574777337,
+      "tag": "0030_grant_filings_suspended_period",
+      "breakpoints": true
     }
   ]
 }

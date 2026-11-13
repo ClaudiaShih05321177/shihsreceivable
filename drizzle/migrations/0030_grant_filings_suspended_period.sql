@@ -1,0 +1,1 @@
+GRANT SELECT (suspended_period), INSERT (suspended_period), UPDATE (suspended_period) ON public.filings TO authenticated;
