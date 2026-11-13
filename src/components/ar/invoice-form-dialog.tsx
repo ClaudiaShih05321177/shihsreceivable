@@ -5,6 +5,7 @@ import { ChevronDown, Plus, Trash2 } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { RocDateInput } from "@/components/ar/roc-date-input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -227,7 +228,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="i-issue">開立日期</Label>
-                <Input id="i-issue" type="date" value={form.issue_date} onChange={(e) => set("issue_date")(e.target.value)} />
+                 <RocDateInput id="i-issue" value={form.issue_date} onChange={set("issue_date")} />
               </div>
               <div className="space-y-1.5">
                 <Label>簽證會計師</Label>

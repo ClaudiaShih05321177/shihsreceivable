@@ -4,8 +4,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, Money } from "@/components/ar/page-header";
+import { RocDateInput } from "@/components/ar/roc-date-input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
@@ -108,7 +108,7 @@ function AuditsPage() {
                         </TableCell>
                         <TableCell>
                           {me.isAdmin && inv.auditor_paid ? (
-                            <Input type="date" className="h-8 w-40" value={inv.auditor_paid_date ?? ""} onChange={(e) => save.mutate({ id: inv.id, auditor_paid: true, auditor_paid_date: e.target.value || null })} />
+                            <RocDateInput className="h-8 w-32" value={inv.auditor_paid_date ?? ""} onChange={(v) => save.mutate({ id: inv.id, auditor_paid: true, auditor_paid_date: v || null })} />
                           ) : (
                             <span className="text-sm">{inv.auditor_paid_date ? formatDate(inv.auditor_paid_date) : "—"}</span>
                           )}

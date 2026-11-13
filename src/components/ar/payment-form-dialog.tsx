@@ -2,6 +2,7 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { RocDateInput } from "@/components/ar/roc-date-input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -81,11 +82,11 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="p-paid">收款日期 *</Label>
-              <Input id="p-paid" type="date" required value={paidDate} onChange={(e) => setPaidDate(e.target.value)} />
+              <RocDateInput id="p-paid" required value={paidDate} onChange={setPaidDate} />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="p-posted">登帳日期</Label>
-              <Input id="p-posted" type="date" value={postedDate} onChange={(e) => setPostedDate(e.target.value)} />
+              <RocDateInput id="p-posted" value={postedDate} onChange={setPostedDate} />
             </div>
           </div>
           <div className="space-y-1.5">

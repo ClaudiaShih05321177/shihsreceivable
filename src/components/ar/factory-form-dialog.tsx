@@ -2,6 +2,7 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { RocDateInput } from "@/components/ar/roc-date-input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -97,7 +98,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   const date = (k: Key, label: string) => (
     <div className="grid gap-2">
       <Label htmlFor={`fr-${k}`}>{label}</Label>
-      <Input id={`fr-${k}`} type="date" value={form[k]} onChange={(e) => set(k, e.target.value)} />
+      <RocDateInput id={`fr-${k}`} value={form[k]} onChange={(v) => set(k, v)} />
     </div>
   );
   const money = (k: Key, label: string) => (

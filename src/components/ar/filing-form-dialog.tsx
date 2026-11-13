@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tansta
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { RocDateInput } from "@/components/ar/roc-date-input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -232,11 +233,11 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           {routeHasAuthority(form.route) && <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="f-filed">主管機關送件日期</Label>
-              <Input id="f-filed" type="date" value={form.filed_date} onChange={(e) => set({ filed_date: e.target.value })} />
+              <RocDateInput id="f-filed" value={form.filed_date} onChange={(v) => set({ filed_date: v })} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="f-approved">主管機關核准日期</Label>
-              <Input id="f-approved" type="date" value={form.approved_date} onChange={(e) => set({ approved_date: e.target.value })} />
+              <RocDateInput id="f-approved" value={form.approved_date} onChange={(v) => set({ approved_date: v })} />
             </div>
           </div>}
           {routeHasAuthority(form.route) && (
@@ -248,11 +249,11 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="f-sfiled">特許送件日期</Label>
-                  <Input id="f-sfiled" type="date" value={form.special_filed_date} onChange={(e) => set({ special_filed_date: e.target.value })} />
+                  <RocDateInput id="f-sfiled" value={form.special_filed_date} onChange={(v) => set({ special_filed_date: v })} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="f-sapproved">特許核准日期</Label>
-                  <Input id="f-sapproved" type="date" value={form.special_approved_date} onChange={(e) => set({ special_approved_date: e.target.value })} />
+                  <RocDateInput id="f-sapproved" value={form.special_approved_date} onChange={(v) => set({ special_approved_date: v })} />
                 </div>
               </div>
             </div>
@@ -260,11 +261,11 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           {routeHasTaxBureau(form.route) && <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="f-tfiled">國稅局送件日期</Label>
-              <Input id="f-tfiled" type="date" value={form.tax_filed_date} onChange={(e) => set({ tax_filed_date: e.target.value })} />
+              <RocDateInput id="f-tfiled" value={form.tax_filed_date} onChange={(v) => set({ tax_filed_date: v })} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="f-tapproved">國稅局核准日期</Label>
-              <Input id="f-tapproved" type="date" value={form.tax_approved_date} onChange={(e) => set({ tax_approved_date: e.target.value })} />
+              <RocDateInput id="f-tapproved" value={form.tax_approved_date} onChange={(v) => set({ tax_approved_date: v })} />
             </div>
           </div>}
           <div className="grid grid-cols-2 gap-4">

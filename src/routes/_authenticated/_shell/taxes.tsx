@@ -5,8 +5,8 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, Money } from "@/components/ar/page-header";
+import { RocDateInput } from "@/components/ar/roc-date-input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,11 +188,10 @@ function TaxesPage() {
                   </TableCell>
                   <TableCell>
                     {me.isAdmin && l.paid ? (
-                      <Input
-                        type="date"
-                        className="h-8 w-40"
+                      <RocDateInput
+                        className="h-8 w-32"
                         value={l.paid_date ?? ""}
-                        onChange={(e) => save.mutate({ invoice_id: l.inv.id, item: l.key, paid: true, paid_date: e.target.value || null })}
+                        onChange={(v) => save.mutate({ invoice_id: l.inv.id, item: l.key, paid: true, paid_date: v || null })}
                       />
                     ) : (
                       <span className="tabular text-sm text-muted-foreground">{formatDate(l.paid_date)}</span>
