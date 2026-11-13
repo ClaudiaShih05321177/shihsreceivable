@@ -88,7 +88,7 @@ export const changeInitialPassword = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: u, error: gErr } = await supabaseAdmin.auth.admin.getUserById(context.userId);
     if (gErr || !u.user) throw new Error("找不到帳號");
-    if (!u.user.app_metadata?.must_change_password) throw new Error("此帳號不需要變更初始密碼");
+    if (!u.user.app_metadata?.["must_change_password"]) throw new Error("此帳號不需要變更初始密碼");
     const { error } = await supabaseAdmin.auth.admin.updateUserById(context.userId, {
       password: data.password,
       app_metadata: { must_change_password: false },
