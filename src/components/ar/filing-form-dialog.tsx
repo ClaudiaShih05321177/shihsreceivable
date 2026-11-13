@@ -245,7 +245,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           {SUSPEND_CASE_TYPES.includes(form.case_type) && (
             <div className="grid gap-2">
               <Label htmlFor="f-susp">停業期間</Label>
-              <Input id="f-susp" value={form.suspended_period} onChange={(e) => set({ suspended_period: e.target.value })} placeholder="例：115/1-115/12" maxLength={60} />
+              <Input id="f-susp" value={form.suspended_period} onChange={(e) => set({ suspended_period: e.target.value })} maxLength={60} />
               <p className="text-xs text-muted-foreground">結案時會寫入客戶資料的停業期間。{form.case_type === "展延停業" ? "已依客戶原停業期間自動帶入下一年，可修改。" : ""}</p>
             </div>
           )}

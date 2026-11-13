@@ -31,7 +31,6 @@ export function RocDateInput({
       className={className}
       required={required}
       inputMode="numeric"
-      placeholder="115/1/15"
       value={text}
       onChange={(e) => {
         const t = e.target.value;
