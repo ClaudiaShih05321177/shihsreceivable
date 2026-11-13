@@ -103,6 +103,7 @@ export type Database = {
           government_fee: number
           id: string
           inspection_date: string | null
+          invoice_type: string
           notes: string | null
           other_fee: number
           quote_amount: number
@@ -132,6 +133,7 @@ export type Database = {
           government_fee?: number
           id?: string
           inspection_date?: string | null
+          invoice_type?: string
           notes?: string | null
           other_fee?: number
           quote_amount?: number
@@ -161,6 +163,7 @@ export type Database = {
           government_fee?: number
           id?: string
           inspection_date?: string | null
+          invoice_type?: string
           notes?: string | null
           other_fee?: number
           quote_amount?: number

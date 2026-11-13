@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv } from "@/lib/factory";
+import { INVOICE_TYPES, autoFinalInvoice, contractTotal, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv } from "@/lib/factory";
 import { meQuery, type FactoryRegistration } from "@/lib/queries";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -18,11 +18,11 @@ type Update = Database["public"]["Tables"]["factory_registrations"]["Update"];
 const TEXT = ["factory_name", "application_item", "status_note", "contact", "notes", "ar_notes"] as const;
 const DATES = ["env_filed_date", "env_approved_date", "bureau_filed_date", "inspection_date", "approved_date", "deposit_received_date", "final_received_date"] as const;
 const MONEY = ["quote_amount", "deposit_invoice_amount", "deposit_received_amount", "final_invoice_amount", "government_fee", "other_fee", "final_received_amount"] as const;
-type Key = (typeof TEXT)[number] | (typeof DATES)[number] | (typeof MONEY)[number] | "env_mode" | "stage";
+type Key = (typeof TEXT)[number] | (typeof DATES)[number] | (typeof MONEY)[number] | "env_mode" | "stage" | "invoice_type";
 type Form = Record<Key, string>;
 
 function toForm(r?: FactoryRegistration): Form {
-  const f = { env_mode: r?.env_mode ?? ENV_MODES[0], stage: r?.stage ?? "" } as Form;
+  const f = { env_mode: r?.env_mode ?? ENV_MODES[0], stage: r?.stage ?? "", invoice_type: r?.invoice_type ?? INVOICE_TYPES[0] } as Form;
   for (const k of [...TEXT, ...DATES]) f[k] = (r?.[k] as string | null) ?? "";
   for (const k of MONEY) f[k] = r && Number(r[k]) ? String(r[k]) : "";
   return f;
@@ -34,12 +34,19 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(toForm(record));
   useEffect(() => { if (open) setForm(toForm(record)); }, [open, record]);
-  const set = (k: Key, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: Key, v: string) => setForm((f) => {
+    const next = { ...f, [k]: v };
+    if (k === "quote_amount" || k === "deposit_invoice_amount" || k === "invoice_type") {
+      if (!issuesInvoice(next.invoice_type)) { next.deposit_invoice_amount = ""; next.final_invoice_amount = ""; }
+      else if (Number(next.quote_amount)) next.final_invoice_amount = String(autoFinalInvoice(next.quote_amount, next.deposit_invoice_amount, next.invoice_type));
+    }
+    return next;
+  });
 
   const save = useMutation({
     mutationFn: async () => {
       if (!form.factory_name.trim()) throw new Error("請輸入廠名");
-      const row: Record<string, string | number | null> = { env_mode: form.env_mode };
+      const row: Record<string, string | number | null> = { env_mode: form.env_mode, invoice_type: form.invoice_type };
       const typed = row as Update;
       for (const k of TEXT) row[k] = form[k].trim() || null;
       row["factory_name"] = form.factory_name.trim();
@@ -80,7 +87,8 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
       <Input id={`fr-${k}`} type="number" min={0} value={form[k]} onChange={(e) => set(k, e.target.value)} placeholder="0" />
     </div>
   );
-  const due = finalDue(Object.fromEntries(MONEY.map((k) => [k, form[k]])) as never);
+  const due = finalDue({ ...Object.fromEntries(MONEY.map((k) => [k, form[k]])), invoice_type: form.invoice_type } as never);
+  const inv = issuesInvoice(form.invoice_type);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -118,14 +126,22 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
           </section>
           <section className={`grid gap-4 rounded-md border border-dashed p-3 sm:grid-cols-2 ${focus === "ar" ? "order-first" : ""}`}>
             <p className="text-sm font-semibold sm:col-span-2">應收帳款{!me.isAdmin && record ? "（僅管理員可修改）" : ""}</p>
-            {money("quote_amount", "報價金額")}
-            {money("deposit_invoice_amount", "訂金發票金額")}
+            <div className="grid gap-2">
+              <Label>發票</Label>
+              <Select value={form.invoice_type} onValueChange={(v) => set("invoice_type", v)}>
+                <SelectTrigger aria-label="發票"><SelectValue /></SelectTrigger>
+                <SelectContent>{INVOICE_TYPES.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+            {money("quote_amount", inv ? "報價金額（未稅）" : "報價金額")}
+            {inv && <div className="grid gap-2"><Label>含稅總額（外加 5%）</Label><p className="tabular py-2 text-sm font-semibold">{contractTotal(form.quote_amount, form.invoice_type).toLocaleString("zh-TW")}</p></div>}
+            {inv && money("deposit_invoice_amount", "訂金發票金額")}
             {money("deposit_received_amount", "訂金收款金額")}
             {date("deposit_received_date", "訂金收款日期")}
-            {money("final_invoice_amount", "尾款發票金額")}
+            {inv && money("final_invoice_amount", "尾款發票金額（自動補齊，可修改）")}
             {money("government_fee", "規費")}
             {money("other_fee", "其他費用")}
-            <div className="grid gap-2"><Label>尾款＋規費＋其他費用</Label><p className="tabular py-2 text-sm font-semibold">{due.toLocaleString("zh-TW")}</p></div>
+            <div className="grid gap-2"><Label>{inv ? "尾款＋規費＋其他費用" : "報價＋規費＋其他費用"}</Label><p className="tabular py-2 text-sm font-semibold">{due.toLocaleString("zh-TW")}</p></div>
             {money("final_received_amount", "尾款收款金額")}
             {date("final_received_date", "尾款收款日期")}
             <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-ar_notes">帳款備註</Label><Textarea id="fr-ar_notes" rows={2} value={form.ar_notes} onChange={(e) => set("ar_notes", e.target.value)} /></div>

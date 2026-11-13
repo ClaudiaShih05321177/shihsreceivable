@@ -31,15 +31,32 @@ export type ProjectArLike = {
   government_fee: Num;
   other_fee: Num;
   final_received_amount: Num;
+  invoice_type?: string | null;
 };
+
+export const INVOICE_TYPES = ["開發票", "不開發票"] as const;
+export const TAX_RATE = 0.05;
+export const issuesInvoice = (t: string | null | undefined) => t !== "不開發票";
+
+/** 開發票：報價未稅外加 5%；不開發票：報價全額。 */
+export function contractTotal(quote: Num, type: string | null | undefined): number {
+  return issuesInvoice(type) ? Math.round(n(quote) * (1 + TAX_RATE)) : n(quote);
+}
+
+/** 開發票時尾款發票自動補齊＝含稅總額−訂金發票；不開發票為 0。 */
+export function autoFinalInvoice(quote: Num, depositInvoice: Num, type: string | null | undefined): number {
+  return issuesInvoice(type) ? Math.max(0, contractTotal(quote, type) - n(depositInvoice)) : 0;
+}
 
 /** 尾款應收＝尾款發票金額＋規費＋其他費用。 */
 export function finalDue(r: ProjectArLike): number {
+  if (!issuesInvoice(r.invoice_type)) return n(r.quote_amount) + n(r.government_fee) + n(r.other_fee);
   return n(r.final_invoice_amount) + n(r.government_fee) + n(r.other_fee);
 }
 
 /** 未收餘額＝（訂金發票−訂金收款）＋（尾款應收−尾款收款）。 */
 export function projectOutstanding(r: ProjectArLike): number {
+  if (!issuesInvoice(r.invoice_type)) return finalDue(r) - n(r.deposit_received_amount) - n(r.final_received_amount);
   return n(r.deposit_invoice_amount) - n(r.deposit_received_amount) + finalDue(r) - n(r.final_received_amount);
 }
 
@@ -47,6 +64,7 @@ export function projectArStatus(r: ProjectArLike): "未請款" | "訂金待收" 
   const billed = n(r.deposit_invoice_amount) + finalDue(r);
   if (billed === 0) return "未請款";
   if (projectOutstanding(r) <= 0) return "已收清";
+  if (!issuesInvoice(r.invoice_type)) return n(r.deposit_received_amount) > 0 ? "尾款待收" : "訂金待收";
   if (n(r.deposit_received_amount) < n(r.deposit_invoice_amount)) return "訂金待收";
   return "尾款待收";
 }

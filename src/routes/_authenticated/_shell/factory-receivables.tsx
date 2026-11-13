@@ -31,23 +31,24 @@ function FactoryReceivablesPage() {
   const total = rows.reduce((s, r) => s + projectOutstanding(r), 0);
   return (
     <>
-      <PageHeader eyebrow="勤豐工商顧問有限公司" title="應收帳款" description={`未收餘額合計 ${total.toLocaleString("zh-TW")} 元；尾款收款＝尾款發票＋規費＋其他費用。`} />
+      <PageHeader eyebrow="勤豐工商顧問有限公司" title="應收帳款" description={`未收餘額合計 ${total.toLocaleString("zh-TW")} 元；開發票：報價外加 5%，尾款發票自動補齊；不開發票：報價＋規費＋其他費用全額列入尾款應收。`} />
       <div className="ledger-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/60 hover:bg-muted/60">
-              <TableHead>廠名</TableHead><TableHead>申辦項目</TableHead>
+              <TableHead>廠名</TableHead><TableHead>申辦項目</TableHead><TableHead>發票</TableHead>
               <TableHead className="text-right">報價金額</TableHead><TableHead className="text-right">訂金發票</TableHead><TableHead className="text-right">訂金收款</TableHead><TableHead>訂金收款日</TableHead>
               <TableHead className="text-right">尾款發票</TableHead><TableHead className="text-right">規費</TableHead><TableHead className="text-right">其他費用</TableHead><TableHead className="text-right">尾款應收</TableHead>
               <TableHead className="text-right">尾款收款</TableHead><TableHead>尾款收款日</TableHead><TableHead className="text-right">未收餘額</TableHead><TableHead>狀態</TableHead><TableHead>備註</TableHead><TableHead />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {rows.length === 0 && <TableRow><TableCell colSpan={16} className="py-10 text-center text-sm text-muted-foreground">尚無案件，請先到工廠登記進度新增</TableCell></TableRow>}
+            {rows.length === 0 && <TableRow><TableCell colSpan={17} className="py-10 text-center text-sm text-muted-foreground">尚無案件，請先到工廠登記進度新增</TableCell></TableRow>}
             {rows.map((r) => (
               <TableRow key={r.id}>
                 <TableCell className="font-medium whitespace-nowrap">{r.factory_name}</TableCell>
                 <TableCell className="text-sm">{r.application_item ?? "—"}</TableCell>
+                <TableCell className="text-xs whitespace-nowrap">{r.invoice_type}</TableCell>
                 <TableCell className="text-right"><Money value={Number(r.quote_amount)} /></TableCell>
                 <TableCell className="text-right"><Money value={Number(r.deposit_invoice_amount)} /></TableCell>
                 <TableCell className="text-right"><Money value={Number(r.deposit_received_amount)} /></TableCell>

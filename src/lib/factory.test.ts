@@ -27,3 +27,15 @@ describe("專案應收帳款", () => {
     expect(projectArStatus({ ...ar, deposit_received_amount: 30000, final_received_amount: 75000 })).toBe("已收清");
   });
 });
+
+import { autoFinalInvoice as afi, contractTotal as ct, finalDue as fd, projectOutstanding as po } from "./factory";
+describe("發票類型", () => {
+  const base = { quote_amount: 100000, deposit_invoice_amount: 0, deposit_received_amount: 0, final_invoice_amount: 0, government_fee: 3000, other_fee: 2000, final_received_amount: 0 };
+  it("開發票報價外加5%", () => expect(ct(100000, "開發票")).toBe(105000));
+  it("尾款發票自動補齊", () => expect(afi(100000, 30000, "開發票")).toBe(75000));
+  it("不開發票全額列入尾款應收", () => {
+    const r = { ...base, invoice_type: "不開發票", deposit_received_amount: 40000 };
+    expect(fd(r)).toBe(105000);
+    expect(po(r)).toBe(65000);
+  });
+});

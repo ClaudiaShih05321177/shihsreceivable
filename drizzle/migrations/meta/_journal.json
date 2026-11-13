@@ -134,6 +134,13 @@
       "when": 1794553395871,
       "tag": "0018_authority_routes_and_factory_registrations",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794554000452,
+      "tag": "0019_factory_invoice_type",
+      "breakpoints": true
     }
   ]
 }

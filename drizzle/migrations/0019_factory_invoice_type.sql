@@ -1,0 +1,1 @@
+ALTER TABLE public.factory_registrations ADD COLUMN invoice_type text NOT NULL DEFAULT '開發票' CHECK (invoice_type IN ('開發票','不開發票'));
