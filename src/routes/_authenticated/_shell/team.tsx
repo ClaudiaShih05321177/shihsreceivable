@@ -12,9 +12,9 @@ import { formatDate } from "@/lib/receivables";
 export const Route = createFileRoute("/_authenticated/_shell/team")({
   head: () => ({
     meta: [
-      { title: "團隊成員 · 帳房" },
+      { title: "團隊成員 · 應收帳款管理系統" },
       { name: "description", content: "管理可使用應收帳款系統的團隊成員，核准新成員加入。" },
-      { property: "og:title", content: "團隊成員 · 帳房" },
+      { property: "og:title", content: "團隊成員 · 應收帳款管理系統" },
       { property: "og:description", content: "管理可使用應收帳款系統的團隊成員，核准新成員加入。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

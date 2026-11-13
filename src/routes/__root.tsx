@@ -84,9 +84,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "帳房 · 應收帳款管理" },
+      { title: "應收帳款管理系統" },
       { name: "description", content: "團隊共用的應收帳款管理：客戶名冊、到期與付款日期、逾期提醒與統計報表。" },
-      { property: "og:title", content: "帳房 · 應收帳款管理" },
+      { property: "og:title", content: "應收帳款管理系統" },
       { property: "og:description", content: "團隊共用的應收帳款管理：客戶名冊、到期與付款日期、逾期提醒與統計報表。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

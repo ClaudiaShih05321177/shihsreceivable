@@ -14,10 +14,10 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
-      { title: "登入 · 帳房應收帳款" },
-      { name: "description", content: "登入帳房，與團隊一起管理應收帳款、到期日與收款紀錄。" },
-      { property: "og:title", content: "登入 · 帳房應收帳款" },
-      { property: "og:description", content: "登入帳房，與團隊一起管理應收帳款、到期日與收款紀錄。" },
+      { title: "登入 · 應收帳款管理系統" },
+      { name: "description", content: "登入，與團隊一起管理應收帳款、到期日與收款紀錄。" },
+      { property: "og:title", content: "登入 · 應收帳款管理系統" },
+      { property: "og:description", content: "登入，與團隊一起管理應收帳款、到期日與收款紀錄。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -81,28 +81,11 @@ function AuthPage() {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1.1fr_1fr]">
-      <aside className="relative hidden overflow-hidden bg-ink-gradient p-12 text-sidebar-foreground lg:flex lg:flex-col lg:justify-between">
-        <BrandMark />
-        <div className="max-w-md animate-rise">
-          <p className="font-display text-4xl font-bold leading-snug">
-            每一筆應收，
-            <br />
-            都記得清清楚楚。
-          </p>
-          <p className="mt-5 text-sidebar-foreground/70">
-            客戶名冊、到期日、付款日期與逾期提醒，整個團隊共用同一本帳。
-          </p>
-        </div>
-        <p className="text-xs text-sidebar-foreground/50">帳房 · 應收帳款管理</p>
-        <span className="seal pointer-events-none absolute -right-10 bottom-24 grid size-56 place-items-center font-display text-7xl font-black text-sidebar-primary/20">
-          收訖
-        </span>
-      </aside>
+    <div className="min-h-screen bg-background">
 
-      <main className="flex items-center justify-center px-6 py-12">
+      <main className="flex min-h-screen items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm animate-rise">
-          <div className="mb-8 lg:hidden">
+          <div className="mb-8">
             <BrandMark />
           </div>
           {sentTo ? (
@@ -118,9 +101,9 @@ function AuthPage() {
             </div>
           ) : (
             <>
-              <h1 className="text-3xl font-bold">{mode === "signin" ? "登入帳房" : "建立帳號"}</h1>
+              <h1 className="text-3xl font-bold">{mode === "signin" ? "登入" : "建立帳號"}</h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                {mode === "signin" ? "歡迎回來，繼續管理您的應收帳款。" : "第一位註冊者將成為管理員，其他成員需經管理員核准。"}
+                {mode === "signin" ? "請輸入帳號密碼。" : "第一位註冊者將成為管理員，其他成員需經管理員核准。"}
               </p>
 
               <div className="mt-8 space-y-3">

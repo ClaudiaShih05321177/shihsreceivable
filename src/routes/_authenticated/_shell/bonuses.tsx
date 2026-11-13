@@ -12,9 +12,9 @@ import { rocYear, bookkeepingCollectionMonth, suggestPeriod } from "@/lib/receiv
 
 export const Route = createFileRoute("/_authenticated/_shell/bonuses")({
   head: () => ({ meta: [
-    { title: "會計專員獎金 · 帳房" },
+    { title: "會計專員獎金 · 應收帳款管理系統" },
     { name: "description", content: "管理員專用的每期會計專員獎金與客戶費用明細。" },
-    { property: "og:title", content: "會計專員獎金 · 帳房" },
+    { property: "og:title", content: "會計專員獎金 · 應收帳款管理系統" },
     { property: "og:description", content: "每期記帳費合計與會計專員獎金。" },
     { property: "og:type", content: "website" },
     { name: "twitter:card", content: "summary" },

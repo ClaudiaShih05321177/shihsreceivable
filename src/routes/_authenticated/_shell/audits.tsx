@@ -16,9 +16,9 @@ import { comparePeriod, formatDate, outstanding, periodMonthLabel, rocYear, toda
 export const Route = createFileRoute("/_authenticated/_shell/audits")({
   head: () => ({
     meta: [
-      { title: "財稅簽 · 帳房" },
+      { title: "財稅簽 · 應收帳款管理系統" },
       { name: "description", content: "依簽證會計師（秉誠、詮益、眾智）列出財稅簽證費用、收款狀態與付會計師日期。" },
-      { property: "og:title", content: "財稅簽 · 帳房" },
+      { property: "og:title", content: "財稅簽 · 應收帳款管理系統" },
       { property: "og:description", content: "各會計師財稅簽證明細與合計。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

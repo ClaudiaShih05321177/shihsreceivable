@@ -11,9 +11,9 @@ import { formatDate, formatTWD, itemEntries, rocYear, vatDue, type FeeItems } fr
 export const Route = createFileRoute("/_authenticated/statement/$id")({
   head: () => ({
     meta: [
-      { title: "請款單 · 帳房" },
+      { title: "請款單 · 應收帳款管理系統" },
       { name: "description", content: "可列印的客戶請款單，含費用明細、前期未收餘額與匯款帳號。" },
-      { property: "og:title", content: "請款單 · 帳房" },
+      { property: "og:title", content: "請款單 · 應收帳款管理系統" },
       { property: "og:description", content: "可列印的客戶請款單。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

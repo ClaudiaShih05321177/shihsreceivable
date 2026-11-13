@@ -17,9 +17,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/_shell/invoices/")({
   head: () => ({
     meta: [
-      { title: "應收帳款 · 帳房" },
+      { title: "應收帳款 · 應收帳款管理系統" },
       { name: "description", content: "所有應收帳款清單，依狀態、會計專員與客戶篩選。" },
-      { property: "og:title", content: "應收帳款 · 帳房" },
+      { property: "og:title", content: "應收帳款 · 應收帳款管理系統" },
       { property: "og:description", content: "所有應收帳款清單，依狀態、會計專員與客戶篩選。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

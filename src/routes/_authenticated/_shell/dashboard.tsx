@@ -13,9 +13,9 @@ import { agingSummary, daysOverdue, formatDate, formatTWD, invoiceStatus, monthl
 export const Route = createFileRoute("/_authenticated/_shell/dashboard")({
   head: () => ({
     meta: [
-      { title: "總覽 · 帳房應收帳款" },
+      { title: "總覽 · 應收帳款管理系統" },
       { name: "description", content: "應收帳款總覽：未收總額、逾期提醒、月度開立與收款、帳齡分析。" },
-      { property: "og:title", content: "總覽 · 帳房應收帳款" },
+      { property: "og:title", content: "總覽 · 應收帳款管理系統" },
       { property: "og:description", content: "應收帳款總覽：未收總額、逾期提醒、月度開立與收款、帳齡分析。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

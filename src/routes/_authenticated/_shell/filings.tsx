@@ -17,9 +17,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/_shell/filings")({
   head: () => ({
     meta: [
-      { title: "工商進度 · 帳房" },
+      { title: "工商進度 · 應收帳款管理系統" },
       { name: "description", content: "工商登記案件進度表：預查、主管機關、國稅局、結案，結案時一鍵立帳到應收帳款。" },
-      { property: "og:title", content: "工商進度 · 帳房" },
+      { property: "og:title", content: "工商進度 · 應收帳款管理系統" },
       { property: "og:description", content: "工商登記案件進度與立帳。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -15,9 +15,9 @@ import { formatTWD, invoiceStatus, outstanding } from "@/lib/receivables";
 export const Route = createFileRoute("/_authenticated/_shell/customers/$id")({
   head: () => ({
     meta: [
-      { title: "客戶明細 · 帳房" },
+      { title: "客戶明細 · 應收帳款管理系統" },
       { name: "description", content: "客戶基本資料、收費設定與所有應收帳款紀錄。" },
-      { property: "og:title", content: "客戶明細 · 帳房" },
+      { property: "og:title", content: "客戶明細 · 應收帳款管理系統" },
       { property: "og:description", content: "客戶基本資料、收費設定與所有應收帳款紀錄。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -38,9 +38,9 @@ import {
 export const Route = createFileRoute("/_authenticated/_shell/invoices/$id")({
   head: () => ({
     meta: [
-      { title: "帳款明細 · 帳房" },
+      { title: "帳款明細 · 應收帳款管理系統" },
       { name: "description", content: "單筆應收帳款的費用項目、收款紀錄與應收餘額。" },
-      { property: "og:title", content: "帳款明細 · 帳房" },
+      { property: "og:title", content: "帳款明細 · 應收帳款管理系統" },
       { property: "og:description", content: "單筆應收帳款的費用項目、收款紀錄與應收餘額。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

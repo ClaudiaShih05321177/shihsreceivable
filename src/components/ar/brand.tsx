@@ -6,7 +6,7 @@ export function BrandMark({ className = "" }: { className?: string }) {
       <span className="seal grid size-9 place-items-center font-display text-lg font-black text-sidebar-primary">
         帳
       </span>
-      <span className="font-display text-xl font-bold tracking-wider">帳房</span>
+      <span className="font-display text-xl font-bold tracking-wider">應收帳款管理系統</span>
     </Link>
   );
 }

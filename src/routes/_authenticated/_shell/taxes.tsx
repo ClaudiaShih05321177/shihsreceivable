@@ -18,9 +18,9 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/_shell/taxes")({
   head: () => ({
     meta: [
-      { title: "稅額明細 · 帳房" },
+      { title: "稅額明細 · 應收帳款管理系統" },
       { name: "description", content: "每一期營業稅、營所稅、暫繳、扣繳、二代健保與股利二代的明細、合計與繳費狀態。" },
-      { property: "og:title", content: "稅額明細 · 帳房" },
+      { property: "og:title", content: "稅額明細 · 應收帳款管理系統" },
       { property: "og:description", content: "每一期稅額明細、合計與繳費狀態。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

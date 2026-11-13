@@ -15,9 +15,9 @@ import { invoiceStatus, outstanding } from "@/lib/receivables";
 export const Route = createFileRoute("/_authenticated/_shell/customers/")({
   head: () => ({
     meta: [
-      { title: "客戶資料 · 帳房" },
+      { title: "客戶資料 · 應收帳款管理系統" },
       { name: "description", content: "客戶名冊：統一編號、收費狀態、記帳費與會計專員，以及各客戶應收餘額。" },
-      { property: "og:title", content: "客戶資料 · 帳房" },
+      { property: "og:title", content: "客戶資料 · 應收帳款管理系統" },
       { property: "og:description", content: "客戶名冊：統一編號、收費狀態、記帳費與會計專員，以及各客戶應收餘額。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
