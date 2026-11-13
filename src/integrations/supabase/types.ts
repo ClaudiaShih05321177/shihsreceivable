@@ -107,6 +107,69 @@ export type Database = {
         }
         Relationships: []
       }
+      filings: {
+        Row: {
+          advance_fee: number
+          approved_date: string | null
+          case_type: string
+          created_at: string
+          created_by: string | null
+          customer_id: string
+          filed_date: string | null
+          id: string
+          invoice_id: string | null
+          notes: string | null
+          service_fee: number
+          stage: string
+          updated_at: string
+        }
+        Insert: {
+          advance_fee?: number
+          approved_date?: string | null
+          case_type: string
+          created_at?: string
+          created_by?: string | null
+          customer_id: string
+          filed_date?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          service_fee?: number
+          stage?: string
+          updated_at?: string
+        }
+        Update: {
+          advance_fee?: number
+          approved_date?: string | null
+          case_type?: string
+          created_at?: string
+          created_by?: string | null
+          customer_id?: string
+          filed_date?: string | null
+          id?: string
+          invoice_id?: string | null
+          notes?: string | null
+          service_fee?: number
+          stage?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "filings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "filings_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount: number

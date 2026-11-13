@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, Landmark, Stamp, FileText, LogOut, Users, UserCog, BadgeDollarSign } from "lucide-react";
+import { BarChart3, Landmark, Stamp, FileText, FileCheck2, LogOut, Users, UserCog, BadgeDollarSign } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { BrandMark } from "@/components/ar/brand";
@@ -17,6 +17,7 @@ const nav = [
   { to: "/invoices", label: "應收帳款", icon: FileText },
   { to: "/taxes", label: "稅額明細", icon: Landmark },
   { to: "/audits", label: "財稅簽", icon: Stamp },
+  { to: "/filings", label: "工商進度", icon: FileCheck2 },
   { to: "/customers", label: "客戶資料", icon: Users },
   { to: "/team", label: "團隊成員", icon: UserCog },
   { to: "/bonuses", label: "會計專員獎金", icon: BadgeDollarSign },

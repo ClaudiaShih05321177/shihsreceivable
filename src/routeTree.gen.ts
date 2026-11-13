@@ -16,6 +16,7 @@ import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedShellAuditsRouteImport } from './routes/_authenticated/_shell/audits'
 import { Route as AuthenticatedShellBonusesRouteImport } from './routes/_authenticated/_shell/bonuses'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
+import { Route as AuthenticatedShellFilingsRouteImport } from './routes/_authenticated/_shell/filings'
 import { Route as AuthenticatedShellTaxesRouteImport } from './routes/_authenticated/_shell/taxes'
 import { Route as AuthenticatedShellTeamRouteImport } from './routes/_authenticated/_shell/team'
 import { Route as AuthenticatedStatementIdRouteImport } from './routes/_authenticated/statement.$id'
@@ -58,6 +59,12 @@ const AuthenticatedShellDashboardRoute =
   AuthenticatedShellDashboardRouteImport.update({
     id: '/dashboard',
     path: '/dashboard',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellFilingsRoute =
+  AuthenticatedShellFilingsRouteImport.update({
+    id: '/filings',
+    path: '/filings',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
 const AuthenticatedShellTaxesRoute = AuthenticatedShellTaxesRouteImport.update({
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
   '/audits': typeof AuthenticatedShellAuditsRoute
   '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/filings': typeof AuthenticatedShellFilingsRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
   '/statement/$id': typeof AuthenticatedStatementIdRoute
@@ -121,6 +129,7 @@ export interface FileRoutesByTo {
   '/audits': typeof AuthenticatedShellAuditsRoute
   '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/filings': typeof AuthenticatedShellFilingsRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
   '/statement/$id': typeof AuthenticatedStatementIdRoute
@@ -138,6 +147,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/audits': typeof AuthenticatedShellAuditsRoute
   '/_authenticated/_shell/bonuses': typeof AuthenticatedShellBonusesRoute
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/_authenticated/_shell/filings': typeof AuthenticatedShellFilingsRoute
   '/_authenticated/_shell/taxes': typeof AuthenticatedShellTaxesRoute
   '/_authenticated/_shell/team': typeof AuthenticatedShellTeamRoute
   '/_authenticated/statement/$id': typeof AuthenticatedStatementIdRoute
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
     | '/audits'
     | '/bonuses'
     | '/dashboard'
+    | '/filings'
     | '/taxes'
     | '/team'
     | '/statement/$id'
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | '/audits'
     | '/bonuses'
     | '/dashboard'
+    | '/filings'
     | '/taxes'
     | '/team'
     | '/statement/$id'
@@ -184,6 +196,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/audits'
     | '/_authenticated/_shell/bonuses'
     | '/_authenticated/_shell/dashboard'
+    | '/_authenticated/_shell/filings'
     | '/_authenticated/_shell/taxes'
     | '/_authenticated/_shell/team'
     | '/_authenticated/statement/$id'
@@ -250,6 +263,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellDashboardRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/_shell/filings': {
+      id: '/_authenticated/_shell/filings'
+      path: '/filings'
+      fullPath: '/filings'
+      preLoaderRoute: typeof AuthenticatedShellFilingsRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
     '/_authenticated/_shell/taxes': {
       id: '/_authenticated/_shell/taxes'
       path: '/taxes'
@@ -306,6 +326,7 @@ interface AuthenticatedShellRouteChildren {
   AuthenticatedShellAuditsRoute: typeof AuthenticatedShellAuditsRoute
   AuthenticatedShellBonusesRoute: typeof AuthenticatedShellBonusesRoute
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
+  AuthenticatedShellFilingsRoute: typeof AuthenticatedShellFilingsRoute
   AuthenticatedShellTaxesRoute: typeof AuthenticatedShellTaxesRoute
   AuthenticatedShellTeamRoute: typeof AuthenticatedShellTeamRoute
   AuthenticatedShellCustomersIdRoute: typeof AuthenticatedShellCustomersIdRoute
@@ -318,6 +339,7 @@ const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellAuditsRoute: AuthenticatedShellAuditsRoute,
   AuthenticatedShellBonusesRoute: AuthenticatedShellBonusesRoute,
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
+  AuthenticatedShellFilingsRoute: AuthenticatedShellFilingsRoute,
   AuthenticatedShellTaxesRoute: AuthenticatedShellTaxesRoute,
   AuthenticatedShellTeamRoute: AuthenticatedShellTeamRoute,
   AuthenticatedShellCustomersIdRoute: AuthenticatedShellCustomersIdRoute,

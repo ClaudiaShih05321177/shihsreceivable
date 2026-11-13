@@ -30,6 +30,9 @@ const num = (v: unknown) => Number(v) || 0;
 const code = (s: string | null | undefined) => s?.trim() || "未指定";
 const before = (r: BonusRow, year: number, month: number) => (r.period_year ?? 0) < year || ((r.period_year ?? 0) === year && (r.period_month ?? 0) <= month);
 
+/** 獎金每期固定計入的客戶（依客戶編號）：不論收費狀態，每期只算這一筆；立帳金額不受影響。 */
+export const FIXED_PERIOD_SHARE: Record<string, number> = { BF09: 40000 };
+
 /** 每期記帳費依客戶設定計入，不因尚未立帳而漏計；其他狀態依實際立帳。 */
 export function periodShare(c?: Pick<BonusCustomer, "billing_type" | "bookkeeping_fee">): number | null {
   if (!c) return null;
@@ -48,10 +51,16 @@ export function bonusGroups(data: BonusData, year: number, month: number) {
     return l;
   };
   // 期收／年收／半年收每期依設定計入；實際立帳不重複加計。
-  for (const c of customers.values()) {
-    const share = periodShare(c);
-    if (share == null || !share) continue;
-    lineFor(c.id, { staff: code(c.staff_code), customer_code: c.customer_code, customer_name: c.name, annual: true, rate: c.annual_extra_rate, shareLabel: c.billing_type === "年收" ? "年收 1/6" : c.billing_type === "半年收" ? "半年收 1/3" : "期收 ×2" }).bookkeeping = share;
+  // 固定計入的客戶（如 BF09）同一編號每期合計只算一筆固定金額，由名稱排序第一戶帶出，其餘同編號客戶為 0。
+  const fixedSeen = new Set<string>();
+  for (const c of [...customers.values()].sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"))) {
+    const fixedCode = c.customer_code?.trim() ?? "";
+    const fixed = FIXED_PERIOD_SHARE[fixedCode];
+    const share = fixed != null ? (fixedSeen.has(fixedCode) ? 0 : fixed) : periodShare(c);
+    if (fixed != null) fixedSeen.add(fixedCode);
+    if (share == null) continue;
+    const label = fixed != null ? (share ? "每期固定" : "併入同編號") : c.billing_type === "年收" ? "年收 1/6" : c.billing_type === "半年收" ? "半年收 1/3" : "期收 ×2";
+    lineFor(c.id, { staff: code(c.staff_code), customer_code: c.customer_code, customer_name: c.name, annual: true, rate: c.annual_extra_rate, shareLabel: label }).bookkeeping = share;
   }
   for (const r of data.rows) {
     const c = r.customer_id ? customers.get(r.customer_id) : undefined;

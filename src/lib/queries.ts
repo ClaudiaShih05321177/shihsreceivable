@@ -131,6 +131,21 @@ export const teamQuery = queryOptions({
   },
 });
 
+export type FilingRow = Database["public"]["Tables"]["filings"]["Row"];
+export type Filing = FilingRow & { customer: Pick<Customer, "id" | "name"> | null };
+
+export const filingsQuery = queryOptions({
+  queryKey: ["filings"],
+  queryFn: async () => {
+    const { data, error } = await supabase
+      .from("filings")
+      .select("*, customer:customers(id, name)")
+      .order("created_at", { ascending: false });
+    if (error) throw error;
+    return data as unknown as Filing[];
+  },
+});
+
 export type TaxFiling = Database["public"]["Tables"]["tax_filings"]["Row"];
 
 export const taxFilingsQuery = queryOptions({
