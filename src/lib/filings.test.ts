@@ -73,3 +73,12 @@ describe("工商費用與派案", () => {
     expect(mergeFeeItems({ 記帳費: 6000, "其他：印章": 200 }, { "其他：印章": 800, 文具: 5000 })).toEqual({ 記帳費: 6000, "其他：印章": 1000, 文具: 5000 });
   });
 });
+
+import { suspendsCustomerOnClose } from "./filings";
+describe("停復業登記連動停業", () => {
+  it("結案的停復業登記才改客戶為停業", () => {
+    expect(suspendsCustomerOnClose("停復業登記", "結案")).toBe(true);
+    expect(suspendsCustomerOnClose("停復業登記", "核准")).toBe(false);
+    expect(suspendsCustomerOnClose("變更登記", "結案")).toBe(false);
+  });
+});

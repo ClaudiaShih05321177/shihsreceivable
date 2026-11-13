@@ -9,7 +9,7 @@ import { PageHeader, Money } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, nextStage } from "@/lib/filings";
+import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, nextStage, suspendsCustomerOnClose } from "@/lib/filings";
 import { customersQuery, filingServiceFeesQuery, filingsQuery, meQuery, type Filing } from "@/lib/queries";
 import { formatDate, scheduledCustomerFees, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,14 @@ function FilingsPage() {
   const openCount = filings.filter((f) => f.stage !== "結案").length;
   const rows = filings.filter((f) => (stage === "all" ? true : stage === "open" ? f.stage !== "結案" : f.stage === stage));
 
+  // 停復業登記結案：客戶收費狀態一併改為停業。
+  const suspendCustomer = async (filing: Filing, stage: string) => {
+    if (!filing.customer_id || !suspendsCustomerOnClose(filing.case_type, stage)) return;
+    const { error } = await supabase.from("customers").update({ billing_type: "停業" }).eq("id", filing.customer_id);
+    if (error) throw error;
+    toast.success("客戶收費狀態已改為停業");
+  };
+
   const advance = useMutation({
     mutationFn: async (filing: Filing) => {
       const next = nextStage(filing.stage, filing.route);
@@ -54,8 +62,9 @@ function FilingsPage() {
       };
       const { error } = await supabase.from("filings").update(patch).eq("id", filing.id);
       if (error) throw error;
+      await suspendCustomer(filing, next);
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["filings"] }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["filings"] }); qc.invalidateQueries({ queryKey: ["customers"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "更新失敗"),
   });
 
@@ -92,11 +101,13 @@ function FilingsPage() {
       }
       const { error } = await supabase.from("filings").update({ stage: "結案", invoice_id: invoiceId }).eq("id", filing.id);
       if (error) throw error;
+      await suspendCustomer(filing, "結案");
     },
     onSuccess: () => {
       toast.success("已結案，工商費用已併入當期記帳費帳款");
       qc.invalidateQueries({ queryKey: ["filings"] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["customers"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "立帳失敗"),
   });

@@ -28,7 +28,7 @@ export function initialStage(route: string | null | undefined): FilingStage {
 }
 
 /** 案件類型。 */
-export const CASE_TYPES = ["設立登記", "變更登記", "遷址登記", "增資登記", "解散登記", "註銷登記", "其他"] as const;
+export const CASE_TYPES = ["設立登記", "變更登記", "遷址登記", "增資登記", "解散登記", "註銷登記", "停復業登記", "其他"] as const;
 
 /** 下一個階段；已結案維持結案。 */
 export function nextStage(stage: string, route?: string | null): FilingStage {
@@ -91,4 +91,10 @@ export function filingInvoiceItems(filing: FilingFeeLike): FeeItems {
 /** 案件費用合計（代辦費＋代墊規費＋印章）。 */
 export function filingTotal(filing: FilingFeeLike): number {
   return feeItemsTotal(filingInvoiceItems(filing));
+}
+
+/** 停復業登記案件結案時，連動將客戶收費狀態改為「停業」。 */
+export const SUSPEND_CASE_TYPE = "停復業登記";
+export function suspendsCustomerOnClose(caseType: string | null | undefined, stage: string): boolean {
+  return caseType === SUSPEND_CASE_TYPE && stage === "結案";
 }
