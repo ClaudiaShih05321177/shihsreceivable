@@ -103,3 +103,14 @@ describe("結案權限", () => {
     expect(canCloseFiling(true, null)).toBe(true);
   });
 });
+
+import { extendSuspendedPeriod } from "./filings";
+describe("展延停業", () => {
+  it("展延停業結案也改停業", () => { expect(billingTypeOnClose("展延停業")).toBe("停業"); });
+  it("接續原期間往後一年", () => {
+    expect(extendSuspendedPeriod("114/7-115/6")).toBe("115/7-116/6");
+    expect(extendSuspendedPeriod("115/1-115/12")).toBe("116/1-116/12");
+    expect(extendSuspendedPeriod("114/7/1-115/6/30")).toBe("115/7-116/6");
+    expect(extendSuspendedPeriod("")).toBe("");
+  });
+});

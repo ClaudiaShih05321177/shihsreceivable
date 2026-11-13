@@ -234,6 +234,7 @@ export type Database = {
           special_filed_date: string | null
           stage: string
           stamp_fee: number
+          suspended_period: string | null
           tax_approved_date: string | null
           tax_filed_date: string | null
           updated_at: string
@@ -259,6 +260,7 @@ export type Database = {
           special_filed_date?: string | null
           stage?: string
           stamp_fee?: number
+          suspended_period?: string | null
           tax_approved_date?: string | null
           tax_filed_date?: string | null
           updated_at?: string
@@ -284,6 +286,7 @@ export type Database = {
           special_filed_date?: string | null
           stage?: string
           stamp_fee?: number
+          suspended_period?: string | null
           tax_approved_date?: string | null
           tax_filed_date?: string | null
           updated_at?: string

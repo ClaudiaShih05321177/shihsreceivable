@@ -28,7 +28,7 @@ export function initialStage(route: string | null | undefined): FilingStage {
 }
 
 /** 案件類型。 */
-export const CASE_TYPES = ["設立登記", "變更登記", "法院報備", "註銷登記", "停業登記", "復業登記", "其他"] as const;
+export const CASE_TYPES = ["設立登記", "變更登記", "法院報備", "註銷登記", "停業登記", "展延停業", "復業登記", "其他"] as const;
 
 /** 下一個階段；已結案維持結案。 */
 export function nextStage(stage: string, route?: string | null): FilingStage {
@@ -95,7 +95,7 @@ export function filingTotal(filing: FilingFeeLike): number {
 
 /** 停業登記結案 → 客戶改「停業」（記帳費歸零）；復業登記結案 → 改回「期收」，沿用原記帳費。 */
 export function billingTypeOnClose(caseType: string | null | undefined): "停業" | "期收" | null {
-  if (caseType === "停業登記" || caseType === "停復業登記") return "停業";
+  if (caseType && SUSPEND_CASE_TYPES.includes(caseType)) return "停業";
   if (caseType === "復業登記") return "期收";
   return null;
 }
@@ -104,4 +104,18 @@ export function billingTypeOnClose(caseType: string | null | undefined): "停業
 export const CLOSER_STAFF_CODES = ["CA", "MN"] as const;
 export function canCloseFiling(isAdmin: boolean, staffCode: string | null | undefined): boolean {
   return isAdmin || (CLOSER_STAFF_CODES as readonly string[]).includes((staffCode ?? "").trim().toUpperCase());
+}
+
+/** 需要填停業期間的案件類型。 */
+export const SUSPEND_CASE_TYPES: readonly string[] = ["停業登記", "展延停業", "停復業登記"];
+
+/** 展延停業預設期間：接續原停業期間往後一年，例 114/7-115/6 → 115/7-116/6。無法解析回傳 ""。 */
+export function extendSuspendedPeriod(period: string | null | undefined): string {
+  const m = (period ?? "").trim().match(/(\d{2,3})\/(\d{1,2})(?:\/\d{1,2})?\s*[-~～－至]\s*(\d{2,3})\/(\d{1,2})(?:\/\d{1,2})?$/);
+  if (!m) return "";
+  let y = Number(m[3]), mo = Number(m[4]) + 1;
+  if (mo > 12) { mo = 1; y += 1; }
+  let ey = y + 1, em = mo - 1;
+  if (em < 1) { em = 12; ey -= 1; }
+  return `${y}/${mo}-${ey}/${em}`;
 }

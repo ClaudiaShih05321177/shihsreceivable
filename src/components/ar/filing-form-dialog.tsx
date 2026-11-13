@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { CASE_TYPES, FILING_ROUTES, initialStage, routeHasAuthority, routeHasTaxBureau, staffFromCode } from "@/lib/filings";
+import { CASE_TYPES, SUSPEND_CASE_TYPES, extendSuspendedPeriod, FILING_ROUTES, initialStage, routeHasAuthority, routeHasTaxBureau, staffFromCode } from "@/lib/filings";
 import { lookupCompany } from "@/lib/company-lookup.functions";
 import { customersQuery, filingServiceFeesQuery, meQuery, type Filing } from "@/lib/queries";
 
@@ -30,13 +30,14 @@ type Form = {
   notes: string;
   special_authority: string;
   change_detail: string;
+  suspended_period: string;
   special_filed_date: string;
   special_approved_date: string;
 };
 
 const NEW = "__new__";
 
-const EMPTY: Form = { customer_id: "", company_name: "", customer_code: "", route: FILING_ROUTES[0], tax_filed_date: "", tax_approved_date: "", case_type: CASE_TYPES[0], change_detail: "", filed_date: "", approved_date: "", service_fee: "", advance_fee: "", stamp_fee: "", notes: "", special_authority: "", special_filed_date: "", special_approved_date: "" };
+const EMPTY: Form = { customer_id: "", company_name: "", customer_code: "", route: FILING_ROUTES[0], tax_filed_date: "", tax_approved_date: "", case_type: CASE_TYPES[0], change_detail: "", suspended_period: "", filed_date: "", approved_date: "", service_fee: "", advance_fee: "", stamp_fee: "", notes: "", special_authority: "", special_filed_date: "", special_approved_date: "" };
 
 function toForm(filing: Filing, serviceFee?: number): Form {
   return {
@@ -55,6 +56,7 @@ function toForm(filing: Filing, serviceFee?: number): Form {
     notes: filing.notes ?? "",
     special_authority: filing.special_authority ?? "",
     change_detail: filing.change_detail ?? "",
+    suspended_period: filing.suspended_period ?? "",
     special_filed_date: filing.special_filed_date ?? "",
     special_approved_date: filing.special_approved_date ?? "",
   };
@@ -130,6 +132,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
         notes: form.notes.trim() || null,
         special_authority: form.special_authority.trim() || null,
         change_detail: form.case_type === "變更登記" ? form.change_detail.trim() || null : null,
+        suspended_period: SUSPEND_CASE_TYPES.includes(form.case_type) ? form.suspended_period.trim() || null : null,
         special_filed_date: form.special_filed_date || null,
         special_approved_date: form.special_approved_date || null,
       };
@@ -224,7 +227,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           </div>
           <div className="grid gap-2">
             <Label htmlFor="f-case">案件類型</Label>
-            <Select value={form.case_type} onValueChange={(v) => set({ case_type: v })}>
+            <Select value={form.case_type} onValueChange={(v) => set({ case_type: v, ...(v === "展延停業" && !form.suspended_period ? { suspended_period: extendSuspendedPeriod(customers.find((c) => c.id === form.customer_id)?.suspended_period) } : {}) })}>
               <SelectTrigger id="f-case" aria-label="案件類型"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {CASE_TYPES.map((t) => (
@@ -237,6 +240,13 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
             <div className="grid gap-2">
               <Label htmlFor="f-change">變更內容</Label>
               <Input id="f-change" value={form.change_detail} onChange={(e) => set({ change_detail: e.target.value })} placeholder="例：遷址、增資、董監事變更" />
+            </div>
+          )}
+          {SUSPEND_CASE_TYPES.includes(form.case_type) && (
+            <div className="grid gap-2">
+              <Label htmlFor="f-susp">停業期間</Label>
+              <Input id="f-susp" value={form.suspended_period} onChange={(e) => set({ suspended_period: e.target.value })} placeholder="例：115/1-115/12" maxLength={60} />
+              <p className="text-xs text-muted-foreground">結案時會寫入客戶資料的停業期間。{form.case_type === "展延停業" ? "已依客戶原停業期間自動帶入下一年，可修改。" : ""}</p>
             </div>
           )}
           {routeHasAuthority(form.route) && <div className="grid grid-cols-2 gap-4">

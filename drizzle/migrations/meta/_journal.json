@@ -204,6 +204,13 @@
       "when": 1794574000652,
       "tag": "0028_members_update_own_customers",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794574458850,
+      "tag": "0029_filings_suspended_period",
+      "breakpoints": true
     }
   ]
 }
