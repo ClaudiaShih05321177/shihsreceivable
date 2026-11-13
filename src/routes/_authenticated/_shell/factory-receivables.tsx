@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Pencil } from "lucide-react";
+import { FileText, Pencil, Receipt } from "lucide-react";
 
 import { FactoryFormDialog } from "@/components/ar/factory-form-dialog";
 import { Money, PageHeader } from "@/components/ar/page-header";
@@ -62,7 +62,10 @@ function FactoryReceivablesPage() {
                 <TableCell className="text-right font-semibold"><Money value={projectOutstanding(r)} /></TableCell>
                 <TableCell className="text-xs whitespace-nowrap">{projectArStatus(r)}</TableCell>
                 <TableCell className="max-w-48 text-sm">{r.ar_notes ?? "—"}</TableCell>
-                <TableCell>{me.isAdmin && <FactoryFormDialog record={r} focus="ar" trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${r.factory_name} 帳款`}><Pencil className="size-3.5" /></Button>} />}</TableCell>
+                <TableCell className="whitespace-nowrap">
+                  <Button asChild variant="ghost" size="icon" aria-label={`${r.factory_name} 報價單`}><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "quote", stage: "尾款" }}><FileText className="size-3.5" /></Link></Button>
+                  <Button asChild variant="ghost" size="icon" aria-label={`${r.factory_name} 請款單`}><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: projectArStatus(r) === "訂金待收" ? "訂金" : "尾款" }}><Receipt className="size-3.5" /></Link></Button>
+                  {me.isAdmin && <FactoryFormDialog record={r} focus="ar" trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${r.factory_name} 帳款`}><Pencil className="size-3.5" /></Button>} />}</TableCell>
               </TableRow>
             ))}
           </TableBody>
