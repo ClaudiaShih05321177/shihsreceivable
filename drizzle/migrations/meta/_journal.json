@@ -225,6 +225,13 @@
       "when": 1794575190710,
       "tag": "0031_filings_insert_closers_only",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794575462191,
+      "tag": "0032_close_filing_extend_suspension",
+      "breakpoints": true
     }
   ]
 }

@@ -186,7 +186,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           </div>
           <div className="grid gap-2">
             <Label htmlFor="f-customer">客戶</Label>
-            <Select value={form.customer_id} onValueChange={(v) => set({ customer_id: v, customer_code: form.customer_code || customers.find((c) => c.id === v)?.customer_code || "" })}>
+            <Select value={form.customer_id} onValueChange={(v) => set({ customer_id: v, customer_code: form.customer_code || customers.find((c) => c.id === v)?.customer_code || "", ...(form.case_type === "展延停業" && !form.suspended_period ? { suspended_period: extendSuspendedPeriod(customers.find((c) => c.id === v)?.suspended_period) } : {}) })}>
               <SelectTrigger id="f-customer" aria-label="客戶"><SelectValue placeholder="選擇客戶" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={NEW}>＋ 新設立（尚無統編／客戶資料）</SelectItem>
