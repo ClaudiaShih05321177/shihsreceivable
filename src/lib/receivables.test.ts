@@ -218,3 +218,11 @@ describe("收費狀態選項", () => {
       for (const m of [1, 3, 11]) expect(scheduledCustomerFees(customer, m, mode)).toEqual({ 記帳費: 0, 暫繳: 0, 股利2代: 0 });
   });
 });
+
+import { paymentOffset, receivedAmount } from "./receivables";
+describe("bank fee offset", () => {
+  it("received 3985 + fee 15 offsets 4000", () => {
+    expect(paymentOffset(3985, 15)).toBe(4000);
+    expect(receivedAmount({ amount: 4000, bank_fee: 15 })).toBe(3985);
+  });
+});

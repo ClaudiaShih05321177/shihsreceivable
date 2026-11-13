@@ -148,6 +148,13 @@
       "when": 1794554720305,
       "tag": "0020_factory_tax_id_company_branch",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1794556217297,
+      "tag": "0021_payments_bank_fee",
+      "breakpoints": true
     }
   ]
 }

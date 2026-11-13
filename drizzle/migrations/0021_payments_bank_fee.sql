@@ -1,0 +1,2 @@
+ALTER TABLE public.payments ADD COLUMN bank_fee numeric NOT NULL DEFAULT 0 CHECK (bank_fee >= 0);
+COMMENT ON COLUMN public.payments.bank_fee IS 'Bank fee deducted by customer; amount is the total offset (actual received = amount - bank_fee).';

@@ -209,7 +209,7 @@ function InvoiceDetail() {
                     <th className="py-2 font-normal">登帳日期</th>
                     <th className="py-2 font-normal">收款日期</th>
                     <th className="py-2 font-normal">支付方式</th>
-                    <th className="py-2 text-right font-normal">收款金額</th>
+                    <th className="py-2 text-right font-normal">沖銷金額</th>
                     {me.canDelete && <th />}
                   </tr>
                 </thead>
@@ -223,7 +223,10 @@ function InvoiceDetail() {
                         {p.method ?? "—"}
                         {p.notes && <span className="block text-xs text-muted-foreground">{p.notes}</span>}
                       </td>
-                      <td className="py-2.5 text-right font-semibold"><Money value={Number(p.amount)} /></td>
+                      <td className="py-2.5 text-right font-semibold">
+                        <Money value={Number(p.amount)} />
+                        {Number(p.bank_fee) > 0 && <span className="block text-xs font-normal text-muted-foreground">實收 {formatTWD(Number(p.amount) - Number(p.bank_fee))}・匯費 {formatTWD(Number(p.bank_fee))}</span>}
+                      </td>
                       {me.canDelete && <td className="py-2.5 text-right">
                         <Button
                           variant="ghost"

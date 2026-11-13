@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { meQuery } from "@/lib/queries";
-import { formatTWD, PAYMENT_METHODS, todayISO } from "@/lib/receivables";
+import { formatTWD, PAYMENT_METHODS, paymentOffset, todayISO } from "@/lib/receivables";
 
 export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: string; balance: number; trigger: ReactNode }) {
   const qc = useQueryClient();
@@ -22,16 +22,21 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
   const [postedDate, setPostedDate] = useState(todayISO());
   const [method, setMethod] = useState<string>("匯款");
   const [notes, setNotes] = useState("");
+  const [fee, setFee] = useState("0");
+  const feeNum = Math.max(0, Math.round(Number(fee) || 0));
+  const offset = paymentOffset(Number(amount) || 0, feeNum);
+  const pickFee = (f: number) => { setFee(String(f)); setAmount(String(Math.max(0, balance - f))); };
 
   const save = useMutation({
     mutationFn: async () => {
       if (!me.canRecordPayment) throw new Error("只有管理員可以銷帳");
       const value = Math.round(Number(amount));
-      if (!value || value <= 0) throw new Error("請輸入收款金額");
+      if (!value || value <= 0) throw new Error("請輸入實收金額");
       if (!paidDate) throw new Error("請選擇收款日期");
       const { error } = await supabase.from("payments").insert({
         invoice_id: invoiceId,
-        amount: value,
+        amount: paymentOffset(value, feeNum),
+        bank_fee: feeNum,
         paid_date: paidDate,
         posted_date: postedDate || null,
         method,
@@ -59,6 +64,7 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
           setPostedDate(todayISO());
           setMethod("匯款");
           setNotes("");
+          setFee("0");
         }
       }}
     >
@@ -76,8 +82,18 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
           className="space-y-4"
         >
           <div className="space-y-1.5">
-            <Label htmlFor="p-amount">收款金額 *</Label>
+            <Label htmlFor="p-amount">實收金額 *</Label>
             <Input id="p-amount" type="number" min={1} step={1} required value={amount} onChange={(e) => setAmount(e.target.value)} className="tabular text-lg" />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="p-fee">扣匯費</Label>
+            <div className="flex gap-2">
+              {[0, 15, 30].map((f) => (
+                <Button key={f} type="button" size="sm" variant={feeNum === f ? "default" : "outline"} onClick={() => pickFee(f)}>{f === 0 ? "無" : `${f} 元`}</Button>
+              ))}
+              <Input id="p-fee" type="number" min={0} step={1} value={fee} onChange={(e) => setFee(e.target.value)} className="tabular w-24" />
+            </div>
+            <p className="text-sm text-muted-foreground">實收 {formatTWD(Number(amount) || 0)} ＋ 匯費 {formatTWD(feeNum)} ＝ 沖銷 <span className="font-semibold text-foreground">{formatTWD(offset)}</span></p>
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">

@@ -343,3 +343,12 @@ export function priorVatCredit(current: PeriodSortable & { customer_id: string; 
   if (!prev) return 0;
   return vatDue(Number(prev.vat_output), Number(prev.vat_input ?? 0), Number(prev.vat_prior_credit ?? 0)).carry;
 }
+
+/** 扣匯費沖銷：實收＋匯費＝沖銷金額（payments.amount 存沖銷金額）。 */
+export function paymentOffset(received: number, bankFee: number): number {
+  return Math.round(Math.max(0, received) + Math.max(0, bankFee));
+}
+/** 銀行實際入帳金額。 */
+export function receivedAmount(p: { amount: number | string; bank_fee?: number | string | null }): number {
+  return Number(p.amount) - Number(p.bank_fee ?? 0);
+}
