@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { permissionsFor } from "./permissions";
+import { canSeePage, permissionsFor } from "./permissions";
 
 describe("帳號權限", () => {
   it("使用者可以查看與立帳", () => {
@@ -31,5 +31,12 @@ describe("帳號權限", () => {
     expect(permissionsFor(["admin"]).canManageBonusRates).toBe(true);
     expect(permissionsFor(["member"]).canManageBonusRates).toBe(false);
     expect(permissionsFor([]).canManageBonusRates).toBe(false);
+  });
+});
+describe("一般使用者可見頁面", () => {
+  it("只能看應收帳款、工商進度、客戶資料", () => {
+    expect(["/invoices", "/filings", "/customers", "/customers/abc"].every((p) => canSeePage(false, p))).toBe(true);
+    expect(["/dashboard", "/taxes", "/audits", "/bonuses", "/team", "/factory"].some((p) => canSeePage(false, p))).toBe(false);
+    expect(canSeePage(true, "/bonuses")).toBe(true);
   });
 });

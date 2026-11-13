@@ -11,6 +11,7 @@ import { invoiceStatus } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 import { useCompany } from "@/hooks/use-company";
 import { COMPANIES, FACTORY_COMPANY } from "@/lib/factory";
+import { canSeePage } from "@/lib/permissions";
 
 type Me = { displayName: string; email: string; isAdmin: boolean };
 
@@ -37,7 +38,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: invoices } = useQuery(invoicesQuery);
   const [company, setCompany] = useCompany();
-  const items = company === FACTORY_COMPANY ? factoryNav : nav;
+  const items = company === FACTORY_COMPANY && me.isAdmin ? factoryNav : nav;
   const overdue = (invoices ?? []).filter((i) => invoiceStatus(i) === "overdue").length;
 
   async function signOut() {
@@ -56,7 +57,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
             <LogOut />
           </Button>
         </div>
-        <div className="px-3 pb-3">
+        {me.isAdmin && <div className="px-3 pb-3">
           <select
             aria-label="切換公司"
             value={company}
@@ -69,9 +70,9 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           >
             {COMPANIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
-        </div>
+        </div>}
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-1 md:flex-col md:pb-0">
-          {(items as readonly { to: string; label: string; icon: typeof Factory }[]).filter((item) => (item.to !== "/team") || me.isAdmin).map((item) => {
+          {(items as readonly { to: string; label: string; icon: typeof Factory }[]).filter((item) => canSeePage(me.isAdmin, item.to)).map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
               <Link

@@ -50,3 +50,5 @@ use the editor.
 - 勤豐 報價單／請款單 print page is `/factory-doc/$id?type=&stage=`; amounts come from tested `src/lib/factory-docs.ts` (KINFENG letterhead/bank there). Why: documents must match the AR row numbers.
 - Team accounts are created by admins via admin-checked server functions in src/lib/team.functions.ts; public signup is disabled and app_metadata.must_change_password forces a first-login password change in the shell. Why: staff must not self-register.
 - Non-admin members see only customers (and their invoices/payments/tax rows) whose staff code (customers.staff_code or first 2 letters of customer_code) matches profiles.staff_code, via `can_see_customer()` RLS; admins set codes through the admin-checked `set_staff_code` RPC (column not user-updatable). Why: each staff member sees only their own clients.
+
+- Non-admin members may only open /invoices, /filings, /customers (canSeePage in src/lib/permissions.ts); the shell redirects other paths and hides nav and the company switcher. Why: staff only need receivables, filings and customers.
