@@ -123,6 +123,7 @@ export type Database = {
           route: string
           service_fee: number
           stage: string
+          stamp_fee: number
           tax_approved_date: string | null
           tax_filed_date: string | null
           updated_at: string
@@ -142,6 +143,7 @@ export type Database = {
           route?: string
           service_fee?: number
           stage?: string
+          stamp_fee?: number
           tax_approved_date?: string | null
           tax_filed_date?: string | null
           updated_at?: string
@@ -161,6 +163,7 @@ export type Database = {
           route?: string
           service_fee?: number
           stage?: string
+          stamp_fee?: number
           tax_approved_date?: string | null
           tax_filed_date?: string | null
           updated_at?: string
@@ -399,6 +402,13 @@ export type Database = {
           customer_id: string
         }[]
       }
+      filing_service_fees: {
+        Args: never
+        Returns: {
+          filing_id: string
+          service_fee: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -407,6 +417,10 @@ export type Database = {
         Returns: boolean
       }
       is_member: { Args: { _user_id: string }; Returns: boolean }
+      set_filing_service_fee: {
+        Args: { _fee: number; _filing_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "member"

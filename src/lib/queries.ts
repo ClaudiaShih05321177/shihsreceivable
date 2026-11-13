@@ -132,14 +132,24 @@ export const teamQuery = queryOptions({
 });
 
 export type FilingRow = Database["public"]["Tables"]["filings"]["Row"];
-export type Filing = FilingRow & { customer: Pick<Customer, "id" | "name"> | null };
+export type Filing = Omit<FilingRow, "service_fee"> & { service_fee?: number; customer: Pick<Customer, "id" | "name" | "customer_code"> | null };
+
+/** 工商代辦費只有管理員可讀（經由管理員檢查的資料庫函式）。 */
+export const filingServiceFeesQuery = queryOptions({
+  queryKey: ["filings", "service_fees"],
+  queryFn: async () => {
+    const { data, error } = await supabase.rpc("filing_service_fees");
+    if (error) throw error;
+    return Object.fromEntries((data ?? []).map((r) => [r.filing_id, Number(r.service_fee) || 0])) as Record<string, number>;
+  },
+});
 
 export const filingsQuery = queryOptions({
   queryKey: ["filings"],
   queryFn: async () => {
     const { data, error } = await supabase
       .from("filings")
-      .select("*, customer:customers(id, name)")
+      .select("id, customer_id, case_type, stage, filed_date, approved_date, advance_fee, stamp_fee, invoice_id, notes, created_by, created_at, updated_at, company_name, route, tax_filed_date, tax_approved_date, customer:customers(id, name, customer_code)")
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data as unknown as Filing[];

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowRight, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -9,9 +9,9 @@ import { PageHeader, Money } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { FILING_STAGES, filingInvoiceItems, filingName, filingTotal, nextStage } from "@/lib/filings";
-import { customersQuery, filingsQuery, meQuery, type Filing } from "@/lib/queries";
-import { formatDate, todayISO } from "@/lib/receivables";
+import { FILING_STAGES, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, nextStage } from "@/lib/filings";
+import { customersQuery, filingServiceFeesQuery, filingsQuery, meQuery, type Filing } from "@/lib/queries";
+import { formatDate, scheduledCustomerFees, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_shell/filings")({
@@ -33,6 +33,8 @@ export const Route = createFileRoute("/_authenticated/_shell/filings")({
 function FilingsPage() {
   const { data: filings } = useSuspenseQuery(filingsQuery);
   const { data: me } = useSuspenseQuery(meQuery);
+  const { data: customers } = useSuspenseQuery(customersQuery);
+  const { data: fees } = useQuery({ ...filingServiceFeesQuery, enabled: me.isAdmin });
   const qc = useQueryClient();
   const [stage, setStage] = useState<string>("open");
 
@@ -61,31 +63,38 @@ function FilingsPage() {
     mutationFn: async (filing: Filing) => {
       if (!filing.customer_id) throw new Error("新設立案件請先建立客戶資料，並在編輯案件中選擇該客戶");
       const customerId = filing.customer_id;
-      const items = filingInvoiceItems(filing);
-      const amount = filingTotal(filing);
-      if (amount <= 0) throw new Error("代辦費與代墊規費皆為 0，無法立帳");
-      const base = filing.tax_approved_date ?? filing.approved_date ?? todayISO();
-      const [y = 0, m = 0] = base.slice(0, 7).split("-").map(Number);
-      const { data: invoice, error: invError } = await supabase
-        .from("invoices")
-        .insert({
-          customer_id: customerId,
-          amount,
-          items,
-          issue_date: todayISO(),
-          period_year: y,
-          period_month: m,
-          period_label: filing.case_type,
-          description: `工商${filing.case_type}`,
-        })
-        .select("id")
-        .single();
-      if (invError) throw invError;
-      const { error } = await supabase.from("filings").update({ stage: "結案", invoice_id: invoice.id }).eq("id", filing.id);
+      const customer = customers.find((c) => c.id === customerId);
+      if (!customer) throw new Error("找不到客戶資料");
+      const add = filingInvoiceItems({ ...filing, service_fee: fees?.[filing.id] ?? 0 });
+      if (feeItemsTotal(add) <= 0) throw new Error("工商費用皆為 0，無法立帳");
+      const { year, month } = filingBillingPeriod(filing.tax_approved_date ?? filing.approved_date ?? todayISO());
+      // 工商帳款併入該客戶同期（雙月）記帳費帳單；沒有就連同記帳費新建一筆。
+      const { data: existing, error: findError } = await supabase
+        .from("invoices").select("id, items").eq("customer_id", customerId).eq("period_year", year).eq("period_month", month)
+        .order("created_at").limit(1);
+      if (findError) throw findError;
+      let invoiceId: string;
+      if (existing?.[0]) {
+        const items = mergeFeeItems(existing[0].items as Record<string, number>, add);
+        const { error: upError } = await supabase.from("invoices").update({ items, amount: feeItemsTotal(items) }).eq("id", existing[0].id);
+        if (upError) throw upError;
+        invoiceId = existing[0].id;
+      } else {
+        const base = Object.fromEntries(Object.entries(scheduledCustomerFees(customer, month, "batch")).filter(([, v]) => Number(v) > 0));
+        const items = mergeFeeItems(base, add);
+        const { data: invoice, error: invError } = await supabase
+          .from("invoices")
+          .insert({ customer_id: customerId, amount: feeItemsTotal(items), items, issue_date: todayISO(), period_year: year, period_month: month, description: `記帳費＋工商${filing.case_type}` })
+          .select("id")
+          .single();
+        if (invError) throw invError;
+        invoiceId = invoice.id;
+      }
+      const { error } = await supabase.from("filings").update({ stage: "結案", invoice_id: invoiceId }).eq("id", filing.id);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("已結案並建立應收帳款");
+      toast.success("已結案，工商費用已併入當期記帳費帳款");
       qc.invalidateQueries({ queryKey: ["filings"] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
     },
@@ -122,7 +131,7 @@ function FilingsPage() {
       <PageHeader
         eyebrow="工商登記"
         title="工商進度表"
-        description={`進行中 ${openCount} 件；核准後可一鍵結案立帳，代辦費與代墊規費合併為一筆應收帳款。`}
+        description={`進行中 ${openCount} 件；結案立帳時，工商費用併入該客戶當期（雙月）記帳費帳款一起收。`}
         actions={<FilingFormDialog trigger={<Button><Plus /> 新增案件</Button>} />}
       />
       <div className="mb-5 flex flex-wrap gap-2">
@@ -140,8 +149,9 @@ function FilingsPage() {
               <TableHead>流程</TableHead>
               <TableHead>經濟部 送件／核准</TableHead>
               <TableHead>國稅局 送件／核准</TableHead>
-              <TableHead className="text-right">代辦費</TableHead>
+              {me.isAdmin && <TableHead className="text-right">代辦費</TableHead>}
               <TableHead className="text-right">代墊規費</TableHead>
+              <TableHead className="text-right">印章</TableHead>
               <TableHead>應收帳款</TableHead>
               <TableHead className="text-right">操作</TableHead>
             </TableRow>
@@ -149,7 +159,7 @@ function FilingsPage() {
           <TableBody>
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell>
+                <TableCell colSpan={11} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell>
               </TableRow>
             )}
             {rows.map((f) => (
@@ -167,8 +177,9 @@ function FilingsPage() {
                 <TableCell className="text-xs whitespace-nowrap">{f.route}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{f.route === "只送國稅局" ? "—" : `${formatDate(f.filed_date)}／${formatDate(f.approved_date)}`}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{formatDate(f.tax_filed_date)}／{formatDate(f.tax_approved_date)}</TableCell>
-                <TableCell className="text-right"><Money value={Number(f.service_fee)} /></TableCell>
+                {me.isAdmin && <TableCell className="text-right"><Money value={fees?.[f.id] ?? 0} /></TableCell>}
                 <TableCell className="text-right"><Money value={Number(f.advance_fee)} /></TableCell>
+                <TableCell className="text-right"><Money value={Number(f.stamp_fee)} /></TableCell>
                 <TableCell className="text-sm">
                   {f.invoice_id ? (
                     <Link to="/invoices/$id" params={{ id: f.invoice_id }} className="text-primary hover:underline">查看帳款</Link>

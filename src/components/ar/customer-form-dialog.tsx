@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { meQuery, type Customer } from "@/lib/queries";
 import { BILLING_TYPES, isSuspended } from "@/lib/receivables";
 import { lookupCompany } from "@/lib/company-lookup.functions";
+import { staffFromCode } from "@/lib/filings";
 
 type Form = {
   name: string;
@@ -90,7 +91,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
         stationery_fee: Number(form.stationery_fee) || 0,
         settlement_fee: Number(form.settlement_fee) || 0,
         suspended_period: form.suspended_period.trim() || null,
-        staff_code: form.staff_code.trim().toUpperCase() || null,
+        staff_code: staffFromCode(form.customer_code) ?? (form.staff_code.trim().toUpperCase() || null),
         annual_extra_rate: form.annual_extra_rate.trim() === "" ? null : Number(form.annual_extra_rate),
         contact_person: form.contact_person.trim() || null,
         phone: form.phone.trim() || null,
@@ -148,7 +149,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
         <form onSubmit={submit} className="space-y-5">
           <div className="grid gap-4 sm:grid-cols-2">
             {field("name", "客戶名稱 *", { required: true, maxLength: 120 })}
-            {field("customer_code", "客戶ID", { maxLength: 40 })}
+            {field("customer_code", "客戶代碼（前兩碼＝會計專員）", { maxLength: 40, placeholder: "例：AC15" })}
             <div className="space-y-1.5">
               <Label htmlFor="c-tax_id">統一編號</Label>
               <div className="flex gap-2">
@@ -172,7 +173,6 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
             {field("settlement_fee", "結算費", { type: "number", min: 0, step: 1 })}
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
-            {field("staff_code", "會計專員工ID", { placeholder: "例：AC", maxLength: 10 })}
             {me.canManageBonusRates && field("annual_extra_rate", "年度加收獎金%（特殊客戶）", { type: "number", min: 0, step: 1, placeholder: "空白＝30%" })}
             {field("suspended_period", "停業期間", { placeholder: "例：114/7-115/6", maxLength: 60 })}
             {field("contact_person", "聯絡人", { maxLength: 60 })}

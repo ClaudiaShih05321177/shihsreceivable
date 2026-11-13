@@ -51,3 +51,25 @@ describe("國稅局進度", () => {
     expect(filingName({ customer: null, company_name: "新光公司" })).toBe("新光公司（新設立）");
   });
 });
+
+import { filingBillingPeriod, mergeFeeItems, staffFromCode } from "./filings";
+
+describe("工商費用與派案", () => {
+  it("印章費列為自訂項目並計入合計", () => {
+    expect(filingInvoiceItems({ service_fee: 0, advance_fee: 1000, stamp_fee: 800 })).toEqual({ "其他：代墊規費": 1000, "其他：印章": 800 });
+    expect(filingTotal({ service_fee: 5000, advance_fee: 1000, stamp_fee: 800 })).toBe(6800);
+  });
+  it("客戶代碼前兩位英文字母為會計專員代號", () => {
+    expect(staffFromCode("ac15")).toBe("AC");
+    expect(staffFromCode("BF09")).toBe("BF");
+    expect(staffFromCode("1234")).toBeNull();
+  });
+  it("工商帳款併入雙月記帳期別（單數月）", () => {
+    expect(filingBillingPeriod("2026-11-20")).toEqual({ year: 2026, month: 11 });
+    expect(filingBillingPeriod("2026-10-05")).toEqual({ year: 2026, month: 11 });
+    expect(filingBillingPeriod("2026-12-05")).toEqual({ year: 2027, month: 1 });
+  });
+  it("併入既有帳單時同名費用相加", () => {
+    expect(mergeFeeItems({ 記帳費: 6000, "其他：印章": 200 }, { "其他：印章": 800, 文具: 5000 })).toEqual({ 記帳費: 6000, "其他：印章": 1000, 文具: 5000 });
+  });
+});
