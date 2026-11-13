@@ -74,7 +74,14 @@ describe("工商費用與派案", () => {
   });
 });
 
-import { suspendsCustomerOnClose } from "./filings";
+import { suspendsCustomerOnClose, CASE_TYPES } from "./filings";
+describe("案件類型", () => {
+  it("解散登記已改名為法院報備，註銷登記保留", () => {
+    expect(CASE_TYPES).toContain("法院報備");
+    expect(CASE_TYPES).not.toContain("解散登記");
+    expect(CASE_TYPES).toContain("註銷登記");
+  });
+});
 describe("停復業登記連動停業", () => {
   it("結案的停復業登記才改客戶為停業", () => {
     expect(suspendsCustomerOnClose("停復業登記", "結案")).toBe(true);
