@@ -12,7 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { FACTORY_STAGES, needsEnv, nextFactoryStage } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery, type FactoryRegistration } from "@/lib/queries";
-import { formatDate, todayISO } from "@/lib/receivables";
+import { formatDate } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_shell/factory")({
@@ -30,7 +30,6 @@ export const Route = createFileRoute("/_authenticated/_shell/factory")({
   component: FactoryPage,
 });
 
-const DATE_FOR: Record<string, keyof FactoryRegistration> = { 環保核准: "env_approved_date", 送件工商科: "bureau_filed_date", 現場會勘: "inspection_date", 核准結案: "approved_date" };
 
 function FactoryPage() {
   const { data: rows } = useSuspenseQuery(factoryRegistrationsQuery);
@@ -42,9 +41,7 @@ function FactoryPage() {
   const advance = useMutation({
     mutationFn: async ({ r, skip }: { r: FactoryRegistration; skip?: boolean }) => {
       const next = nextFactoryStage(r.stage, skip);
-      const col = DATE_FOR[next];
       const patch: Record<string, string> = { stage: next };
-      if (col && !r[col]) patch[col] = todayISO();
       const { error } = await supabase.from("factory_registrations").update(patch as Database["public"]["Tables"]["factory_registrations"]["Update"]).eq("id", r.id);
       if (error) throw error;
     },

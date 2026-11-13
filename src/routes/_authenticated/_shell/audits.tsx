@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { auditFee, auditSummary } from "@/lib/auditors";
 import { invoicesQuery, meQuery } from "@/lib/queries";
-import { comparePeriod, formatDate, outstanding, periodMonthLabel, rocYear, todayISO } from "@/lib/receivables";
+import { comparePeriod, formatDate, outstanding, periodMonthLabel, rocYear } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/_shell/audits")({
   head: () => ({
@@ -103,7 +103,7 @@ function AuditsPage() {
                             aria-label={`${inv.customer?.name ?? ""} 已付會計師`}
                             checked={inv.auditor_paid}
                             disabled={!me.isAdmin}
-                            onCheckedChange={(c) => save.mutate({ id: inv.id, auditor_paid: c === true, auditor_paid_date: c === true ? inv.auditor_paid_date ?? todayISO() : null })}
+                            onCheckedChange={(c) => save.mutate({ id: inv.id, auditor_paid: c === true, auditor_paid_date: c === true ? inv.auditor_paid_date ?? null : null })}
                           />
                         </TableCell>
                         <TableCell>

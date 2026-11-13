@@ -11,15 +11,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { meQuery } from "@/lib/queries";
-import { formatTWD, PAYMENT_METHODS, paymentOffset, todayISO } from "@/lib/receivables";
+import { formatTWD, PAYMENT_METHODS, paymentOffset } from "@/lib/receivables";
 
 export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: string; balance: number; trigger: ReactNode }) {
   const qc = useQueryClient();
   const { data: me } = useSuspenseQuery(meQuery);
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState("");
-  const [paidDate, setPaidDate] = useState(todayISO());
-  const [postedDate, setPostedDate] = useState(todayISO());
+  const [paidDate, setPaidDate] = useState("");
+  const [postedDate, setPostedDate] = useState("");
   const [method, setMethod] = useState<string>("匯款");
   const [notes, setNotes] = useState("");
   const [fee, setFee] = useState("0");
@@ -60,8 +60,8 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
         setOpen(o);
         if (o) {
           setAmount(balance > 0 ? String(balance) : "");
-          setPaidDate(todayISO());
-          setPostedDate(todayISO());
+          setPaidDate("");
+          setPostedDate("");
           setMethod("匯款");
           setNotes("");
           setFee("0");

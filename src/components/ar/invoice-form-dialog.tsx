@@ -49,7 +49,7 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
     month: String(month),
     period_label: inv ? inv.period_label ?? "" : suggestPeriod(month),
     invoice_no: inv?.invoice_no ?? "",
-    issue_date: inv?.issue_date ?? today,
+    issue_date: inv?.issue_date ?? "",
     due_date: inv?.due_date ?? "",
     notes: inv?.notes ?? "",
     auditor: inv?.auditor ?? "",
@@ -123,7 +123,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
       if (invoice ? !me.canEdit : !me.canCreate) throw new Error("您沒有此操作的權限");
       if (!form.customer_id) throw new Error("請選擇客戶");
       if (total <= 0) throw new Error("應收帳款金額需大於 0，請填寫費用項目");
-      if (form.due_date && form.due_date < form.issue_date) throw new Error("到期日不可早於開立日期");
+      if (form.due_date && form.issue_date && form.due_date < form.issue_date) throw new Error("到期日不可早於開立日期");
       const year = Number(form.roc_year) + 1911;
       const payload = {
         customer_id: form.customer_id,
@@ -131,7 +131,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
         period_year: Number.isFinite(year) ? year : null,
         period_month: Number(form.month),
         period_label: form.period_label.trim() || null,
-        issue_date: form.issue_date,
+        issue_date: form.issue_date || todayISO(),
         due_date: form.due_date || null,
         notes: form.notes.trim() || null,
         auditor: form.auditor || null,

@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { invoicesQuery, meQuery, taxFilingsQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { comparePeriod, formatDate, periodMonthLabel, rocYear, splitTaxLines, TAX_GROUPS, taxLines, taxSummary, todayISO, type FeeItems, type SortDirection } from "@/lib/receivables";
+import { comparePeriod, formatDate, periodMonthLabel, rocYear, splitTaxLines, TAX_GROUPS, taxLines, taxSummary, type FeeItems, type SortDirection } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_shell/taxes")({
@@ -182,7 +182,7 @@ function TaxesPage() {
                       checked={l.paid}
                       disabled={!me.isAdmin}
                       onCheckedChange={(c) =>
-                        save.mutate({ invoice_id: l.inv.id, item: l.key, paid: c === true, paid_date: c === true ? l.paid_date ?? todayISO() : null })
+                        save.mutate({ invoice_id: l.inv.id, item: l.key, paid: c === true, paid_date: c === true ? l.paid_date ?? null : null })
                       }
                     />
                   </TableCell>
