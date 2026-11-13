@@ -131,7 +131,7 @@ function FilingsPage() {
         eyebrow="工商登記"
         title="工商進度表"
         description={`進行中 ${openCount} 件；CA／MN 結案後，管理員立帳把工商費用併入該客戶當期（雙月）記帳費帳款一起收。`}
-        actions={<FilingFormDialog trigger={<Button><Plus /> 新增案件</Button>} />}
+        actions={canClose && <FilingFormDialog trigger={<Button><Plus /> 新增案件</Button>} />}
       />
       <div className="mb-5 flex flex-wrap gap-2">
         {filterBtn("open", "進行中", openCount)}
