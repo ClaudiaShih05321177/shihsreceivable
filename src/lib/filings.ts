@@ -76,12 +76,12 @@ export function feeItemsTotal(items: FeeItems): number {
 /** 代墊規費在帳款費用項目裡的說明文字。 */
 export const ADVANCE_FEE_LABEL = "代墊規費";
 
-/** 結案立帳的費用項目：代辦費存入顯示為「工商代辦費」的欄位（鍵「文具」），代墊規費存自訂項目。 */
+/** 結案立帳的費用項目：代辦費存入顯示為「工商代辦費」的欄位（鍵「工商」），代墊規費存自訂項目。 */
 export function filingInvoiceItems(filing: FilingFeeLike): FeeItems {
   const items: FeeItems = {};
   const service = Math.round(Number(filing.service_fee) || 0);
   const advance = Math.round(Number(filing.advance_fee) || 0);
-  if (service > 0) items["文具"] = service;
+  if (service > 0) items["工商"] = service;
   const stamp = Math.round(Number(filing.stamp_fee) || 0);
   if (advance > 0) items[otherKey(ADVANCE_FEE_LABEL)] = advance;
   if (stamp > 0) items[otherKey(STAMP_FEE_LABEL)] = stamp;

@@ -166,32 +166,32 @@ export function applyScheduledFees(items: Record<string, string>, previous: FeeI
   return result;
 }
 
-/** Fee line items, in the order of the user's ledger (總帳). */
+/** Fee line items, in the order the user specified. */
 export const FEE_ITEMS = [
   "記帳費",
   "營業稅",
   "發票",
-  "文具",
-  "結算",
   "工商",
-  "22-1申報",
   "印章",
-  "印花稅",
-  "2代A-B",
-  "2代-4X獎金",
-  "租金2代",
-  "個人2代",
-  "員工酬勞2代",
   "租金扣繳",
+  "租金2代",
   "薪資扣繳",
+  "2代A-B",
   "勞務扣繳",
+  "個人2代",
+  "2代-4X獎金",
   "其他扣繳",
+  "印花稅",
   "財稅簽證",
   "營所稅",
   "未加徵",
+  "年度加收",
   "暫繳",
   "股利2代",
-  "年度加收",
+  "文具",
+  "結算",
+  "22-1申報",
+  "員工酬勞2代",
   "前期餘額",
 ] as const;
 export type FeeItem = (typeof FEE_ITEMS)[number];

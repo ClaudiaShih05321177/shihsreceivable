@@ -18,13 +18,13 @@ describe("nextStage", () => {
 describe("filingInvoiceItems", () => {
   it("代辦費存入顯示為工商代辦費的欄位，代墊規費存自訂項目", () => {
     const items = filingInvoiceItems({ service_fee: 5000, advance_fee: 1200 });
-    expect(items["文具"]).toBe(5000);
-    expect(feeLabel("文具")).toBe("工商代辦費");
+    expect(items["工商"]).toBe(5000);
+    expect(feeLabel("工商")).toBe("工商代辦費");
     expect(items["其他：代墊規費"]).toBe(1200);
   });
 
   it("金額為 0 的項目不產生", () => {
-    expect(filingInvoiceItems({ service_fee: 3000, advance_fee: 0 })).toEqual({ 文具: 3000 });
+    expect(filingInvoiceItems({ service_fee: 3000, advance_fee: 0 })).toEqual({ 工商: 3000 });
     expect(filingInvoiceItems({ service_fee: 0, advance_fee: 0 })).toEqual({});
   });
 });
