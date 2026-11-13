@@ -9,7 +9,7 @@ import { PageHeader, Money } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { FILING_STAGES, filingInvoiceItems, filingTotal, nextStage } from "@/lib/filings";
+import { FILING_STAGES, filingInvoiceItems, filingName, filingTotal, nextStage } from "@/lib/filings";
 import { customersQuery, filingsQuery, meQuery, type Filing } from "@/lib/queries";
 import { formatDate, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/_shell/filings")({
   head: () => ({
     meta: [
       { title: "工商進度 · 帳房" },
-      { name: "description", content: "工商登記案件進度表：預查、送件、核准、結案，結案時一鍵立帳到應收帳款。" },
+      { name: "description", content: "工商登記案件進度表：預查、經濟部、國稅局、結案，結案時一鍵立帳到應收帳款。" },
       { property: "og:title", content: "工商進度 · 帳房" },
       { property: "og:description", content: "工商登記案件進度與立帳。" },
       { property: "og:type", content: "website" },
@@ -42,11 +42,13 @@ function FilingsPage() {
 
   const advance = useMutation({
     mutationFn: async (filing: Filing) => {
-      const next = nextStage(filing.stage);
+      const next = nextStage(filing.stage, filing.route);
       const patch = {
         stage: next,
         filed_date: next === "送件" && !filing.filed_date ? todayISO() : filing.filed_date,
         approved_date: next === "核准" && !filing.approved_date ? todayISO() : filing.approved_date,
+        tax_filed_date: next === "國稅局送件" && !filing.tax_filed_date ? todayISO() : filing.tax_filed_date,
+        tax_approved_date: next === "國稅局核准" && !filing.tax_approved_date ? todayISO() : filing.tax_approved_date,
       };
       const { error } = await supabase.from("filings").update(patch).eq("id", filing.id);
       if (error) throw error;
@@ -57,15 +59,17 @@ function FilingsPage() {
 
   const bill = useMutation({
     mutationFn: async (filing: Filing) => {
+      if (!filing.customer_id) throw new Error("新設立案件請先建立客戶資料，並在編輯案件中選擇該客戶");
+      const customerId = filing.customer_id;
       const items = filingInvoiceItems(filing);
       const amount = filingTotal(filing);
       if (amount <= 0) throw new Error("代辦費與代墊規費皆為 0，無法立帳");
-      const base = filing.approved_date ?? todayISO();
+      const base = filing.tax_approved_date ?? filing.approved_date ?? todayISO();
       const [y = 0, m = 0] = base.slice(0, 7).split("-").map(Number);
       const { data: invoice, error: invError } = await supabase
         .from("invoices")
         .insert({
-          customer_id: filing.customer_id,
+          customer_id: customerId,
           amount,
           items,
           issue_date: todayISO(),
@@ -133,8 +137,9 @@ function FilingsPage() {
               <TableHead>客戶名稱</TableHead>
               <TableHead>案件類型</TableHead>
               <TableHead>階段</TableHead>
-              <TableHead>送件日期</TableHead>
-              <TableHead>核准日期</TableHead>
+              <TableHead>流程</TableHead>
+              <TableHead>經濟部 送件／核准</TableHead>
+              <TableHead>國稅局 送件／核准</TableHead>
               <TableHead className="text-right">代辦費</TableHead>
               <TableHead className="text-right">代墊規費</TableHead>
               <TableHead>應收帳款</TableHead>
@@ -144,23 +149,24 @@ function FilingsPage() {
           <TableBody>
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell>
+                <TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell>
               </TableRow>
             )}
             {rows.map((f) => (
               <TableRow key={f.id}>
-                <TableCell className="font-medium">{f.customer?.name ?? "—"}</TableCell>
+                <TableCell className="font-medium">{filingName(f)}</TableCell>
                 <TableCell className="text-sm">{f.case_type}</TableCell>
                 <TableCell>
                   <span className={cn(
                     "rounded-full px-2 py-0.5 text-xs font-medium",
-                    f.stage === "結案" ? "bg-primary/10 text-primary" : f.stage === "核准" ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground",
+                    f.stage === "結案" ? "bg-primary/10 text-primary" : f.stage.includes("核准") ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground",
                   )}>
                     {f.stage}
                   </span>
                 </TableCell>
-                <TableCell className="text-sm">{formatDate(f.filed_date)}</TableCell>
-                <TableCell className="text-sm">{formatDate(f.approved_date)}</TableCell>
+                <TableCell className="text-xs whitespace-nowrap">{f.route}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{f.route === "只送國稅局" ? "—" : `${formatDate(f.filed_date)}／${formatDate(f.approved_date)}`}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{formatDate(f.tax_filed_date)}／{formatDate(f.tax_approved_date)}</TableCell>
                 <TableCell className="text-right"><Money value={Number(f.service_fee)} /></TableCell>
                 <TableCell className="text-right"><Money value={Number(f.advance_fee)} /></TableCell>
                 <TableCell className="text-sm">
@@ -172,10 +178,10 @@ function FilingsPage() {
                   <div className="flex items-center justify-end gap-1">
                     {me.isAdmin && f.stage !== "結案" && (
                       <>
-                        <Button variant="ghost" size="sm" onClick={() => advance.mutate(f)} disabled={advance.isPending} aria-label={`${f.customer?.name ?? ""} 推進到${nextStage(f.stage)}`}>
-                          <ArrowRight className="size-3.5" /> {nextStage(f.stage)}
+                        <Button variant="ghost" size="sm" onClick={() => advance.mutate(f)} disabled={advance.isPending} aria-label={`${filingName(f)} 推進到${nextStage(f.stage, f.route)}`}>
+                          <ArrowRight className="size-3.5" /> {nextStage(f.stage, f.route)}
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => bill.mutate(f)} disabled={bill.isPending} aria-label={`${f.customer?.name ?? ""} 結案立帳`}>
+                        <Button variant="ghost" size="sm" onClick={() => bill.mutate(f)} disabled={bill.isPending} aria-label={`${filingName(f)} 結案立帳`}>
                           <Receipt className="size-3.5" /> 結案立帳
                         </Button>
                       </>
@@ -183,15 +189,15 @@ function FilingsPage() {
                     {me.isAdmin && (
                       <FilingFormDialog
                         filing={f}
-                        trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${f.customer?.name ?? ""}`}><Pencil className="size-3.5" /></Button>}
+                        trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${filingName(f)}`}><Pencil className="size-3.5" /></Button>}
                       />
                     )}
                     {me.isAdmin && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        aria-label={`刪除 ${f.customer?.name ?? ""}`}
-                        onClick={() => { if (window.confirm(`確定刪除「${f.customer?.name ?? ""}」的${f.case_type}案件？`)) remove.mutate(f); }}
+                        aria-label={`刪除 ${filingName(f)}`}
+                        onClick={() => { if (window.confirm(`確定刪除「${filingName(f)}」的${f.case_type}案件？`)) remove.mutate(f); }}
                       >
                         <Trash2 className="size-3.5 text-destructive" />
                       </Button>

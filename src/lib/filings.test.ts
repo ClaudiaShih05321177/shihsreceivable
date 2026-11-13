@@ -4,10 +4,10 @@ import { filingInvoiceItems, filingTotal, nextStage } from "./filings";
 import { feeLabel } from "./fee-labels";
 
 describe("nextStage", () => {
-  it("依序推進 預查→送件→核准→結案", () => {
+  it("依序推進 預查→送件→核准→國稅局送件", () => {
     expect(nextStage("預查")).toBe("送件");
     expect(nextStage("送件")).toBe("核准");
-    expect(nextStage("核准")).toBe("結案");
+    expect(nextStage("核准")).toBe("國稅局送件");
   });
 
   it("結案後維持結案", () => {
@@ -33,5 +33,21 @@ describe("filingTotal", () => {
   it("代辦費加代墊規費", () => {
     expect(filingTotal({ service_fee: 5000, advance_fee: 1200 })).toBe(6200);
     expect(filingTotal({ service_fee: "5000", advance_fee: "" })).toBe(5000);
+  });
+});
+
+import { nextStage as ns2, initialStage, filingName } from "./filings";
+describe("國稅局進度", () => {
+  it("經濟部核准後接國稅局送件、國稅局核准、結案", () => {
+    expect(ns2("核准", "經濟部+國稅局")).toBe("國稅局送件");
+    expect(ns2("國稅局送件")).toBe("國稅局核准");
+    expect(ns2("國稅局核准")).toBe("結案");
+  });
+  it("只送國稅局的案件從國稅局送件開始", () => {
+    expect(initialStage("只送國稅局")).toBe("國稅局送件");
+    expect(ns2("國稅局送件", "只送國稅局")).toBe("國稅局核准");
+  });
+  it("新設立無客戶時顯示暫定名稱", () => {
+    expect(filingName({ customer: null, company_name: "新光公司" })).toBe("新光公司（新設立）");
   });
 });

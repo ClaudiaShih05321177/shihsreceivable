@@ -112,45 +112,57 @@ export type Database = {
           advance_fee: number
           approved_date: string | null
           case_type: string
+          company_name: string | null
           created_at: string
           created_by: string | null
-          customer_id: string
+          customer_id: string | null
           filed_date: string | null
           id: string
           invoice_id: string | null
           notes: string | null
+          route: string
           service_fee: number
           stage: string
+          tax_approved_date: string | null
+          tax_filed_date: string | null
           updated_at: string
         }
         Insert: {
           advance_fee?: number
           approved_date?: string | null
           case_type: string
+          company_name?: string | null
           created_at?: string
           created_by?: string | null
-          customer_id: string
+          customer_id?: string | null
           filed_date?: string | null
           id?: string
           invoice_id?: string | null
           notes?: string | null
+          route?: string
           service_fee?: number
           stage?: string
+          tax_approved_date?: string | null
+          tax_filed_date?: string | null
           updated_at?: string
         }
         Update: {
           advance_fee?: number
           approved_date?: string | null
           case_type?: string
+          company_name?: string | null
           created_at?: string
           created_by?: string | null
-          customer_id?: string
+          customer_id?: string | null
           filed_date?: string | null
           id?: string
           invoice_id?: string | null
           notes?: string | null
+          route?: string
           service_fee?: number
           stage?: string
+          tax_approved_date?: string | null
+          tax_filed_date?: string | null
           updated_at?: string
         }
         Relationships: [
