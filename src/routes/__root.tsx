@@ -147,3 +147,14 @@ function RootComponent() {
     </QueryClientProvider>
   );
 }
+
+if (typeof document !== "undefined") {
+  document.addEventListener(
+    "wheel",
+    () => {
+      const el = document.activeElement;
+      if (el instanceof HTMLInputElement && el.type === "number") el.blur();
+    },
+    { passive: true },
+  );
+}

@@ -244,3 +244,15 @@
 @utility animate-rise {
   animation: rise-in 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
+
+@layer base {
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+}
