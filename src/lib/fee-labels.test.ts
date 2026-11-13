@@ -24,10 +24,11 @@ describe("feeLabel", () => {
     expect(FEE_ITEMS).toHaveLength(25);
   });
 
-  it("hides only the retired field", () => {
+  it("hides only the retired fields", () => {
     expect(isFeeHidden("前期餘額")).toBe(true);
+    expect(isFeeHidden("未加徵")).toBe(true);
     expect(isFeeHidden("記帳費")).toBe(false);
-    expect(feeItemCount()).toBe(24);
+    expect(feeItemCount()).toBe(23);
   });
 
   it("shows a hidden fee field when it already holds money", () => {
