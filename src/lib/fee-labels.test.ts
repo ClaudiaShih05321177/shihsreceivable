@@ -5,9 +5,9 @@ import { feeItemCount, feeLabel, isFeeHidden, visibleFeeItems } from "./fee-labe
 
 describe("feeLabel", () => {
   it("uses the saved display name", () => {
-    expect(feeLabel("文具")).toBe("工商代辦費");
-    expect(feeLabel("印章")).toBe("扣繳-租金");
-    expect(feeLabel("暫繳")).toBe("文具費");
+    expect(feeLabel("文具")).toBe("文具費");
+    expect(feeLabel("印章")).toBe("印章代刻");
+    expect(feeLabel("暫繳")).toBe("暫繳稅額");
   });
 
   it("falls back to the fee code when there is no saved name", () => {
@@ -19,16 +19,20 @@ describe("feeLabel", () => {
     expect(FEE_ITEMS.filter((k) => feeLabel(k).trim() === "")).toEqual([]);
   });
 
+  it("has no duplicate display names", () => {
+    const names = FEE_ITEMS.map(feeLabel);
+    expect(new Set(names).size).toBe(names.length);
+  });
+
   it("has removed the 其他 fee field", () => {
     expect(FEE_ITEMS).not.toContain("其他");
     expect(FEE_ITEMS).toHaveLength(25);
   });
 
-  it("hides only the retired fields", () => {
+  it("hides only the retired field", () => {
     expect(isFeeHidden("前期餘額")).toBe(true);
-    expect(isFeeHidden("未加徵")).toBe(true);
     expect(isFeeHidden("記帳費")).toBe(false);
-    expect(feeItemCount()).toBe(23);
+    expect(feeItemCount()).toBe(24);
   });
 
   it("shows a hidden fee field when it already holds money", () => {

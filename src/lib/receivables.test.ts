@@ -110,18 +110,18 @@ describe("scheduled customer fees", () => {
     expect(scheduledCustomerFees({ ...customer, billing_type: "期收" }, 11)["記帳費"]).toBe(6000);
   });
   it("charges stationery in November only", () => {
-    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["暫繳"])).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0]);
+    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["文具"])).toEqual([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 500, 0]);
   });
   it("charges settlement in January only", () => {
-    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["股利2代"])).toEqual([2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(Array.from({ length: 12 }, (_, i) => scheduledCustomerFees(customer, i + 1)["結算"])).toEqual([2000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
   });
   it("moves automatic amounts with the month but keeps manual amounts", () => {
-    expect(applyScheduledFees({ 記帳費: "6000", 暫繳: "500", 股利2代: "900", 文具: "300", 結算: "400" }, scheduledCustomerFees(customer, 11), scheduledCustomerFees(customer, 1))).toEqual({ 記帳費: "6000", 暫繳: "", 股利2代: "900", 文具: "300", 結算: "400" });
+    expect(applyScheduledFees({ 記帳費: "6000", 文具: "500", 結算: "900" }, scheduledCustomerFees(customer, 11), scheduledCustomerFees(customer, 1))).toEqual({ 記帳費: "6000", 文具: "", 結算: "900" });
   });
   it("does not automatically fill agency or seal fees", () => {
     for (const month of [1, 11]) {
-      expect(scheduledCustomerFees(customer, month)).not.toHaveProperty("文具");
-      expect(scheduledCustomerFees(customer, month)).not.toHaveProperty("結算");
+      expect(scheduledCustomerFees(customer, month)).not.toHaveProperty("工商");
+      expect(scheduledCustomerFees(customer, month)).not.toHaveProperty("印章");
     }
   });
 });
@@ -215,7 +215,7 @@ describe("收費狀態選項", () => {
   it("停業 customers get 0 記帳費、文具費、結算費 in every month and mode", () => {
     const customer = { bookkeeping_fee: 3000, stationery_fee: 500, settlement_fee: 2000, billing_type: "停業" };
     for (const mode of ["batch", "individual"] as const)
-      for (const m of [1, 3, 11]) expect(scheduledCustomerFees(customer, m, mode)).toEqual({ 記帳費: 0, 暫繳: 0, 股利2代: 0 });
+      for (const m of [1, 3, 11]) expect(scheduledCustomerFees(customer, m, mode)).toEqual({ 記帳費: 0, 文具: 0, 結算: 0 });
   });
 });
 

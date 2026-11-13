@@ -145,13 +145,13 @@ export function isSuspended(billingType?: string | null): boolean {
 }
 
 export function scheduledCustomerFees(customer: { billing_type?: string | null; bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string }, month: number, mode: "batch" | "individual" = "batch"): FeeItems {
-  if (isSuspended(customer.billing_type)) return { 記帳費: 0, 暫繳: 0, 股利2代: 0 };
+  if (isSuspended(customer.billing_type)) return { 記帳費: 0, 文具: 0, 結算: 0 };
   return {
     記帳費: customer.billing_type === "年收" ? (mode === "individual" ? Math.round(Number(customer.bookkeeping_fee)) || 0 : 0)
       : customer.billing_type === "半年收" ? (mode === "individual" ? Math.round((Number(customer.bookkeeping_fee) || 0) * 6) : 0)
       : bookkeepingPeriodFee(customer.bookkeeping_fee, month),
-    暫繳: month === 11 ? Number(customer.stationery_fee) || 0 : 0,
-    股利2代: month === 1 ? Number(customer.settlement_fee) || 0 : 0,
+    文具: month === 11 ? Number(customer.stationery_fee) || 0 : 0,
+    結算: month === 1 ? Number(customer.settlement_fee) || 0 : 0,
   };
 }
 
