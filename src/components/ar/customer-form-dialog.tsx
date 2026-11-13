@@ -78,7 +78,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
 
   const save = useMutation({
     mutationFn: async () => {
-      if (!me.isAdmin) throw new Error("只有管理員可以管理客戶資料");
+      if (!me.isMember) throw new Error("沒有權限管理客戶資料");
       const name = form.name.trim();
       if (!name) throw new Error("請輸入客戶名稱");
       if (form.tax_id && !/^\d{8}$/.test(form.tax_id.trim())) throw new Error("統一編號應為 8 位數字");
@@ -92,7 +92,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
         settlement_fee: Number(form.settlement_fee) || 0,
         suspended_period: form.suspended_period.trim() || null,
         staff_code: staffFromCode(form.customer_code) ?? (form.staff_code.trim().toUpperCase() || null),
-        annual_extra_rate: form.annual_extra_rate.trim() === "" ? null : Number(form.annual_extra_rate),
+        ...(me.isAdmin ? { annual_extra_rate: form.annual_extra_rate.trim() === "" ? null : Number(form.annual_extra_rate) } : {}),
         contact_person: form.contact_person.trim() || null,
         phone: form.phone.trim() || null,
         email: form.email.trim() || null,
@@ -126,7 +126,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
     </div>
   );
 
-  if (!me.isAdmin) return null;
+  if (!me.isMember) return null;
 
   const billingOptions =
     !form.billing_type || (BILLING_TYPES as readonly string[]).includes(form.billing_type)
