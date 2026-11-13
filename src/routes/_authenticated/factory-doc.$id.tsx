@@ -71,11 +71,11 @@ function FactoryDocPage() {
         </header>
         <p className="mt-2 text-right">日期：{formatDate(todayISO())}</p>
         <table className="mt-2 w-full table-fixed border-collapse text-sm">
-          <colgroup><col style={{ width: "12%" }} /><col style={{ width: "46%" }} /><col style={{ width: "12%" }} /><col style={{ width: "11%" }} /><col style={{ width: "8%" }} /><col style={{ width: "11%" }} /></colgroup>
+          <colgroup><col style={{ width: "12%" }} /><col style={{ width: "52%" }} /><col style={{ width: "14%" }} /><col style={{ width: "22%" }} /></colgroup>
           <tbody>
-            <tr><td className={cell}>業主</td><td className={cell}>{owner}</td><td className={cell}>電　話</td><td className={cell}><Blank /></td><td className={cell}>傳　真</td><td className={cell}><Blank /></td></tr>
-            <tr><td className={cell}>地址</td><td className={cell}><Blank /></td><td className={cell}>統一編號</td><td className={cell} colSpan={3}>{r.tax_id ?? ""}</td></tr>
-            <tr><td className={cell}>{isQuote ? "估價內容" : "請款內容"}</td><td className={cell}>{item}{isQuote ? "案件" : `申請案${stage !== "全額" ? `（${stage}）` : ""}`}</td><td className={cell}>{isQuote ? "業主接洽人" : "接洽人"}</td><td className={cell} colSpan={3}>{r.contact ?? ""}</td></tr>
+            <tr><td className={cell}>業主</td><td className={cell}>{owner}</td><td className={cell}>統一編號</td><td className={cell}>{r.tax_id ?? ""}</td></tr>
+            <tr><td className={cell}>地址</td><td className={cell} colSpan={3}><Blank /></td></tr>
+            <tr><td className={cell}>{isQuote ? "估價內容" : "請款內容"}</td><td className={cell}>{item}{isQuote ? "案件" : `申請案${stage !== "全額" ? `（${stage}）` : ""}`}</td><td className={cell}>{isQuote ? "業主接洽人" : "接洽人"}</td><td className={cell}>{r.contact ?? ""}</td></tr>
           </tbody>
         </table>
         <table className="mt-4 w-full border-collapse text-sm">
