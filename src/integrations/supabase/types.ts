@@ -80,6 +80,96 @@ export type Database = {
         }
         Relationships: []
       }
+      factory_registrations: {
+        Row: {
+          application_item: string | null
+          approved_date: string | null
+          ar_notes: string | null
+          bureau_filed_date: string | null
+          company: string
+          contact: string | null
+          created_at: string
+          created_by: string | null
+          deposit_invoice_amount: number
+          deposit_received_amount: number
+          deposit_received_date: string | null
+          env_approved_date: string | null
+          env_filed_date: string | null
+          env_mode: string
+          factory_name: string
+          final_invoice_amount: number
+          final_received_amount: number
+          final_received_date: string | null
+          government_fee: number
+          id: string
+          inspection_date: string | null
+          notes: string | null
+          other_fee: number
+          quote_amount: number
+          stage: string
+          status_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          application_item?: string | null
+          approved_date?: string | null
+          ar_notes?: string | null
+          bureau_filed_date?: string | null
+          company?: string
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          deposit_invoice_amount?: number
+          deposit_received_amount?: number
+          deposit_received_date?: string | null
+          env_approved_date?: string | null
+          env_filed_date?: string | null
+          env_mode?: string
+          factory_name: string
+          final_invoice_amount?: number
+          final_received_amount?: number
+          final_received_date?: string | null
+          government_fee?: number
+          id?: string
+          inspection_date?: string | null
+          notes?: string | null
+          other_fee?: number
+          quote_amount?: number
+          stage?: string
+          status_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          application_item?: string | null
+          approved_date?: string | null
+          ar_notes?: string | null
+          bureau_filed_date?: string | null
+          company?: string
+          contact?: string | null
+          created_at?: string
+          created_by?: string | null
+          deposit_invoice_amount?: number
+          deposit_received_amount?: number
+          deposit_received_date?: string | null
+          env_approved_date?: string | null
+          env_filed_date?: string | null
+          env_mode?: string
+          factory_name?: string
+          final_invoice_amount?: number
+          final_received_amount?: number
+          final_received_date?: string | null
+          government_fee?: number
+          id?: string
+          inspection_date?: string | null
+          notes?: string | null
+          other_fee?: number
+          quote_amount?: number
+          stage?: string
+          status_note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       fee_labels: {
         Row: {
           hidden: boolean
@@ -123,6 +213,9 @@ export type Database = {
           notes: string | null
           route: string
           service_fee: number
+          special_approved_date: string | null
+          special_authority: string | null
+          special_filed_date: string | null
           stage: string
           stamp_fee: number
           tax_approved_date: string | null
@@ -144,6 +237,9 @@ export type Database = {
           notes?: string | null
           route?: string
           service_fee?: number
+          special_approved_date?: string | null
+          special_authority?: string | null
+          special_filed_date?: string | null
           stage?: string
           stamp_fee?: number
           tax_approved_date?: string | null
@@ -165,6 +261,9 @@ export type Database = {
           notes?: string | null
           route?: string
           service_fee?: number
+          special_approved_date?: string | null
+          special_authority?: string | null
+          special_filed_date?: string | null
           stage?: string
           stamp_fee?: number
           tax_approved_date?: string | null

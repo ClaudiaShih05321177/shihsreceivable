@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { CASE_TYPES, FILING_ROUTES, initialStage, staffFromCode } from "@/lib/filings";
+import { CASE_TYPES, FILING_ROUTES, initialStage, routeHasAuthority, routeHasTaxBureau, staffFromCode } from "@/lib/filings";
 import { lookupCompany } from "@/lib/company-lookup.functions";
 import { customersQuery, filingServiceFeesQuery, meQuery, type Filing } from "@/lib/queries";
 
@@ -27,11 +27,14 @@ type Form = {
   advance_fee: string;
   stamp_fee: string;
   notes: string;
+  special_authority: string;
+  special_filed_date: string;
+  special_approved_date: string;
 };
 
 const NEW = "__new__";
 
-const EMPTY: Form = { customer_id: "", company_name: "", customer_code: "", route: FILING_ROUTES[0], tax_filed_date: "", tax_approved_date: "", case_type: CASE_TYPES[0], filed_date: "", approved_date: "", service_fee: "", advance_fee: "", stamp_fee: "", notes: "" };
+const EMPTY: Form = { customer_id: "", company_name: "", customer_code: "", route: FILING_ROUTES[0], tax_filed_date: "", tax_approved_date: "", case_type: CASE_TYPES[0], filed_date: "", approved_date: "", service_fee: "", advance_fee: "", stamp_fee: "", notes: "", special_authority: "", special_filed_date: "", special_approved_date: "" };
 
 function toForm(filing: Filing, serviceFee?: number): Form {
   return {
@@ -48,6 +51,9 @@ function toForm(filing: Filing, serviceFee?: number): Form {
     advance_fee: filing.advance_fee ? String(filing.advance_fee) : "",
     stamp_fee: filing.stamp_fee ? String(filing.stamp_fee) : "",
     notes: filing.notes ?? "",
+    special_authority: filing.special_authority ?? "",
+    special_filed_date: filing.special_filed_date ?? "",
+    special_approved_date: filing.special_approved_date ?? "",
   };
 }
 
@@ -119,6 +125,9 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
         advance_fee: money(form.advance_fee),
         stamp_fee: money(form.stamp_fee),
         notes: form.notes.trim() || null,
+        special_authority: form.special_authority.trim() || null,
+        special_filed_date: form.special_filed_date || null,
+        special_approved_date: form.special_approved_date || null,
       };
       let id = filing?.id;
       if (filing) {
@@ -220,17 +229,35 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
               </SelectContent>
             </Select>
           </div>
-          {form.route !== "只送國稅局" && <div className="grid grid-cols-2 gap-4">
+          {routeHasAuthority(form.route) && <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="f-filed">經濟部送件日期</Label>
+              <Label htmlFor="f-filed">主管機關送件日期</Label>
               <Input id="f-filed" type="date" value={form.filed_date} onChange={(e) => set({ filed_date: e.target.value })} />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="f-approved">經濟部核准日期</Label>
+              <Label htmlFor="f-approved">主管機關核准日期</Label>
               <Input id="f-approved" type="date" value={form.approved_date} onChange={(e) => set({ approved_date: e.target.value })} />
             </div>
           </div>}
-          <div className="grid grid-cols-2 gap-4">
+          {routeHasAuthority(form.route) && (
+            <div className="grid gap-4 rounded-md border border-dashed p-3">
+              <div className="grid gap-2">
+                <Label htmlFor="f-special">特許目的事業主管機關（特許行業才填）</Label>
+                <Input id="f-special" value={form.special_authority} onChange={(e) => set({ special_authority: e.target.value })} placeholder="例：教育局、衛生局" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="f-sfiled">特許送件日期</Label>
+                  <Input id="f-sfiled" type="date" value={form.special_filed_date} onChange={(e) => set({ special_filed_date: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="f-sapproved">特許核准日期</Label>
+                  <Input id="f-sapproved" type="date" value={form.special_approved_date} onChange={(e) => set({ special_approved_date: e.target.value })} />
+                </div>
+              </div>
+            </div>
+          )}
+          {routeHasTaxBureau(form.route) && <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="f-tfiled">國稅局送件日期</Label>
               <Input id="f-tfiled" type="date" value={form.tax_filed_date} onChange={(e) => set({ tax_filed_date: e.target.value })} />
@@ -239,7 +266,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
               <Label htmlFor="f-tapproved">國稅局核准日期</Label>
               <Input id="f-tapproved" type="date" value={form.tax_approved_date} onChange={(e) => set({ tax_approved_date: e.target.value })} />
             </div>
-          </div>
+          </div>}
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="f-advance">代墊規費</Label>

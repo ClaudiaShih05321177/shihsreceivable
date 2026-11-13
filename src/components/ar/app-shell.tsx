@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { BarChart3, Landmark, Stamp, FileText, FileCheck2, LogOut, Users, UserCog, BadgeDollarSign } from "lucide-react";
+import { BarChart3, Landmark, Stamp, FileText, FileCheck2, LogOut, Users, UserCog, BadgeDollarSign, Factory, Wallet } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { BrandMark } from "@/components/ar/brand";
@@ -9,6 +9,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { invoicesQuery } from "@/lib/queries";
 import { invoiceStatus } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
+import { useCompany } from "@/hooks/use-company";
+import { COMPANIES, FACTORY_COMPANY } from "@/lib/factory";
 
 type Me = { displayName: string; email: string; isAdmin: boolean };
 
@@ -23,11 +25,19 @@ const nav = [
   { to: "/bonuses", label: "會計專員獎金", icon: BadgeDollarSign },
 ] as const;
 
+const factoryNav = [
+  { to: "/factory", label: "工廠登記進度", icon: Factory },
+  { to: "/factory-receivables", label: "勤豐應收帳款", icon: Wallet },
+  { to: "/team", label: "團隊成員", icon: UserCog },
+] as const;
+
 export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: invoices } = useQuery(invoicesQuery);
+  const [company, setCompany] = useCompany();
+  const items = company === FACTORY_COMPANY ? factoryNav : nav;
   const overdue = (invoices ?? []).filter((i) => invoiceStatus(i) === "overdue").length;
 
   async function signOut() {
@@ -46,13 +56,27 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
             <LogOut />
           </Button>
         </div>
+        <div className="px-3 pb-3">
+          <select
+            aria-label="切換公司"
+            value={company}
+            onChange={(e) => {
+              const c = e.target.value as (typeof COMPANIES)[number];
+              setCompany(c);
+              navigate({ to: c === FACTORY_COMPANY ? "/factory" : "/dashboard" });
+            }}
+            className="w-full rounded-md border border-sidebar-border bg-sidebar-accent px-2 py-1.5 text-sm text-sidebar-accent-foreground"
+          >
+            {COMPANIES.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-1 md:flex-col md:pb-0">
-          {nav.filter((item) => (item.to !== "/team" && item.to !== "/bonuses") || me.isAdmin).map((item) => {
+          {(items as readonly { to: string; label: string; icon: typeof Factory }[]).filter((item) => (item.to !== "/team" && item.to !== "/bonuses") || me.isAdmin).map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
               <Link
                 key={item.to}
-                to={item.to}
+                to={item.to as "/dashboard"}
                 className={cn(
                   "flex shrink-0 items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                   active ? "bg-sidebar-accent text-sidebar-accent-foreground" : "text-sidebar-foreground/75 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",

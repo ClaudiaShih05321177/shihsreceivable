@@ -1,0 +1,120 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { ArrowRight, CheckCheck, Pencil, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+
+import { FactoryFormDialog } from "@/components/ar/factory-form-dialog";
+import { PageHeader } from "@/components/ar/page-header";
+import { Button } from "@/components/ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+import { FACTORY_STAGES, needsEnv, nextFactoryStage } from "@/lib/factory";
+import { factoryRegistrationsQuery, meQuery, type FactoryRegistration } from "@/lib/queries";
+import { formatDate, todayISO } from "@/lib/receivables";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/_authenticated/_shell/factory")({
+  head: () => ({
+    meta: [
+      { title: "工廠登記進度 · 勤豐工商顧問" },
+      { name: "description", content: "勤豐工商顧問工廠登記案件：環保、工商科、現場會勘到核准結案的進度表。" },
+      { property: "og:title", content: "工廠登記進度 · 勤豐工商顧問" },
+      { property: "og:description", content: "工廠登記案件進度表。" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+    ],
+  }),
+  loader: ({ context }) => context.queryClient.ensureQueryData(factoryRegistrationsQuery),
+  component: FactoryPage,
+});
+
+const DATE_FOR: Record<string, keyof FactoryRegistration> = { 環保核准: "env_approved_date", 送件工商科: "bureau_filed_date", 現場會勘: "inspection_date", 核准結案: "approved_date" };
+
+function FactoryPage() {
+  const { data: rows } = useSuspenseQuery(factoryRegistrationsQuery);
+  const { data: me } = useSuspenseQuery(meQuery);
+  const qc = useQueryClient();
+  const [stage, setStage] = useState("open");
+  const shown = rows.filter((r) => (stage === "all" ? true : stage === "open" ? r.stage !== "核准結案" : r.stage === stage));
+
+  const advance = useMutation({
+    mutationFn: async ({ r, skip }: { r: FactoryRegistration; skip?: boolean }) => {
+      const next = nextFactoryStage(r.stage, skip);
+      const col = DATE_FOR[next];
+      const patch: Record<string, string> = { stage: next };
+      if (col && !r[col]) patch[col] = todayISO();
+      const { error } = await supabase.from("factory_registrations").update(patch as Database["public"]["Tables"]["factory_registrations"]["Update"]).eq("id", r.id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["factory_registrations"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "更新失敗"),
+  });
+  const remove = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("factory_registrations").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["factory_registrations"] }),
+    onError: (e) => toast.error(e instanceof Error ? e.message : "刪除失敗"),
+  });
+
+  const btn = (key: string, label: string, count: number) => (
+    <button key={key} onClick={() => setStage(key)} className={cn("rounded-full border px-3 py-1 text-sm transition-colors", stage === key ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:bg-accent")}>
+      {label} <span className="tabular ml-1 text-xs opacity-70">{count}</span>
+    </button>
+  );
+  const d = (a: string | null, b?: string | null) => `${formatDate(a)}${b !== undefined ? `／${formatDate(b)}` : ""}`;
+
+  return (
+    <>
+      <PageHeader eyebrow="勤豐工商顧問有限公司" title="工廠登記進度表" description="環保與現場會勘為選辦；免跑環保或客戶自辦環保的案件從送件工商科開始。" actions={<FactoryFormDialog trigger={<Button><Plus /> 新增案件</Button>} />} />
+      <div className="mb-5 flex flex-wrap gap-2">
+        {btn("open", "進行中", rows.filter((r) => r.stage !== "核准結案").length)}
+        {FACTORY_STAGES.map((s) => btn(s, s, rows.filter((r) => r.stage === s).length))}
+        {btn("all", "全部", rows.length)}
+      </div>
+      <div className="ledger-card overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/60 hover:bg-muted/60">
+              <TableHead>廠名</TableHead><TableHead>申辦項目</TableHead><TableHead>Status</TableHead><TableHead>聯絡人</TableHead>
+              <TableHead>階段</TableHead><TableHead>環保 送件／核准</TableHead><TableHead>工商科送件</TableHead><TableHead>現場會勘</TableHead><TableHead>核准結案</TableHead>
+              <TableHead>備註</TableHead><TableHead className="text-right">操作</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {shown.length === 0 && <TableRow><TableCell colSpan={11} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell></TableRow>}
+            {shown.map((r) => (
+              <TableRow key={r.id}>
+                <TableCell className="font-medium">{r.factory_name}</TableCell>
+                <TableCell className="text-sm">{r.application_item ?? "—"}</TableCell>
+                <TableCell className="max-w-48 text-sm">{r.status_note ?? "—"}</TableCell>
+                <TableCell className="text-sm">{r.contact ?? "—"}</TableCell>
+                <TableCell><span className={cn("rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap", r.stage === "核准結案" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{r.stage}</span></TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{needsEnv(r.env_mode) ? d(r.env_filed_date, r.env_approved_date) : r.env_mode}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{d(r.bureau_filed_date)}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{d(r.inspection_date)}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{d(r.approved_date)}</TableCell>
+                <TableCell className="max-w-48 text-sm">{r.notes ?? "—"}</TableCell>
+                <TableCell>
+                  <div className="flex items-center justify-end gap-1">
+                    {me.isAdmin && r.stage !== "核准結案" && (
+                      <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r })} aria-label={`${r.factory_name} 推進到${nextFactoryStage(r.stage)}`}><ArrowRight className="size-3.5" /> {nextFactoryStage(r.stage)}</Button>
+                    )}
+                    {me.isAdmin && r.stage === "送件工商科" && (
+                      <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r, skip: true })}><CheckCheck className="size-3.5" /> 免會勘結案</Button>
+                    )}
+                    {me.isAdmin && <FactoryFormDialog record={r} trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${r.factory_name}`}><Pencil className="size-3.5" /></Button>} />}
+                    {me.isAdmin && <Button variant="ghost" size="icon" aria-label={`刪除 ${r.factory_name}`} onClick={() => { if (window.confirm(`確定刪除「${r.factory_name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
+  );
+}

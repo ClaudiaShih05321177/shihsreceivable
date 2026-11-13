@@ -300,6 +300,23 @@ export function taxLines(items: FeeItems | null | undefined): TaxLine[] {
   );
 }
 
+/** 扣繳與二代健保每月繳納，但一次請兩個月：稅額明細拆成第1個月／第2個月各自勾選。 */
+export const MONTHLY_TAX_GROUPS: readonly string[] = ["扣繳稅額", "二代健保"];
+
+export type SplitTaxLine = TaxLine & { key: string; half: 0 | 1 | 2 };
+
+/** 拆分後的稅額列：key 為勾選紀錄鍵（拆分列為「項目#1」「項目#2」），奇數金額多的 1 元放第1個月。 */
+export function splitTaxLines(items: FeeItems | null | undefined): SplitTaxLine[] {
+  return taxLines(items).flatMap((l): SplitTaxLine[] => {
+    if (!MONTHLY_TAX_GROUPS.includes(l.group)) return [{ ...l, key: l.item, half: 0 }];
+    const first = Math.ceil(l.amount / 2);
+    return [
+      { ...l, amount: first, key: `${l.item}#1`, half: 1 },
+      { ...l, amount: l.amount - first, key: `${l.item}#2`, half: 2 },
+    ];
+  });
+}
+
 /** Per-group totals with the paid portion. */
 export function taxSummary(lines: (TaxLine & { paid: boolean })[]) {
   return TAX_GROUPS.map((g) => {

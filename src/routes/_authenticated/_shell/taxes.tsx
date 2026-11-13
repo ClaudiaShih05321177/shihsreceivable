@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { invoicesQuery, meQuery, taxFilingsQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { comparePeriod, formatDate, periodMonthLabel, rocYear, TAX_GROUPS, taxLines, taxSummary, todayISO, type FeeItems, type SortDirection } from "@/lib/receivables";
+import { comparePeriod, formatDate, periodMonthLabel, rocYear, splitTaxLines, TAX_GROUPS, taxLines, taxSummary, todayISO, type FeeItems, type SortDirection } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_shell/taxes")({
@@ -64,8 +64,9 @@ function TaxesPage() {
       invoices
         .filter((inv) => period === "all" || periodKey(inv.period_year, inv.period_month, inv.period_label) === period)
         .flatMap((inv) =>
-          taxLines(inv.items as FeeItems).map((l) => {
-            const f = filingMap.get(`${inv.id}|${l.item}`);
+          splitTaxLines(inv.items as FeeItems).map((l) => {
+            // 拆月前的舊勾選紀錄（只記項目名稱）仍適用於兩個月。
+            const f = filingMap.get(`${inv.id}|${l.key}`) ?? (l.half ? filingMap.get(`${inv.id}|${l.item}`) : undefined);
             return { ...l, inv, paid: !!f?.paid, paid_date: f?.paid_date ?? null };
           }),
         ),
@@ -94,7 +95,7 @@ function TaxesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期。" />
+      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；扣繳與二代健保分第1、第2個月各自勾選。" />
 
       <div className="flex flex-wrap gap-3">
         <Select value={period} onValueChange={setPeriod}>
@@ -167,21 +168,21 @@ function TaxesPage() {
             </TableHeader>
             <TableBody>
               {ordered.map((l) => (
-                <TableRow key={`${l.inv.id}-${l.item}`}>
+                <TableRow key={`${l.inv.id}-${l.key}`}>
                   <TableCell className="font-medium">
                     <Link to="/invoices/$id" params={{ id: l.inv.id }} className="hover:text-primary hover:underline">{l.inv.customer?.name ?? "—"}</Link>
                   </TableCell>
                   <TableCell className="text-sm">{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</TableCell>
                   <TableCell className="text-sm">{l.group}</TableCell>
-                  <TableCell className="text-sm">{feeLabel(l.item)}</TableCell>
+                  <TableCell className="text-sm">{feeLabel(l.item)}{l.half ? <span className="ml-1 text-xs text-muted-foreground">（第{l.half}個月）</span> : null}</TableCell>
                   <TableCell className="text-right"><Money value={l.amount} /></TableCell>
                   <TableCell>
                     <Checkbox
-                      aria-label={`${l.inv.customer?.name ?? ""} ${l.item} 已繳費`}
+                      aria-label={`${l.inv.customer?.name ?? ""} ${l.item}${l.half ? ` 第${l.half}個月` : ""} 已繳費`}
                       checked={l.paid}
                       disabled={!me.isAdmin}
                       onCheckedChange={(c) =>
-                        save.mutate({ invoice_id: l.inv.id, item: l.item, paid: c === true, paid_date: c === true ? l.paid_date ?? todayISO() : null })
+                        save.mutate({ invoice_id: l.inv.id, item: l.key, paid: c === true, paid_date: c === true ? l.paid_date ?? todayISO() : null })
                       }
                     />
                   </TableCell>
@@ -191,7 +192,7 @@ function TaxesPage() {
                         type="date"
                         className="h-8 w-40"
                         value={l.paid_date ?? ""}
-                        onChange={(e) => save.mutate({ invoice_id: l.inv.id, item: l.item, paid: true, paid_date: e.target.value || null })}
+                        onChange={(e) => save.mutate({ invoice_id: l.inv.id, item: l.key, paid: true, paid_date: e.target.value || null })}
                       />
                     ) : (
                       <span className="tabular text-sm text-muted-foreground">{formatDate(l.paid_date)}</span>

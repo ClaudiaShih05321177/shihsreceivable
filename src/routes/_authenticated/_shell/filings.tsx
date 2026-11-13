@@ -9,7 +9,7 @@ import { PageHeader, Money } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { FILING_STAGES, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, nextStage } from "@/lib/filings";
+import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, nextStage } from "@/lib/filings";
 import { customersQuery, filingServiceFeesQuery, filingsQuery, meQuery, type Filing } from "@/lib/queries";
 import { formatDate, scheduledCustomerFees, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/_shell/filings")({
   head: () => ({
     meta: [
       { title: "工商進度 · 帳房" },
-      { name: "description", content: "工商登記案件進度表：預查、經濟部、國稅局、結案，結案時一鍵立帳到應收帳款。" },
+      { name: "description", content: "工商登記案件進度表：預查、主管機關、國稅局、結案，結案時一鍵立帳到應收帳款。" },
       { property: "og:title", content: "工商進度 · 帳房" },
       { property: "og:description", content: "工商登記案件進度與立帳。" },
       { property: "og:type", content: "website" },
@@ -147,19 +147,20 @@ function FilingsPage() {
               <TableHead>案件類型</TableHead>
               <TableHead>階段</TableHead>
               <TableHead>流程</TableHead>
-              <TableHead>經濟部 送件／核准</TableHead>
+              <TableHead>主管機關 送件／核准</TableHead>
+              <TableHead>特許 送件／核准</TableHead>
               <TableHead>國稅局 送件／核准</TableHead>
               {me.isAdmin && <TableHead className="text-right">代辦費</TableHead>}
               <TableHead className="text-right">代墊規費</TableHead>
               <TableHead className="text-right">印章</TableHead>
-              <TableHead>應收帳款</TableHead>
+              {me.isAdmin && <TableHead>應收帳款</TableHead>}
               <TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {rows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={11} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell>
+                <TableCell colSpan={12} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell>
               </TableRow>
             )}
             {rows.map((f) => (
@@ -175,16 +176,17 @@ function FilingsPage() {
                   </span>
                 </TableCell>
                 <TableCell className="text-xs whitespace-nowrap">{f.route}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{f.route === "只送國稅局" ? "—" : `${formatDate(f.filed_date)}／${formatDate(f.approved_date)}`}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{formatDate(f.tax_filed_date)}／{formatDate(f.tax_approved_date)}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{routeHasAuthority(f.route) ? `${formatDate(f.filed_date)}／${formatDate(f.approved_date)}` : "—"}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{f.special_authority ? `${f.special_authority} ${formatDate(f.special_filed_date)}／${formatDate(f.special_approved_date)}` : "—"}</TableCell>
+                <TableCell className="text-sm whitespace-nowrap">{routeHasTaxBureau(f.route) ? `${formatDate(f.tax_filed_date)}／${formatDate(f.tax_approved_date)}` : "—"}</TableCell>
                 {me.isAdmin && <TableCell className="text-right"><Money value={fees?.[f.id] ?? 0} /></TableCell>}
                 <TableCell className="text-right"><Money value={Number(f.advance_fee)} /></TableCell>
                 <TableCell className="text-right"><Money value={Number(f.stamp_fee)} /></TableCell>
-                <TableCell className="text-sm">
+                {me.isAdmin && <TableCell className="text-sm">
                   {f.invoice_id ? (
                     <Link to="/invoices/$id" params={{ id: f.invoice_id }} className="text-primary hover:underline">查看帳款</Link>
                   ) : "—"}
-                </TableCell>
+                </TableCell>}
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">
                     {me.isAdmin && f.stage !== "結案" && (

@@ -1,18 +1,26 @@
 import { bookkeepingCollectionMonth, otherKey, type FeeItems } from "./receivables";
 
-/** 工商案件進度階段，依序推進（經濟部→國稅局→結案）。 */
+/** 工商案件進度階段，依序推進（主管機關→國稅局→結案）。 */
 export const FILING_STAGES = ["預查", "送件", "核准", "國稅局送件", "國稅局核准", "結案"] as const;
 export type FilingStage = (typeof FILING_STAGES)[number];
 
-/** 送件流程：經濟部送完接國稅局，或只送國稅局。 */
-export const FILING_ROUTES = ["經濟部+國稅局", "只送國稅局"] as const;
+/** 送件流程：主管機關（經濟部、縣市政府、教育局等）送完接國稅局、只送主管機關，或只送國稅局。 */
+export const FILING_ROUTES = ["主管機關+國稅局", "只送主管機關", "只送國稅局"] as const;
 export const TAX_ONLY_ROUTE = "只送國稅局";
+export const AUTHORITY_ONLY_ROUTE = "只送主管機關";
 const TAX_ONLY_STAGES: readonly FilingStage[] = ["國稅局送件", "國稅局核准", "結案"];
+const AUTHORITY_ONLY_STAGES: readonly FilingStage[] = ["預查", "送件", "核准", "結案"];
 
 /** 該流程適用的階段。 */
 export function stagesFor(route: string | null | undefined): readonly FilingStage[] {
-  return route === TAX_ONLY_ROUTE ? TAX_ONLY_STAGES : FILING_STAGES;
+  if (route === TAX_ONLY_ROUTE) return TAX_ONLY_STAGES;
+  if (route === AUTHORITY_ONLY_ROUTE) return AUTHORITY_ONLY_STAGES;
+  return FILING_STAGES;
 }
+
+/** 流程是否經過主管機關／國稅局。 */
+export const routeHasAuthority = (route: string | null | undefined) => route !== TAX_ONLY_ROUTE;
+export const routeHasTaxBureau = (route: string | null | undefined) => route !== AUTHORITY_ONLY_ROUTE;
 
 /** 新案件的起始階段。 */
 export function initialStage(route: string | null | undefined): FilingStage {

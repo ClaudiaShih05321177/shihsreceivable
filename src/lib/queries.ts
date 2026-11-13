@@ -149,7 +149,7 @@ export const filingsQuery = queryOptions({
   queryFn: async () => {
     const { data, error } = await supabase
       .from("filings")
-      .select("id, customer_id, case_type, stage, filed_date, approved_date, advance_fee, stamp_fee, invoice_id, notes, created_by, created_at, updated_at, company_name, route, tax_filed_date, tax_approved_date, customer_code, customer:customers(id, name, customer_code)")
+      .select("id, customer_id, case_type, stage, filed_date, approved_date, advance_fee, stamp_fee, invoice_id, notes, created_by, created_at, updated_at, company_name, route, tax_filed_date, tax_approved_date, customer_code, special_authority, special_filed_date, special_approved_date, customer:customers(id, name, customer_code)")
       .order("created_at", { ascending: false });
     if (error) throw error;
     return data as unknown as Filing[];
@@ -168,5 +168,16 @@ export const taxFilingsQuery = queryOptions({
       all.push(...data);
       if (data.length < 1000) return all;
     }
+  },
+});
+
+export type FactoryRegistration = Database["public"]["Tables"]["factory_registrations"]["Row"];
+
+export const factoryRegistrationsQuery = queryOptions({
+  queryKey: ["factory_registrations"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("factory_registrations").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
   },
 });

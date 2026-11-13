@@ -24,3 +24,11 @@ describe("tax lines", () => {
     expect(s.find((g) => g.label === "扣繳稅額")).toMatchObject({ total: 300, paid: 200, unpaid: 100 });
   });
 });
+
+import { splitTaxLines } from "./receivables";
+describe("扣繳與二代健保拆兩個月勾選", () => {
+  it("扣繳與二代拆成兩列，營業稅不拆", () => {
+    const l = splitTaxLines({ 營業稅: 500, 薪資扣繳: 4001, 個人2代: 100 });
+    expect(l.map((x) => [x.key, x.amount])).toEqual([["營業稅", 500], ["薪資扣繳#1", 2001], ["薪資扣繳#2", 2000], ["個人2代#1", 50], ["個人2代#2", 50]]);
+  });
+});

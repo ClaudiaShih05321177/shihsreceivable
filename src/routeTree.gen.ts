@@ -16,6 +16,8 @@ import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedShellAuditsRouteImport } from './routes/_authenticated/_shell/audits'
 import { Route as AuthenticatedShellBonusesRouteImport } from './routes/_authenticated/_shell/bonuses'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
+import { Route as AuthenticatedShellFactoryRouteImport } from './routes/_authenticated/_shell/factory'
+import { Route as AuthenticatedShellFactoryReceivablesRouteImport } from './routes/_authenticated/_shell/factory-receivables'
 import { Route as AuthenticatedShellFilingsRouteImport } from './routes/_authenticated/_shell/filings'
 import { Route as AuthenticatedShellTaxesRouteImport } from './routes/_authenticated/_shell/taxes'
 import { Route as AuthenticatedShellTeamRouteImport } from './routes/_authenticated/_shell/team'
@@ -59,6 +61,18 @@ const AuthenticatedShellDashboardRoute =
   AuthenticatedShellDashboardRouteImport.update({
     id: '/dashboard',
     path: '/dashboard',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellFactoryRoute =
+  AuthenticatedShellFactoryRouteImport.update({
+    id: '/factory',
+    path: '/factory',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellFactoryReceivablesRoute =
+  AuthenticatedShellFactoryReceivablesRouteImport.update({
+    id: '/factory-receivables',
+    path: '/factory-receivables',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
 const AuthenticatedShellFilingsRoute =
@@ -114,6 +128,8 @@ export interface FileRoutesByFullPath {
   '/audits': typeof AuthenticatedShellAuditsRoute
   '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/factory': typeof AuthenticatedShellFactoryRoute
+  '/factory-receivables': typeof AuthenticatedShellFactoryReceivablesRoute
   '/filings': typeof AuthenticatedShellFilingsRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
@@ -129,6 +145,8 @@ export interface FileRoutesByTo {
   '/audits': typeof AuthenticatedShellAuditsRoute
   '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/factory': typeof AuthenticatedShellFactoryRoute
+  '/factory-receivables': typeof AuthenticatedShellFactoryReceivablesRoute
   '/filings': typeof AuthenticatedShellFilingsRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
@@ -147,6 +165,8 @@ export interface FileRoutesById {
   '/_authenticated/_shell/audits': typeof AuthenticatedShellAuditsRoute
   '/_authenticated/_shell/bonuses': typeof AuthenticatedShellBonusesRoute
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
+  '/_authenticated/_shell/factory': typeof AuthenticatedShellFactoryRoute
+  '/_authenticated/_shell/factory-receivables': typeof AuthenticatedShellFactoryReceivablesRoute
   '/_authenticated/_shell/filings': typeof AuthenticatedShellFilingsRoute
   '/_authenticated/_shell/taxes': typeof AuthenticatedShellTaxesRoute
   '/_authenticated/_shell/team': typeof AuthenticatedShellTeamRoute
@@ -164,6 +184,8 @@ export interface FileRouteTypes {
     | '/audits'
     | '/bonuses'
     | '/dashboard'
+    | '/factory'
+    | '/factory-receivables'
     | '/filings'
     | '/taxes'
     | '/team'
@@ -179,6 +201,8 @@ export interface FileRouteTypes {
     | '/audits'
     | '/bonuses'
     | '/dashboard'
+    | '/factory'
+    | '/factory-receivables'
     | '/filings'
     | '/taxes'
     | '/team'
@@ -196,6 +220,8 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/audits'
     | '/_authenticated/_shell/bonuses'
     | '/_authenticated/_shell/dashboard'
+    | '/_authenticated/_shell/factory'
+    | '/_authenticated/_shell/factory-receivables'
     | '/_authenticated/_shell/filings'
     | '/_authenticated/_shell/taxes'
     | '/_authenticated/_shell/team'
@@ -263,6 +289,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellDashboardRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/_shell/factory': {
+      id: '/_authenticated/_shell/factory'
+      path: '/factory'
+      fullPath: '/factory'
+      preLoaderRoute: typeof AuthenticatedShellFactoryRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/factory-receivables': {
+      id: '/_authenticated/_shell/factory-receivables'
+      path: '/factory-receivables'
+      fullPath: '/factory-receivables'
+      preLoaderRoute: typeof AuthenticatedShellFactoryReceivablesRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
     '/_authenticated/_shell/filings': {
       id: '/_authenticated/_shell/filings'
       path: '/filings'
@@ -326,6 +366,8 @@ interface AuthenticatedShellRouteChildren {
   AuthenticatedShellAuditsRoute: typeof AuthenticatedShellAuditsRoute
   AuthenticatedShellBonusesRoute: typeof AuthenticatedShellBonusesRoute
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
+  AuthenticatedShellFactoryRoute: typeof AuthenticatedShellFactoryRoute
+  AuthenticatedShellFactoryReceivablesRoute: typeof AuthenticatedShellFactoryReceivablesRoute
   AuthenticatedShellFilingsRoute: typeof AuthenticatedShellFilingsRoute
   AuthenticatedShellTaxesRoute: typeof AuthenticatedShellTaxesRoute
   AuthenticatedShellTeamRoute: typeof AuthenticatedShellTeamRoute
@@ -339,6 +381,9 @@ const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellAuditsRoute: AuthenticatedShellAuditsRoute,
   AuthenticatedShellBonusesRoute: AuthenticatedShellBonusesRoute,
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
+  AuthenticatedShellFactoryRoute: AuthenticatedShellFactoryRoute,
+  AuthenticatedShellFactoryReceivablesRoute:
+    AuthenticatedShellFactoryReceivablesRoute,
   AuthenticatedShellFilingsRoute: AuthenticatedShellFilingsRoute,
   AuthenticatedShellTaxesRoute: AuthenticatedShellTaxesRoute,
   AuthenticatedShellTeamRoute: AuthenticatedShellTeamRoute,
