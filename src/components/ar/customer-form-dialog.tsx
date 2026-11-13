@@ -61,11 +61,11 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
   const [looking, setLooking] = useState(false);
   const lookup = async () => {
     const taxId = form.tax_id.trim();
-    if (!/^\d{8}$/.test(taxId)) return toast.error("請先輸入 8 位數統一編號");
+    if (!/^\d{8}$/.test(taxId)) { toast.error("請先輸入 8 位數統一編號"); return; }
     setLooking(true);
     try {
       const r = await lookupCompany({ data: { taxId } });
-      if (!r) return toast.error("經濟部查無此統一編號");
+      if (!r) { toast.error("經濟部查無此統一編號"); return; }
       setForm((f) => ({ ...f, name: r.name || f.name, contact_person: r.responsible || f.contact_person, address: r.address || f.address }));
       toast.success(`已帶入：${r.name}${r.status ? `（${r.status}）` : ""}`);
     } catch {
