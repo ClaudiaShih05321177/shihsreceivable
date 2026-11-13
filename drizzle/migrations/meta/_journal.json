@@ -141,6 +141,13 @@
       "when": 1794554000452,
       "tag": "0019_factory_invoice_type",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1794554720305,
+      "tag": "0020_factory_tax_id_company_branch",
+      "breakpoints": true
     }
   ]
 }

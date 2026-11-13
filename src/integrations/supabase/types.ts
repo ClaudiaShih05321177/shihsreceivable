@@ -85,8 +85,10 @@ export type Database = {
           application_item: string | null
           approved_date: string | null
           ar_notes: string | null
+          branch_name: string | null
           bureau_filed_date: string | null
           company: string
+          company_name: string | null
           contact: string | null
           created_at: string
           created_by: string | null
@@ -109,14 +111,17 @@ export type Database = {
           quote_amount: number
           stage: string
           status_note: string | null
+          tax_id: string | null
           updated_at: string
         }
         Insert: {
           application_item?: string | null
           approved_date?: string | null
           ar_notes?: string | null
+          branch_name?: string | null
           bureau_filed_date?: string | null
           company?: string
+          company_name?: string | null
           contact?: string | null
           created_at?: string
           created_by?: string | null
@@ -139,14 +144,17 @@ export type Database = {
           quote_amount?: number
           stage?: string
           status_note?: string | null
+          tax_id?: string | null
           updated_at?: string
         }
         Update: {
           application_item?: string | null
           approved_date?: string | null
           ar_notes?: string | null
+          branch_name?: string | null
           bureau_filed_date?: string | null
           company?: string
+          company_name?: string | null
           contact?: string | null
           created_at?: string
           created_by?: string | null
@@ -169,6 +177,7 @@ export type Database = {
           quote_amount?: number
           stage?: string
           status_note?: string | null
+          tax_id?: string | null
           updated_at?: string
         }
         Relationships: []

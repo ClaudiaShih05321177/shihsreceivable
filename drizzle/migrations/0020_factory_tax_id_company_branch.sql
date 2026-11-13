@@ -1,0 +1,2 @@
+ALTER TABLE public.factory_registrations ADD COLUMN tax_id text, ADD COLUMN company_name text, ADD COLUMN branch_name text;
+COMMENT ON COLUMN public.factory_registrations.notes IS 'DEPRECATED: 備註 removed from UI; use status_note';

@@ -9,13 +9,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { lookupCompany } from "@/lib/company-lookup.functions";
 import { INVOICE_TYPES, autoFinalInvoice, contractTotal, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv } from "@/lib/factory";
 import { meQuery, type FactoryRegistration } from "@/lib/queries";
 import type { Database } from "@/integrations/supabase/types";
 
 type Update = Database["public"]["Tables"]["factory_registrations"]["Update"];
 
-const TEXT = ["factory_name", "application_item", "status_note", "contact", "notes", "ar_notes"] as const;
+const TEXT = ["factory_name", "application_item", "status_note", "contact", "ar_notes", "tax_id", "company_name", "branch_name"] as const;
 const DATES = ["env_filed_date", "env_approved_date", "bureau_filed_date", "inspection_date", "approved_date", "deposit_received_date", "final_received_date"] as const;
 const MONEY = ["quote_amount", "deposit_invoice_amount", "deposit_received_amount", "final_invoice_amount", "government_fee", "other_fee", "final_received_amount"] as const;
 type Key = (typeof TEXT)[number] | (typeof DATES)[number] | (typeof MONEY)[number] | "env_mode" | "stage" | "invoice_type";
@@ -36,12 +37,30 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   useEffect(() => { if (open) setForm(toForm(record)); }, [open, record]);
   const set = (k: Key, v: string) => setForm((f) => {
     const next = { ...f, [k]: v };
+    if ((k === "company_name" || k === "branch_name") && next.company_name.trim()) next.factory_name = `${next.company_name.trim()}${next.branch_name.trim()}`;
     if (k === "quote_amount" || k === "deposit_invoice_amount" || k === "invoice_type") {
       if (!issuesInvoice(next.invoice_type)) { next.deposit_invoice_amount = ""; next.final_invoice_amount = ""; }
       else if (Number(next.quote_amount)) next.final_invoice_amount = String(autoFinalInvoice(next.quote_amount, next.deposit_invoice_amount, next.invoice_type));
     }
     return next;
   });
+
+  const [looking, setLooking] = useState(false);
+  const lookup = async () => {
+    const taxId = form.tax_id.trim();
+    if (!/^\d{8}$/.test(taxId)) { toast.error("請先輸入 8 位數統一編號"); return; }
+    setLooking(true);
+    try {
+      const r = await lookupCompany({ data: { taxId } });
+      if (!r?.name) { toast.error("經濟部查無此統一編號"); return; }
+      set("company_name", r.name);
+      toast.success(`已帶入：${r.name}${r.status ? `（${r.status}）` : ""}`);
+    } catch {
+      toast.error("經濟部公示資料暫時無法查詢，請稍後再試");
+    } finally {
+      setLooking(false);
+    }
+  };
 
   const save = useMutation({
     mutationFn: async () => {
@@ -97,9 +116,18 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
         <DialogHeader><DialogTitle>{record ? "編輯工廠登記案件" : "新增工廠登記案件"}</DialogTitle></DialogHeader>
         <div className="grid gap-5 py-2">
           <section className="grid gap-4 sm:grid-cols-2">
-            {text("factory_name", "廠名")}
+            <div className="grid gap-2 sm:col-span-2">
+              <Label htmlFor="fr-tax_id">統一編號</Label>
+              <div className="flex gap-2">
+                <Input id="fr-tax_id" inputMode="numeric" maxLength={8} value={form.tax_id} onChange={(e) => set("tax_id", e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); lookup(); } }} placeholder="8 位數" />
+                <Button type="button" variant="outline" onClick={lookup} disabled={looking}>{looking ? "查詢中…" : "查詢公司"}</Button>
+              </div>
+            </div>
+            {text("company_name", "公司名稱")}
+            {text("branch_name", "廠別（選填）", "例：新竹廠；沒有可留空")}
+            {text("factory_name", "廠名（公司名稱＋廠別，可修改）")}
             {text("application_item", "申辦項目", "例：工廠登記、變更登記")}
-            <div className="sm:col-span-2">{text("status_note", "Status", "自由輸入目前狀況，例：等補件")}</div>
+            <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-status_note">Status</Label><Textarea id="fr-status_note" rows={4} value={form.status_note} onChange={(e) => set("status_note", e.target.value)} placeholder="自由輸入目前狀況，例：等補件" /></div>
             {text("contact", "聯絡人", "姓名／電話")}
             <div className="grid gap-2">
               <Label>環保</Label>
@@ -146,7 +174,6 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             {date("final_received_date", "尾款收款日期")}
             <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-ar_notes">帳款備註</Label><Textarea id="fr-ar_notes" rows={2} value={form.ar_notes} onChange={(e) => set("ar_notes", e.target.value)} /></div>
           </section>
-          <div className="grid gap-2"><Label htmlFor="fr-notes">備註</Label><Textarea id="fr-notes" rows={2} value={form.notes} onChange={(e) => set("notes", e.target.value)} /></div>
         </div>
         <DialogFooter><Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? "儲存中…" : "儲存"}</Button></DialogFooter>
       </DialogContent>

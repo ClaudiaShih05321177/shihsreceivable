@@ -81,23 +81,22 @@ function FactoryPage() {
             <TableRow className="bg-muted/60 hover:bg-muted/60">
               <TableHead>廠名</TableHead><TableHead>申辦項目</TableHead><TableHead>Status</TableHead><TableHead>聯絡人</TableHead>
               <TableHead>階段</TableHead><TableHead>環保 送件／核准</TableHead><TableHead>工商科送件</TableHead><TableHead>現場會勘</TableHead><TableHead>核准結案</TableHead>
-              <TableHead>備註</TableHead><TableHead className="text-right">操作</TableHead>
+<TableHead className="text-right">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {shown.length === 0 && <TableRow><TableCell colSpan={11} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell></TableRow>}
+            {shown.length === 0 && <TableRow><TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell></TableRow>}
             {shown.map((r) => (
               <TableRow key={r.id}>
-                <TableCell className="font-medium">{r.factory_name}</TableCell>
+                <TableCell className="font-medium">{r.factory_name}{r.tax_id && <div className="tabular text-xs font-normal text-muted-foreground">{r.tax_id}</div>}</TableCell>
                 <TableCell className="text-sm">{r.application_item ?? "—"}</TableCell>
-                <TableCell className="max-w-48 text-sm">{r.status_note ?? "—"}</TableCell>
+                <TableCell className="min-w-64 max-w-96 text-sm whitespace-pre-wrap">{r.status_note ?? "—"}</TableCell>
                 <TableCell className="text-sm">{r.contact ?? "—"}</TableCell>
                 <TableCell><span className={cn("rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap", r.stage === "核准結案" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{r.stage}</span></TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{needsEnv(r.env_mode) ? d(r.env_filed_date, r.env_approved_date) : r.env_mode}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{d(r.bureau_filed_date)}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{d(r.inspection_date)}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{d(r.approved_date)}</TableCell>
-                <TableCell className="max-w-48 text-sm">{r.notes ?? "—"}</TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">
                     {me.isAdmin && r.stage !== "核准結案" && (
