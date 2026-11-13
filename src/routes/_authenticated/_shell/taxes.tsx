@@ -95,7 +95,7 @@ function TaxesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；扣繳與二代健保分第1、第2個月各自勾選。" />
+      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；租金扣繳與租金二代分第1、第2個月各自勾選。" />
 
       <div className="flex flex-wrap gap-3">
         <Select value={period} onValueChange={setPeriod}>

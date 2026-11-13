@@ -133,10 +133,9 @@ export function bookkeepingPeriodFee(monthlyFee: number | string, month: number)
   return Math.round(Number(monthlyFee) * 2) || 0;
 }
 
-/** Ledger periods precede collection: January collects November–December. */
+/** 收款月份收當期：1月收1-2月、3月收3-4月…11月收11-12月。 */
 export function suggestPeriod(month: number): string {
-  if (month === 0 || month === 1) return "11-12";
-  if (month >= 3 && month <= 11 && month % 2 === 1) return `${month - 2}-${month - 1}`;
+  if (month >= 1 && month <= 11 && month % 2 === 1) return `${month}-${month + 1}`;
   return "";
 }
 
@@ -300,15 +299,15 @@ export function taxLines(items: FeeItems | null | undefined): TaxLine[] {
   );
 }
 
-/** 扣繳與二代健保每月繳納，但一次請兩個月：稅額明細拆成第1個月／第2個月各自勾選。 */
-export const MONTHLY_TAX_GROUPS: readonly string[] = ["扣繳稅額", "二代健保"];
+/** 只有租金扣繳與租金二代每月繳納、一次請兩個月：稅額明細拆成第1個月／第2個月各自勾選。 */
+export const MONTHLY_TAX_ITEMS: readonly string[] = ["租金扣繳", "租金2代"];
 
 export type SplitTaxLine = TaxLine & { key: string; half: 0 | 1 | 2 };
 
 /** 拆分後的稅額列：key 為勾選紀錄鍵（拆分列為「項目#1」「項目#2」），奇數金額多的 1 元放第1個月。 */
 export function splitTaxLines(items: FeeItems | null | undefined): SplitTaxLine[] {
   return taxLines(items).flatMap((l): SplitTaxLine[] => {
-    if (!MONTHLY_TAX_GROUPS.includes(l.group)) return [{ ...l, key: l.item, half: 0 }];
+    if (!MONTHLY_TAX_ITEMS.includes(l.item)) return [{ ...l, key: l.item, half: 0 }];
     const first = Math.ceil(l.amount / 2);
     return [
       { ...l, amount: first, key: `${l.item}#1`, half: 1 },

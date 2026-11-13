@@ -94,7 +94,7 @@ describe("bimonthly bookkeeping collection", () => {
   });
 
   it("keeps the preceding two-month ledger period", () => {
-    expect([1, 3, 5, 7, 9, 11].map(suggestPeriod)).toEqual(["11-12", "1-2", "3-4", "5-6", "7-8", "9-10"]);
+    expect([1, 3, 5, 7, 9, 11].map(suggestPeriod)).toEqual(["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"]);
   });
 });
 

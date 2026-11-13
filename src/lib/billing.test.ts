@@ -16,7 +16,7 @@ describe("batchInvoiceDrafts", () => {
     expect(d).toEqual([{ customer_id: "a", period_year: 2026, period_month: 11, period_label: "9-10", items: { 記帳費: 5000, 暫繳: 2500 }, amount: 7500 }]);
   });
   it("places January settlement in the settlement fee field", () => {
-    expect(batchInvoiceDrafts([c("a", 2500)], [], 2026, 1)).toEqual([{ customer_id: "a", period_year: 2026, period_month: 1, period_label: "11-12", items: { 記帳費: 5000, 股利2代: 6000 }, amount: 11000 }]);
+    expect(batchInvoiceDrafts([c("a", 2500)], [], 2026, 1)).toEqual([{ customer_id: "a", period_year: 2026, period_month: 1, period_label: "1-2", items: { 記帳費: 5000, 股利2代: 6000 }, amount: 11000 }]);
   });
   it("creates nothing in an even month", () => {
     expect(batchInvoiceDrafts([c("a", 2500)], [], 2026, 4)).toEqual([]);
