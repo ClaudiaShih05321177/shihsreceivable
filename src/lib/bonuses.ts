@@ -31,7 +31,7 @@ const code = (s: string | null | undefined) => s?.trim() || "未指定";
 const before = (r: BonusRow, year: number, month: number) => (r.period_year ?? 0) < year || ((r.period_year ?? 0) === year && (r.period_month ?? 0) <= month);
 
 /** 獎金每期固定計入的客戶（依客戶編號）：不論收費狀態，每期只算這一筆；立帳金額不受影響。 */
-export const FIXED_PERIOD_SHARE: Record<string, number> = { BF09: 50000 };
+export const FIXED_PERIOD_SHARE: Record<string, number> = { BF09: 50000, BI06: 5000 };
 
 /** 每期記帳費依客戶設定計入，不因尚未立帳而漏計；其他狀態依實際立帳。 */
 export function periodShare(c?: Pick<BonusCustomer, "billing_type" | "bookkeeping_fee">): number | null {

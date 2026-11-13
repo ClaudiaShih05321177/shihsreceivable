@@ -55,6 +55,13 @@ describe("bookkeeper bonuses", () => {
       expect(g?.rows.filter((r) => r.bookkeeping === 50000)).toHaveLength(1);
     }
   });
+  it("BI06 不收費仍每期固定計入 5000，立帳不重複計算", () => {
+    const c = cust({ id: "c1", customer_code: "BI06", staff_code: "BI", name: "施慶豐事務所 (不收費)", billing_type: "不收費", bookkeeping_fee: 2500 });
+    const d = { staff: ["BI"], customers: [c], rows: [] };
+    expect(bonusGroups(d, 2026, 9).find((g) => g.code === "BI")?.total).toBe(5000);
+    const withInvoice = { staff: ["BI"], customers: [c], rows: [row({ customer_code: "BI06", staff_code: "BI", items: { 記帳費: 5000 } })] };
+    expect(bonusGroups(withInvoice, 2026, 9).find((g) => g.code === "BI")?.total).toBe(5000);
+  });
   it("combines period, half-year and annual customers in the staff total", () => {
     const d = { staff: ["AC"], customers: [cust({ bookkeeping_fee: 100000 }), cust({ id: "c2", billing_type: "半年收", bookkeeping_fee: 3000 }), cust({ id: "c3", billing_type: "年收", bookkeeping_fee: 6000 })], rows: [] };
     const g = bonusGroups(d, 2026, 11)[0];
