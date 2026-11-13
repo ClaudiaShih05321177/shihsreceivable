@@ -37,7 +37,7 @@ function toForm(filing: Filing, serviceFee?: number): Form {
   return {
     customer_id: filing.customer_id ?? NEW,
     company_name: filing.company_name ?? "",
-    customer_code: filing.customer?.customer_code ?? "",
+    customer_code: filing.customer?.customer_code ?? filing.customer_code ?? "",
     route: filing.route,
     tax_filed_date: filing.tax_filed_date ?? "",
     tax_approved_date: filing.tax_approved_date ?? "",
@@ -73,7 +73,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
     const id = taxId.trim();
     if (!/^\d{8}$/.test(id)) { toast.error("請輸入 8 位數統一編號"); return; }
     const existing = customers.find((c) => c.tax_id === id);
-    if (existing) { set({ customer_id: existing.id, customer_code: existing.customer_code ?? "" }); toast.success(`已選擇既有客戶：${existing.name}`); return; }
+    if (existing) { set({ customer_id: existing.id, customer_code: form.customer_code || existing.customer_code || "" }); toast.success(`已選擇既有客戶：${existing.name}`); return; }
     setLooking(true);
     try {
       const r = await lookupCompany({ data: { taxId: id } });
@@ -84,6 +84,11 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
         .select("id")
         .single();
       if (error) throw error;
+      // 管理員已填客戶代碼時，一併寫入新客戶（前兩碼為會計專員代號）。
+      const code = form.customer_code.trim().toUpperCase();
+      if (me.isAdmin && code) {
+        await supabase.from("customers").update({ customer_code: code, staff_code: staffFromCode(code) }).eq("id", data.id);
+      }
       await qc.invalidateQueries({ queryKey: ["customers"] });
       set({ customer_id: data.id });
       setTaxId("");
@@ -103,6 +108,8 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
       const row = {
         customer_id: isNew ? null : form.customer_id,
         company_name: isNew ? form.company_name.trim() : null,
+        // 管理員可先填客戶代碼（新設立案件先存在案件上，連結客戶後同步）。
+        ...(me.isAdmin ? { customer_code: form.customer_code.trim().toUpperCase() || null } : {}),
         route: form.route,
         tax_filed_date: form.tax_filed_date || null,
         tax_approved_date: form.tax_approved_date || null,
@@ -163,7 +170,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           </div>
           <div className="grid gap-2">
             <Label htmlFor="f-customer">客戶</Label>
-            <Select value={form.customer_id} onValueChange={(v) => set({ customer_id: v, customer_code: customers.find((c) => c.id === v)?.customer_code ?? "" })}>
+            <Select value={form.customer_id} onValueChange={(v) => set({ customer_id: v, customer_code: form.customer_code || customers.find((c) => c.id === v)?.customer_code || "" })}>
               <SelectTrigger id="f-customer" aria-label="客戶"><SelectValue placeholder="選擇客戶" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={NEW}>＋ 新設立（尚無統編／客戶資料）</SelectItem>
@@ -180,11 +187,17 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
               <p className="text-xs text-muted-foreground">取得統編後，用上方「用統編新增客戶」建立客戶並選擇，才能結案立帳。</p>
             </div>
           )}
-          {me.isAdmin && form.customer_id && form.customer_id !== NEW && (
+          {me.isAdmin && form.customer_id && (
             <div className="grid gap-2">
               <Label htmlFor="f-code">客戶代碼（派案）</Label>
               <Input id="f-code" value={form.customer_code} onChange={(e) => set({ customer_code: e.target.value })} placeholder="例：AC15，可先留空" maxLength={40} />
-              <p className="text-xs text-muted-foreground">{staff ? `派給會計專員 ${staff}，儲存後同步更新客戶資料。` : "前兩位英文字母為會計專員代號；尚未派案可留空。"}</p>
+              <p className="text-xs text-muted-foreground">
+                {form.customer_id === NEW
+                  ? "新設立案件先存在案件上；之後用統編建立或選擇客戶時會一併寫入客戶資料。"
+                  : staff
+                    ? `派給會計專員 ${staff}，儲存後同步更新客戶資料。`
+                    : "前兩位英文字母為會計專員代號；尚未派案可留空。"}
+              </p>
             </div>
           )}
           <div className="grid gap-2">
