@@ -20,7 +20,7 @@ export function initialStage(route: string | null | undefined): FilingStage {
 }
 
 /** 案件類型。 */
-export const CASE_TYPES = ["新設立", "設立登記", "變更登記", "遷址登記", "增資登記", "解散登記", "註銷登記", "其他"] as const;
+export const CASE_TYPES = ["設立登記", "變更登記", "遷址登記", "增資登記", "解散登記", "註銷登記", "其他"] as const;
 
 /** 下一個階段；已結案維持結案。 */
 export function nextStage(stage: string, route?: string | null): FilingStage {
