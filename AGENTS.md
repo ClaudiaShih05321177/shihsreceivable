@@ -33,7 +33,7 @@ use the editor.
 
 - Shared customer queries use an explicit public column list; bonus percentages are fetched only through an admin-checked security-definer RPC, with direct column SELECT revoked. Why: row-level customer sharing must not expose private bonus settings.
 
-- Bonus rules are tested in src/lib/bonuses.ts; bonus rows are fetched only through the admin-checked SECURITY INVOKER database RPC, with a role-gated page and navigation. Why: bonus data must not be returned to ordinary members.
+- Bonus rules are tested in src/lib/bonuses.ts; bonus rows come from the SECURITY INVOKER RPC bookkeeper_bonus_data, so RLS limits members to their own customers while admins see all and print per-staff sign-off sheets. Why: staff see only their own bonus.
 
 - Receivables business rules (status, overdue, aging, fee totals, ROC dates) live in `src/lib/receivables.ts` with tests in `src/lib/receivables.test.ts`; UI must call these helpers instead of re-deriving. Why: one tested source of truth for money logic.
 - Data access goes through the browser Supabase client with RLS (`src/lib/queries.ts` queryOptions + route loaders); no server functions needed. Why: team-shared data is fully guarded by `is_member()` policies.

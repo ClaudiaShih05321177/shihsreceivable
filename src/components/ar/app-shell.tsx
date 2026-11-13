@@ -49,7 +49,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full flex-col md:flex-row">
-      <aside className="bg-ink-gradient text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen md:w-60 md:shrink-0 md:flex-col">
+      <aside className="print:hidden bg-ink-gradient text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen md:w-60 md:shrink-0 md:flex-col">
         <div className="flex items-center justify-between px-5 py-4 md:py-6">
           <BrandMark />
           <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:hidden" aria-label="登出">
@@ -71,7 +71,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           </select>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-1 md:flex-col md:pb-0">
-          {(items as readonly { to: string; label: string; icon: typeof Factory }[]).filter((item) => (item.to !== "/team" && item.to !== "/bonuses") || me.isAdmin).map((item) => {
+          {(items as readonly { to: string; label: string; icon: typeof Factory }[]).filter((item) => (item.to !== "/team") || me.isAdmin).map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
               <Link
@@ -99,7 +99,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           </Button>
         </div>
       </aside>
-      <main className="min-w-0 flex-1 px-5 py-8 md:px-10 md:py-10">
+      <main className="min-w-0 flex-1 px-5 py-8 md:px-10 md:py-10 print:p-0">
         <div className="mx-auto max-w-6xl">{children}</div>
       </main>
     </div>

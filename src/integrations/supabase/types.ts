@@ -549,6 +549,7 @@ export type Database = {
         Args: { _code: string; _user_id: string }
         Returns: undefined
       }
+      visible_bonus_rate: { Args: { _customer_id: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "member"
