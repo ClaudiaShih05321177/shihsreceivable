@@ -109,11 +109,17 @@ export function canCloseFiling(isAdmin: boolean, staffCode: string | null | unde
 /** 需要填停業期間的案件類型。 */
 export const SUSPEND_CASE_TYPES: readonly string[] = ["停業登記", "展延停業", "停復業登記"];
 
-/** 展延停業預設期間：接續原停業期間往後一年，例 114/7-115/6 → 115/7-116/6。無法解析回傳 ""。 */
+/** 展延停業預設期間：接續原停業期間往後一年。有日期就連日推算（115/1/1-115/12/31 → 116/1/1-116/12/31），只有年月則按月（114/7-115/6 → 115/7-116/6）。無法解析回傳 ""。 */
 export function extendSuspendedPeriod(period: string | null | undefined): string {
-  const m = (period ?? "").trim().match(/(\d{2,3})\/(\d{1,2})(?:\/\d{1,2})?\s*[-~～－至]\s*(\d{2,3})\/(\d{1,2})(?:\/\d{1,2})?$/);
+  const m = (period ?? "").trim().match(/(\d{2,3})\/(\d{1,2})(?:\/(\d{1,2}))?\s*[-~～－至]\s*(\d{2,3})\/(\d{1,2})(?:\/(\d{1,2}))?$/);
   if (!m) return "";
-  let y = Number(m[3]), mo = Number(m[4]) + 1;
+  if (m[6]) {
+    const start = new Date(Date.UTC(Number(m[4]) + 1911, Number(m[5]) - 1, Number(m[6]) + 1));
+    const end = new Date(Date.UTC(start.getUTCFullYear() + 1, start.getUTCMonth(), start.getUTCDate() - 1));
+    const f = (d: Date) => `${d.getUTCFullYear() - 1911}/${d.getUTCMonth() + 1}/${d.getUTCDate()}`;
+    return `${f(start)}-${f(end)}`;
+  }
+  let y = Number(m[4]), mo = Number(m[5]) + 1;
   if (mo > 12) { mo = 1; y += 1; }
   let ey = y + 1, em = mo - 1;
   if (em < 1) { em = 12; ey -= 1; }

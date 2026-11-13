@@ -232,6 +232,13 @@
       "when": 1794575462191,
       "tag": "0032_close_filing_extend_suspension",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794575582013,
+      "tag": "0033_extend_suspended_period_days",
+      "breakpoints": true
     }
   ]
 }

@@ -110,7 +110,12 @@ describe("展延停業", () => {
   it("接續原期間往後一年", () => {
     expect(extendSuspendedPeriod("114/7-115/6")).toBe("115/7-116/6");
     expect(extendSuspendedPeriod("115/1-115/12")).toBe("116/1-116/12");
-    expect(extendSuspendedPeriod("114/7/1-115/6/30")).toBe("115/7-116/6");
+    expect(extendSuspendedPeriod("114/7/1-115/6/30")).toBe("115/7/1-116/6/30");
     expect(extendSuspendedPeriod("")).toBe("");
   });
+});
+
+describe("展延停業連日推算", () => {
+  it("115/1/1-115/12/31 延成 116/1/1-116/12/31", () => { expect(extendSuspendedPeriod("115/1/1-115/12/31")).toBe("116/1/1-116/12/31"); });
+  it("114/7/15-115/7/14 延成 115/7/15-116/7/14", () => { expect(extendSuspendedPeriod("114/7/15-115/7/14")).toBe("115/7/15-116/7/14"); });
 });
