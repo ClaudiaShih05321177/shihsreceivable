@@ -32,7 +32,20 @@ export type ProjectArLike = {
   other_fee: Num;
   final_received_amount: Num;
   invoice_type?: string | null;
+  extra_fees?: unknown;
 };
+
+/** 自訂費用項目（每筆案件自行增列，如竣工圖燒錄費、代刻印章）。 */
+export type ExtraFee = { label: string; amount: number };
+
+export function extraFees(v: unknown): ExtraFee[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((x) => ({ label: String((x as ExtraFee)?.label ?? "").trim(), amount: Math.round(Number((x as ExtraFee)?.amount) || 0) }))
+    .filter((x) => x.label && x.amount !== 0);
+}
+
+export const extraFeesTotal = (v: unknown) => extraFees(v).reduce((s, x) => s + x.amount, 0);
 
 export const INVOICE_TYPES = ["開發票", "不開發票"] as const;
 export const TAX_RATE = 0.05;
@@ -48,10 +61,11 @@ export function autoFinalInvoice(quote: Num, depositInvoice: Num, type: string |
   return issuesInvoice(type) ? Math.max(0, contractTotal(quote, type) - n(depositInvoice)) : 0;
 }
 
-/** 尾款應收＝尾款發票金額＋規費＋其他費用。 */
+/** 尾款應收＝尾款發票金額＋規費＋其他費用＋自訂費用項目。 */
 export function finalDue(r: ProjectArLike): number {
-  if (!issuesInvoice(r.invoice_type)) return n(r.quote_amount) + n(r.government_fee) + n(r.other_fee);
-  return n(r.final_invoice_amount) + n(r.government_fee) + n(r.other_fee);
+  const fees = n(r.government_fee) + n(r.other_fee) + extraFeesTotal(r.extra_fees);
+  if (!issuesInvoice(r.invoice_type)) return n(r.quote_amount) + fees;
+  return n(r.final_invoice_amount) + fees;
 }
 
 /** 未收餘額＝（訂金發票−訂金收款）＋（尾款應收−尾款收款）。 */

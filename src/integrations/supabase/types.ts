@@ -98,6 +98,7 @@ export type Database = {
           env_approved_date: string | null
           env_filed_date: string | null
           env_mode: string
+          extra_fees: Json
           factory_name: string
           final_invoice_amount: number
           final_received_amount: number
@@ -131,6 +132,7 @@ export type Database = {
           env_approved_date?: string | null
           env_filed_date?: string | null
           env_mode?: string
+          extra_fees?: Json
           factory_name: string
           final_invoice_amount?: number
           final_received_amount?: number
@@ -164,6 +166,7 @@ export type Database = {
           env_approved_date?: string | null
           env_filed_date?: string | null
           env_mode?: string
+          extra_fees?: Json
           factory_name?: string
           final_invoice_amount?: number
           final_received_amount?: number

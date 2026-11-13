@@ -39,3 +39,16 @@ describe("發票類型", () => {
     expect(po(r)).toBe(65000);
   });
 });
+
+import { extraFeesTotal } from "./factory";
+import { quoteSummary } from "./factory-docs";
+describe("自訂費用項目", () => {
+  const r = { quote_amount: 100000, deposit_invoice_amount: 0, deposit_received_amount: 0, final_invoice_amount: 105000, government_fee: 3000, other_fee: 0, final_received_amount: 0, invoice_type: "開發票", extra_fees: [{ label: "竣工圖燒錄費", amount: 1500 }, { label: "", amount: 99 }, { label: "代刻印章", amount: 500 }] };
+  it("只計有名稱的項目", () => expect(extraFeesTotal(r.extra_fees)).toBe(2000));
+  it("尾款應收含自訂費用", () => expect(finalDue(r)).toBe(105000 + 3000 + 2000));
+  it("報價單逐筆列出並保留規費", () => {
+    const s = quoteSummary(r);
+    expect(s.lines.map((l) => l.label)).toEqual(["營業稅(5%)", "規費(收據)", "竣工圖燒錄費", "代刻印章"]);
+    expect(s.total).toBe(110000);
+  });
+});

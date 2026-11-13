@@ -1,8 +1,12 @@
 /** 勤豐工商顧問 報價單／請款單內容（依使用者提供之 Excel 範本）。 */
-import { contractTotal, issuesInvoice, TAX_RATE, type ProjectArLike } from "./factory";
+import { contractTotal, extraFees, issuesInvoice, TAX_RATE, type ProjectArLike } from "./factory";
 
 export const KINFENG = {
   name: "勤豐工商顧問有限公司",
+  taxId: "53407393",
+  address: "新竹市東區民生路193號6樓之3",
+  phone: "(03)5321177",
+  fax: "(03)5325488",
   bank: "新竹市第一信用合作社 三民分社",
   accountName: "勤豐工商顧問有限公司",
   bankCode: "130",
@@ -31,6 +35,7 @@ export function quoteSummary(r: ProjectArLike): DocSummary {
   const tax = issuesInvoice(r.invoice_type) ? contractTotal(q, r.invoice_type) - q : 0;
   const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: tax }, { label: "規費(收據)", amount: n(r.government_fee) }];
   if (n(r.other_fee)) lines.push({ label: "其他費用", amount: n(r.other_fee) });
+  for (const x of extraFees(r.extra_fees)) lines.push(x);
   return { consulting: q, subtotal: q, lines, total: lines.reduce((s, l) => s + l.amount, q) };
 }
 
@@ -55,5 +60,6 @@ export function invoiceSummary(r: ProjectArLike, stage: InvoiceStage): DocSummar
   }
   lines.push({ label: "規費(收據)", amount: n(r.government_fee) });
   if (n(r.other_fee)) lines.push({ label: "其他費用", amount: n(r.other_fee) });
+  for (const x of extraFees(r.extra_fees)) lines.push(x);
   return { consulting: q, subtotal: q, lines, total: lines.reduce((s, l) => s + l.amount, q) };
 }

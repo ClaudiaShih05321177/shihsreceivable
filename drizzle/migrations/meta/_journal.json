@@ -155,6 +155,13 @@
       "when": 1794556217297,
       "tag": "0021_payments_bank_fee",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1794557519498,
+      "tag": "0022_factory_extra_fees",
+      "breakpoints": true
     }
   ]
 }

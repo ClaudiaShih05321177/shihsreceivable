@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { RocDateInput } from "@/components/ar/roc-date-input";
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupCompany } from "@/lib/company-lookup.functions";
-import { INVOICE_TYPES, autoFinalInvoice, contractTotal, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv } from "@/lib/factory";
+import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv } from "@/lib/factory";
 import { meQuery, type FactoryRegistration } from "@/lib/queries";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -35,7 +36,11 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(toForm(record));
-  useEffect(() => { if (open) setForm(toForm(record)); }, [open, record]);
+  const [extras, setExtras] = useState<{ label: string; amount: string }[]>([]);
+  useEffect(() => {
+    if (open) { setForm(toForm(record)); setExtras(extraFees(record?.extra_fees).map((x) => ({ label: x.label, amount: String(x.amount) }))); }
+  }, [open, record]);
+  const extraRows = (): ExtraFee[] => extraFees(extras);
   const set = (k: Key, v: string) => setForm((f) => {
     const next = { ...f, [k]: v };
     if ((k === "company_name" || k === "branch_name") && next.company_name.trim()) next.factory_name = `${next.company_name.trim()}${next.branch_name.trim()}`;
@@ -72,6 +77,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
       row["factory_name"] = form.factory_name.trim();
       for (const k of DATES) row[k] = form[k] || null;
       for (const k of MONEY) row[k] = Math.round(Number(form[k]) || 0);
+      (row as Record<string, unknown>)["extra_fees"] = extraRows();
       if (record) {
         if (form.stage) row["stage"] = form.stage;
         const { error } = await supabase.from("factory_registrations").update(typed).eq("id", record.id);
@@ -107,7 +113,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
       <Input id={`fr-${k}`} type="number" min={0} value={form[k]} onChange={(e) => set(k, e.target.value)} placeholder="0" />
     </div>
   );
-  const due = finalDue({ ...Object.fromEntries(MONEY.map((k) => [k, form[k]])), invoice_type: form.invoice_type } as never);
+  const due = finalDue({ ...Object.fromEntries(MONEY.map((k) => [k, form[k]])), invoice_type: form.invoice_type, extra_fees: extras } as never);
   const inv = issuesInvoice(form.invoice_type);
 
   return (
@@ -169,8 +175,21 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             {date("deposit_received_date", "訂金收款日期")}
             {inv && money("final_invoice_amount", "尾款發票金額（自動補齊，可修改）")}
             {money("government_fee", "規費")}
-            {money("other_fee", "其他費用")}
-            <div className="grid gap-2"><Label>{inv ? "尾款＋規費＋其他費用" : "報價＋規費＋其他費用"}</Label><p className="tabular py-2 text-sm font-semibold">{due.toLocaleString("zh-TW")}</p></div>
+            {Number(form.other_fee) ? money("other_fee", "其他費用") : null}
+            <div className="grid gap-2 rounded-md border bg-card p-3 sm:col-span-2">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold">自訂費用項目 <span className="text-xs font-normal text-muted-foreground">例：竣工圖燒錄費、代刻印章</span></p>
+                <button type="button" onClick={() => setExtras((e) => [...e, { label: "", amount: "" }])} className="flex items-center gap-1 text-xs text-primary hover:underline"><Plus className="size-3.5" />新增費用</button>
+              </div>
+              {extras.length === 0 ? <p className="text-xs text-muted-foreground">沒有自訂費用。</p> : extras.map((x, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <Input aria-label={`費用 ${i + 1} 名稱`} placeholder="項目名稱" value={x.label} maxLength={40} className="h-8 flex-1" onChange={(e) => setExtras((all) => all.map((y, j) => (j === i ? { ...y, label: e.target.value } : y)))} />
+                  <Input aria-label={`費用 ${i + 1} 金額`} type="number" placeholder="金額" value={x.amount} className="h-8 w-32" onChange={(e) => setExtras((all) => all.map((y, j) => (j === i ? { ...y, amount: e.target.value } : y)))} />
+                  <button type="button" aria-label={`刪除費用 ${i + 1}`} onClick={() => setExtras((all) => all.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive"><Trash2 className="size-4" /></button>
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-2"><Label>{inv ? "尾款＋規費＋其他費用項目" : "報價＋規費＋其他費用項目"}</Label><p className="tabular py-2 text-sm font-semibold">{due.toLocaleString("zh-TW")}</p></div>
             {money("final_received_amount", "尾款收款金額")}
             {date("final_received_date", "尾款收款日期")}
             <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-ar_notes">帳款備註</Label><Textarea id="fr-ar_notes" rows={2} value={form.ar_notes} onChange={(e) => set("ar_notes", e.target.value)} /></div>

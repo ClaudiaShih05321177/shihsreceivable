@@ -1,0 +1,1 @@
+ALTER TABLE public.factory_registrations ADD COLUMN extra_fees jsonb NOT NULL DEFAULT '[]'::jsonb;

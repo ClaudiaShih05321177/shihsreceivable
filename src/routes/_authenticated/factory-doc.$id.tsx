@@ -66,6 +66,8 @@ function FactoryDocPage() {
           <h1 className="font-serif text-3xl font-bold tracking-[0.5em]">{isQuote ? "報價單" : "請款單"}</h1>
           <p className="tracking-widest">{isQuote ? "Quotation" : "INVOICE"}</p>
           <p className="font-medium">{KINFENG.name}</p>
+          <p className="text-sm">統一編號：{KINFENG.taxId}　地址：{KINFENG.address}</p>
+          <p className="text-sm">電話：{KINFENG.phone}　傳真：{KINFENG.fax}</p>
         </header>
         <p className="mt-2 text-right">日期：{formatDate(todayISO())}</p>
         <table className="mt-2 w-full border-collapse text-sm">
@@ -86,8 +88,8 @@ function FactoryDocPage() {
               <td className={`${cell} text-right font-mono`}>{formatTWD(s.consulting)}</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.consulting)}</td>
             </tr>
             <tr><td className={cell} colSpan={5}>小計(發票金額)</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.subtotal)}</td></tr>
-            {s.lines.map((l) => (
-              <tr key={l.label}><td className={cell} colSpan={5}>{l.label}</td><td className={`${cell} text-right font-mono`}>{l.amount < 0 ? `−${formatTWD(-l.amount)}` : formatTWD(l.amount)}</td></tr>
+            {s.lines.map((l, i) => (
+              <tr key={`${l.label}-${i}`}><td className={cell} colSpan={5}>{l.label}</td><td className={`${cell} text-right font-mono`}>{l.amount < 0 ? `−${formatTWD(-l.amount)}` : formatTWD(l.amount)}</td></tr>
             ))}
             <tr className="font-bold"><td className={cell} colSpan={5}>總計新台幣：</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.total)}</td></tr>
           </tbody>
