@@ -76,3 +76,28 @@ export const completePasswordChange = createServerFn({ method: "POST" })
     if (error) throw new Error("更新失敗");
     return { ok: true };
   });
+
+/** 首次登入（必須變更密碼）時由伺服端設定新密碼並清除標記。 */
+export const changeInitialPassword = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { password: string }) => {
+    if (typeof d?.password !== "string" || d.password.length < 8) throw new Error("新密碼至少 8 個字元");
+    return { password: d.password };
+  })
+  .handler(async ({ data, context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: u, error: gErr } = await supabaseAdmin.auth.admin.getUserById(context.userId);
+    if (gErr || !u.user) throw new Error("找不到帳號");
+    if (!u.user.app_metadata?.must_change_password) throw new Error("此帳號不需要變更初始密碼");
+    const { error } = await supabaseAdmin.auth.admin.updateUserById(context.userId, {
+      password: data.password,
+      app_metadata: { must_change_password: false },
+    });
+    if (error) {
+      const m = error.message ?? "";
+      if (/weak|pwned|leaked|compromised/i.test(m)) throw new Error("此密碼太常見或曾外洩，請換一組");
+      if (/same|different/i.test(m)) throw new Error("新密碼不可與初始密碼相同");
+      throw new Error("變更失敗");
+    }
+    return { email: u.user.email ?? "" };
+  });

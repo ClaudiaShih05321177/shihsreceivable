@@ -8,11 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { completePasswordChange } from "@/lib/team.functions";
+import { changeInitialPassword } from "@/lib/team.functions";
 
 export function ForcePasswordChange() {
   const qc = useQueryClient();
-  const complete = useServerFn(completePasswordChange);
+  const change = useServerFn(changeInitialPassword);
   const [pw, setPw] = useState("");
   const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
@@ -23,10 +23,9 @@ export function ForcePasswordChange() {
     if (pw !== pw2) { toast.error("兩次輸入的密碼不一致"); return; }
     setBusy(true);
     try {
-      const { error } = await supabase.auth.updateUser({ password: pw });
-      if (error) throw new Error(/different|same/i.test(error.message) ? "新密碼不可與初始密碼相同" : "變更失敗");
-      await complete();
-      await supabase.auth.refreshSession();
+      const { email } = await change({ data: { password: pw } });
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pw });
+      if (error) throw new Error("密碼已更新，請用新密碼重新登入");
       toast.success("密碼已更新");
       await qc.invalidateQueries({ queryKey: ["me"] });
     } catch (err) {
