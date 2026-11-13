@@ -35,12 +35,12 @@ use the editor.
 
 - Bonus rules are tested in src/lib/bonuses.ts; bonus rows come from the SECURITY INVOKER RPC bookkeeper_bonus_data, so RLS limits members to their own customers while admins see all and print per-staff sign-off sheets. Why: staff see only their own bonus.
 
-- Receivables business rules (status, overdue, aging, fee totals, ROC dates) live in `src/lib/receivables.ts` with tests in `src/lib/receivables.test.ts`; UI must call these helpers instead of re-deriving. Why: one tested source of truth for money logic.
+- Receivables business rules (status, overdue, aging, fee totals, ROC dates) live in `src/lib/receivables.ts` with tests in `src/lib/receivables.test.ts`; UI must call these helpers instead of re-deriving. Why: one source of truth.
 - Data access goes through the browser Supabase client with RLS (`src/lib/queries.ts` queryOptions + route loaders); no server functions needed. Why: team-shared data is fully guarded by `is_member()` policies.
 - Access model: first sign-up becomes admin via the `handle_new_user` trigger; later users have no role (pending) until an admin grants one on /team. Why: financial data must not be visible to arbitrary sign-ups.
 - Permissions are derived from database roles through `src/lib/permissions.ts`; RLS permits members to read ledger data, insert invoices and update their own (can_see_customer) customers, while customer deletes, invoice edits/deletes, payments and role management require admin. Why: UI and data access share one boundary.
 - Signed-in pages live under `src/routes/_authenticated/_shell/` (shell layout shows the pending-approval screen for users without a role). Why: one place for nav and membership gating.
-- Invoice fee breakdown is stored as `invoices.items` jsonb keyed by fee name; `amount` is saved as the items total. Why: mirrors the user's ledger columns without a column per fee.
+- Invoice fee breakdown is stored as `invoices.items` jsonb keyed by fee name; `amount` is saved as the items total. Why: no column per fee.
 - Invoice creation uses tested collection-month and fee helpers from `receivables.ts`; editing preserves saved amounts and manual overrides. Why: billing defaults must not silently rewrite existing financial records.
 - Office letterhead and bank details for 請款單 live in OFFICE in src/lib/billing.ts; batch invoice creation and prior-balance logic are tested there. Why: one source for statement content.
 - Fee-field display names live in `FEE_LABELS` in `src/lib/fee-labels.ts` (code, not a database table); screens render them through `feeLabel()` / `visibleFeeItems()`, never the raw fee key. Why: the user edits names by asking in chat, and a rename must never rewrite stored amounts or tax grouping.
