@@ -435,18 +435,21 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          staff_code: string | null
         }
         Insert: {
           created_at?: string
           display_name?: string | null
           email?: string | null
           id: string
+          staff_code?: string | null
         }
         Update: {
           created_at?: string
           display_name?: string | null
           email?: string | null
           id?: string
+          staff_code?: string | null
         }
         Relationships: []
       }
@@ -515,6 +518,7 @@ export type Database = {
     }
     Functions: {
       bookkeeper_bonus_data: { Args: never; Returns: Json }
+      can_see_customer: { Args: { _customer_id: string }; Returns: boolean }
       customer_bonus_rates: {
         Args: { _customer_id?: string }
         Returns: {
@@ -539,6 +543,10 @@ export type Database = {
       is_member: { Args: { _user_id: string }; Returns: boolean }
       set_filing_service_fee: {
         Args: { _fee: number; _filing_id: string }
+        Returns: undefined
+      }
+      set_staff_code: {
+        Args: { _code: string; _user_id: string }
         Returns: undefined
       }
     }

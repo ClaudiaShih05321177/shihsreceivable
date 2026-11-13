@@ -130,6 +130,9 @@ function TeamManagement() {
                   </p>
                   <p className="text-xs text-muted-foreground">{m.email}</p>
                 </div>
+                {me.isAdmin ? (
+                  <StaffCodeInput userId={m.id} value={m.staff_code ?? ""} />
+                ) : m.staff_code ? <span className="text-xs">專員代號 {m.staff_code}</span> : null}
                 <span className={`rounded-full px-2.5 py-0.5 text-xs ${isAdmin ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                   {isAdmin ? "管理員" : "使用者"}
                 </span>
@@ -159,5 +162,29 @@ function TeamManagement() {
         </div>
       </section>
     </>
+  );
+}
+
+function StaffCodeInput({ userId, value }: { userId: string; value: string }) {
+  const qc = useQueryClient();
+  const save = async (code: string) => {
+    if (code.trim().toUpperCase() === value) return;
+    const { error } = await supabase.rpc("set_staff_code", { _user_id: userId, _code: code });
+    if (error) { toast.error("儲存失敗"); return; }
+    toast.success("已更新專員代號");
+    qc.invalidateQueries();
+  };
+  return (
+    <label className="flex items-center gap-1 text-xs text-muted-foreground">
+      專員代號
+      <input
+        defaultValue={value}
+        maxLength={4}
+        placeholder="如 AC"
+        className="w-16 rounded border border-input bg-background px-2 py-1 uppercase text-foreground"
+        onBlur={(e) => save(e.target.value)}
+        onKeyDown={(e) => e.key === "Enter" && (e.target as HTMLInputElement).blur()}
+      />
+    </label>
   );
 }

@@ -162,6 +162,13 @@
       "when": 1794557519498,
       "tag": "0022_factory_extra_fees",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1794559736123,
+      "tag": "0023_staff_code_scoping",
+      "breakpoints": true
     }
   ]
 }
