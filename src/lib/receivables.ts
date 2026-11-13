@@ -140,7 +140,13 @@ export function suggestPeriod(month: number): string {
   return "";
 }
 
+/** 停業客戶：記帳費、文具費、結算費一律為 0。 */
+export function isSuspended(billingType?: string | null): boolean {
+  return !!billingType?.trim().startsWith("停業");
+}
+
 export function scheduledCustomerFees(customer: { billing_type?: string | null; bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string }, month: number, mode: "batch" | "individual" = "batch"): FeeItems {
+  if (isSuspended(customer.billing_type)) return { 記帳費: 0, 暫繳: 0, 股利2代: 0 };
   return {
     記帳費: customer.billing_type === "年收" ? (mode === "individual" ? Math.round(Number(customer.bookkeeping_fee)) || 0 : 0)
       : customer.billing_type === "半年收" ? (mode === "individual" ? Math.round((Number(customer.bookkeeping_fee) || 0) * 6) : 0)

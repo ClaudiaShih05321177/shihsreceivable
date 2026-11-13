@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { meQuery, type Customer } from "@/lib/queries";
-import { BILLING_TYPES } from "@/lib/receivables";
+import { BILLING_TYPES, isSuspended } from "@/lib/receivables";
+import { lookupCompany } from "@/lib/company-lookup.functions";
 
 type Form = {
   name: string;
@@ -55,7 +56,24 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
   const { data: me } = useSuspenseQuery(meQuery);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(toForm(customer));
-  const set = (k: keyof Form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof Form) => (v: string) =>
+    setForm((f) => (k === "billing_type" && isSuspended(v) ? { ...f, billing_type: v, bookkeeping_fee: "0", stationery_fee: "0", settlement_fee: "0" } : { ...f, [k]: v }));
+  const [looking, setLooking] = useState(false);
+  const lookup = async () => {
+    const taxId = form.tax_id.trim();
+    if (!/^\d{8}$/.test(taxId)) return toast.error("請先輸入 8 位數統一編號");
+    setLooking(true);
+    try {
+      const r = await lookupCompany({ data: { taxId } });
+      if (!r) return toast.error("經濟部查無此統一編號");
+      setForm((f) => ({ ...f, name: r.name || f.name, contact_person: r.responsible || f.contact_person, address: r.address || f.address }));
+      toast.success(`已帶入：${r.name}${r.status ? `（${r.status}）` : ""}`);
+    } catch {
+      toast.error("經濟部公示資料暫時無法查詢，請稍後再試");
+    } finally {
+      setLooking(false);
+    }
+  };
 
   const save = useMutation({
     mutationFn: async () => {
@@ -131,7 +149,13 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
           <div className="grid gap-4 sm:grid-cols-2">
             {field("name", "客戶名稱 *", { required: true, maxLength: 120 })}
             {field("customer_code", "客戶ID", { maxLength: 40 })}
-            {field("tax_id", "統一編號", { inputMode: "numeric", maxLength: 8 })}
+            <div className="space-y-1.5">
+              <Label htmlFor="c-tax_id">統一編號</Label>
+              <div className="flex gap-2">
+                <Input id="c-tax_id" value={form.tax_id} onChange={(e) => set("tax_id")(e.target.value)} inputMode="numeric" maxLength={8} />
+                <Button type="button" variant="outline" onClick={lookup} disabled={looking}>{looking ? "查詢中…" : "帶入公示資料"}</Button>
+              </div>
+            </div>
             <div className="space-y-1.5">
               <Label>收費狀態</Label>
               <Select value={form.billing_type} onValueChange={set("billing_type")}>

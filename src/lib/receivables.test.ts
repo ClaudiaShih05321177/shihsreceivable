@@ -212,8 +212,9 @@ describe("收費狀態選項", () => {
   it("offers 停業 as a collection status", () => {
     expect([...BILLING_TYPES]).toContain("停業");
   });
-  it("treats 停業 customers like 期收 customers when adding a receivable", () => {
-    const customer = { bookkeeping_fee: 3000, stationery_fee: 0, settlement_fee: 0, billing_type: "停業" };
-    expect([1, 2].map((m) => scheduledCustomerFees(customer, m, "individual")["記帳費"])).toEqual([6000, 0]);
+  it("停業 customers get 0 記帳費、文具費、結算費 in every month and mode", () => {
+    const customer = { bookkeeping_fee: 3000, stationery_fee: 500, settlement_fee: 2000, billing_type: "停業" };
+    for (const mode of ["batch", "individual"] as const)
+      for (const m of [1, 3, 11]) expect(scheduledCustomerFees(customer, m, mode)).toEqual({ 記帳費: 0, 暫繳: 0, 股利2代: 0 });
   });
 });
