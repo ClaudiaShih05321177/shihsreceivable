@@ -154,16 +154,7 @@ function AuthPage() {
                 </Button>
               </form>
 
-              <p className="mt-6 text-center text-sm text-muted-foreground">
-                {mode === "signin" ? "還沒有帳號？" : "已經有帳號？"}
-                <button
-                  type="button"
-                  className="ml-1 font-medium text-primary underline-offset-4 hover:underline"
-                  onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
-                >
-                  {mode === "signin" ? "註冊" : "登入"}
-                </button>
-              </p>
+              <p className="mt-6 text-center text-sm text-muted-foreground">帳號由管理員建立，如需使用請洽管理員。</p>
             </>
           )}
         </div>

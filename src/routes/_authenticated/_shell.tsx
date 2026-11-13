@@ -3,6 +3,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 
 import { AppShell, PendingApproval } from "@/components/ar/app-shell";
 import { meQuery } from "@/lib/queries";
+import { ForcePasswordChange } from "@/components/ar/force-password-change";
 
 export const Route = createFileRoute("/_authenticated/_shell")({
   loader: ({ context }) => context.queryClient.ensureQueryData(meQuery),
@@ -11,6 +12,7 @@ export const Route = createFileRoute("/_authenticated/_shell")({
 
 function ShellLayout() {
   const { data: me } = useSuspenseQuery(meQuery);
+  if (me.mustChangePassword) return <ForcePasswordChange />;
   if (!me.isMember) return <PendingApproval email={me.email} />;
   return (
     <AppShell me={me}>

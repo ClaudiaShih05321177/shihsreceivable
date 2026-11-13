@@ -3,6 +3,7 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/ar/page-header";
+import { AddMemberDialog, ResetPasswordDialog } from "@/components/ar/member-dialogs";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { meQuery, teamQuery, type AppRole } from "@/lib/queries";
@@ -91,8 +92,9 @@ function TeamManagement() {
       <PageHeader
         eyebrow="權限"
         title="團隊成員"
-        description={me.isAdmin ? "新成員註冊後，需由管理員核准才能查看帳款。" : "只有管理員可以核准或移除成員。"}
+        description={me.isAdmin ? "由管理員建立成員帳號，同仁第一次登入時需變更密碼。" : "只有管理員可以新增或移除成員。"}
       />
+      {me.isAdmin && <div className="mb-6 flex justify-end"><AddMemberDialog /></div>}
       {pending.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-bold">待核准 <span className="tabular text-sm text-muted-foreground">{pending.length}</span></h2>
@@ -133,6 +135,7 @@ function TeamManagement() {
                 </span>
                 {me.isAdmin && !isSelf && (
                   <div className="flex gap-1">
+                    <ResetPasswordDialog userId={m.id} name={m.display_name ?? m.email ?? ""} />
                     {isAdmin ? (
                       <Button size="sm" variant="ghost" onClick={() => demote.mutate(m.id)}>取消管理員</Button>
                     ) : (

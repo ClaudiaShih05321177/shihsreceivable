@@ -35,6 +35,7 @@ export const meQuery = queryOptions({
       email: user.email ?? "",
       displayName: profile.data?.display_name ?? user.email ?? "",
       roles: roleList,
+      mustChangePassword: user.app_metadata?.["must_change_password"] === true,
       ...permissionsFor(roleList),
     };
   },
