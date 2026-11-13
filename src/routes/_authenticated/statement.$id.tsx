@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Printer } from "lucide-react";
+import { ArrowLeft, Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { OFFICE, priorBalance } from "@/lib/billing";
@@ -47,7 +47,8 @@ function StatementPage() {
 
   return (
     <div className="min-h-screen bg-muted/40 py-8 print:bg-background print:py-0">
-      <div className="mx-auto mb-4 flex max-w-[720px] justify-end print:hidden">
+      <div className="mx-auto mb-4 flex max-w-[720px] justify-between print:hidden">
+        <Button variant="outline" size="sm" onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = "/dashboard"))}><ArrowLeft className="h-4 w-4" />返回</Button>
         <Button onClick={() => window.print()}><Printer /> 列印 / 存成 PDF</Button>
       </div>
       <article className="mx-auto max-w-[720px] bg-card p-10 text-[15px] leading-7 shadow print:max-w-none print:p-0 print:shadow-none">

@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Printer } from "lucide-react";
+import { ArrowLeft, Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { INVOICE_STAGES, invoiceSummary, KINFENG, quoteSummary, type InvoiceStage } from "@/lib/factory-docs";
@@ -53,6 +53,7 @@ function FactoryDocPage() {
     <div className="min-h-screen bg-muted/40 py-8 print:bg-background print:py-0">
       <div className="mx-auto mb-4 flex max-w-[760px] flex-wrap items-center justify-between gap-2 print:hidden">
         <div className="flex gap-1">
+          <Button variant="outline" size="sm" onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = "/dashboard"))}><ArrowLeft className="h-4 w-4" />返回</Button>
           <Button variant={isQuote ? "default" : "outline"} size="sm" onClick={() => navigate({ search: { type: "quote", stage } })}>報價單</Button>
           <Button variant={!isQuote ? "default" : "outline"} size="sm" onClick={() => navigate({ search: { type: "invoice", stage } })}>請款單</Button>
           {!isQuote && INVOICE_STAGES.map((st) => (
