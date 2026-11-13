@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowRight, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
+import { CheckCircle2, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -9,7 +9,7 @@ import { PageHeader, Money } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, nextStage, suspendsCustomerOnClose } from "@/lib/filings";
+import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, billingTypeOnClose, canCloseFiling } from "@/lib/filings";
 import { customersQuery, filingServiceFeesQuery, filingsQuery, meQuery, type Filing } from "@/lib/queries";
 import { formatDate, scheduledCustomerFees, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/_shell/filings")({
   head: () => ({
     meta: [
       { title: "工商進度 · 應收帳款管理系統" },
-      { name: "description", content: "工商登記案件進度表：預查、主管機關、國稅局、結案，結案時一鍵立帳到應收帳款。" },
+      { name: "description", content: "工商登記案件進度表：預查、主管機關、國稅局、結案，結案後由管理員立帳到應收帳款。" },
       { property: "og:title", content: "工商進度 · 應收帳款管理系統" },
       { property: "og:description", content: "工商登記案件進度與立帳。" },
       { property: "og:type", content: "website" },
@@ -40,32 +40,21 @@ function FilingsPage() {
 
   const counts = Object.fromEntries(FILING_STAGES.map((s) => [s, filings.filter((f) => f.stage === s).length]));
   const openCount = filings.filter((f) => f.stage !== "結案").length;
-  const rows = filings.filter((f) => (stage === "all" ? true : stage === "open" ? f.stage !== "結案" : f.stage === stage));
+  const rows = filings.filter((f) => (stage === "all" ? true : stage === "open" ? f.stage !== "結案" : stage === "pending" ? pendingBill(f) : f.stage === stage));
 
-  // 停復業登記結案：客戶收費狀態一併改為停業。
-  const suspendCustomer = async (filing: Filing, stage: string) => {
-    if (!filing.customer_id || !suspendsCustomerOnClose(filing.case_type, stage)) return;
-    const { error } = await supabase.from("customers").update({ billing_type: "停業" }).eq("id", filing.customer_id);
-    if (error) throw error;
-    toast.success("客戶收費狀態已改為停業");
-  };
+  const canClose = canCloseFiling(me.isAdmin, me.staffCode);
+  const pendingBill = (f: Filing) => f.stage === "結案" && !f.invoice_id;
+  const pendingCount = filings.filter(pendingBill).length;
 
-  const advance = useMutation({
+  const close = useMutation({
     mutationFn: async (filing: Filing) => {
-      const next = nextStage(filing.stage, filing.route);
-      const patch = {
-        stage: next,
-        filed_date: next === "送件" && !filing.filed_date ? todayISO() : filing.filed_date,
-        approved_date: next === "核准" && !filing.approved_date ? todayISO() : filing.approved_date,
-        tax_filed_date: next === "國稅局送件" && !filing.tax_filed_date ? todayISO() : filing.tax_filed_date,
-        tax_approved_date: next === "國稅局核准" && !filing.tax_approved_date ? todayISO() : filing.tax_approved_date,
-      };
-      const { error } = await supabase.from("filings").update(patch).eq("id", filing.id);
+      const { error } = await supabase.rpc("close_filing", { _filing_id: filing.id });
       if (error) throw error;
-      await suspendCustomer(filing, next);
+      const bt = filing.customer_id ? billingTypeOnClose(filing.case_type) : null;
+      if (bt) toast.success(`客戶收費狀態已改為${bt}`);
     },
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["filings"] }); qc.invalidateQueries({ queryKey: ["customers"] }); },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "更新失敗"),
+    onSuccess: () => { toast.success("已結案"); qc.invalidateQueries({ queryKey: ["filings"] }); qc.invalidateQueries({ queryKey: ["customers"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "結案失敗"),
   });
 
   const bill = useMutation({
@@ -99,12 +88,11 @@ function FilingsPage() {
         if (invError) throw invError;
         invoiceId = invoice.id;
       }
-      const { error } = await supabase.from("filings").update({ stage: "結案", invoice_id: invoiceId }).eq("id", filing.id);
+      const { error } = await supabase.from("filings").update({ invoice_id: invoiceId }).eq("id", filing.id);
       if (error) throw error;
-      await suspendCustomer(filing, "結案");
     },
     onSuccess: () => {
-      toast.success("已結案，工商費用已併入當期記帳費帳款");
+      toast.success("已立帳，工商費用已併入當期記帳費帳款");
       qc.invalidateQueries({ queryKey: ["filings"] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["customers"] });
@@ -142,11 +130,12 @@ function FilingsPage() {
       <PageHeader
         eyebrow="工商登記"
         title="工商進度表"
-        description={`進行中 ${openCount} 件；結案立帳時，工商費用併入該客戶當期（雙月）記帳費帳款一起收。`}
+        description={`進行中 ${openCount} 件；CA／MN 結案後，管理員立帳把工商費用併入該客戶當期（雙月）記帳費帳款一起收。`}
         actions={<FilingFormDialog trigger={<Button><Plus /> 新增案件</Button>} />}
       />
       <div className="mb-5 flex flex-wrap gap-2">
         {filterBtn("open", "進行中", openCount)}
+        {me.isAdmin && filterBtn("pending", "待立帳", pendingCount)}
         {FILING_STAGES.map((s) => filterBtn(s, s, counts[s] ?? 0))}
         {filterBtn("all", "全部", filings.length)}
       </div>
@@ -200,15 +189,15 @@ function FilingsPage() {
                 </TableCell>}
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">
-                    {me.isAdmin && f.stage !== "結案" && (
-                      <>
-                        <Button variant="ghost" size="sm" onClick={() => advance.mutate(f)} disabled={advance.isPending} aria-label={`${filingName(f)} 推進到${nextStage(f.stage, f.route)}`}>
-                          <ArrowRight className="size-3.5" /> {nextStage(f.stage, f.route)}
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => bill.mutate(f)} disabled={bill.isPending} aria-label={`${filingName(f)} 結案立帳`}>
-                          <Receipt className="size-3.5" /> 結案立帳
-                        </Button>
-                      </>
+                    {canClose && f.stage !== "結案" && (
+                      <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`確定將「${filingName(f)}」結案？`)) close.mutate(f); }} disabled={close.isPending} aria-label={`${filingName(f)} 結案`}>
+                        <CheckCircle2 className="size-3.5" /> 結案
+                      </Button>
+                    )}
+                    {me.isAdmin && pendingBill(f) && (
+                      <Button variant="ghost" size="sm" onClick={() => bill.mutate(f)} disabled={bill.isPending} aria-label={`${filingName(f)} 立帳`}>
+                        <Receipt className="size-3.5" /> 立帳
+                      </Button>
                     )}
                     {me.isAdmin && (
                       <FilingFormDialog

@@ -28,7 +28,7 @@ export function initialStage(route: string | null | undefined): FilingStage {
 }
 
 /** 案件類型。 */
-export const CASE_TYPES = ["設立登記", "變更登記", "法院報備", "註銷登記", "停復業登記", "其他"] as const;
+export const CASE_TYPES = ["設立登記", "變更登記", "法院報備", "註銷登記", "停業登記", "復業登記", "其他"] as const;
 
 /** 下一個階段；已結案維持結案。 */
 export function nextStage(stage: string, route?: string | null): FilingStage {
@@ -93,8 +93,15 @@ export function filingTotal(filing: FilingFeeLike): number {
   return feeItemsTotal(filingInvoiceItems(filing));
 }
 
-/** 停復業登記案件結案時，連動將客戶收費狀態改為「停業」。 */
-export const SUSPEND_CASE_TYPE = "停復業登記";
-export function suspendsCustomerOnClose(caseType: string | null | undefined, stage: string): boolean {
-  return caseType === SUSPEND_CASE_TYPE && stage === "結案";
+/** 停業登記結案 → 客戶改「停業」（記帳費歸零）；復業登記結案 → 改回「期收」，沿用原記帳費。 */
+export function billingTypeOnClose(caseType: string | null | undefined): "停業" | "期收" | null {
+  if (caseType === "停業登記" || caseType === "停復業登記") return "停業";
+  if (caseType === "復業登記") return "期收";
+  return null;
+}
+
+/** 可以按「結案」的會計專員代號（管理員也可以）。 */
+export const CLOSER_STAFF_CODES = ["CA", "MN"] as const;
+export function canCloseFiling(isAdmin: boolean, staffCode: string | null | undefined): boolean {
+  return isAdmin || (CLOSER_STAFF_CODES as readonly string[]).includes((staffCode ?? "").trim().toUpperCase());
 }

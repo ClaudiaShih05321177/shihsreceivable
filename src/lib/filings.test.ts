@@ -74,7 +74,7 @@ describe("工商費用與派案", () => {
   });
 });
 
-import { suspendsCustomerOnClose, CASE_TYPES } from "./filings";
+import { billingTypeOnClose, canCloseFiling, CASE_TYPES } from "./filings";
 describe("案件類型", () => {
   it("解散登記已改名為法院報備，註銷登記保留", () => {
     expect(CASE_TYPES).toContain("法院報備");
@@ -87,10 +87,19 @@ describe("案件類型", () => {
     expect(CASE_TYPES).not.toContain("增資登記");
   });
 });
-describe("停復業登記連動停業", () => {
-  it("結案的停復業登記才改客戶為停業", () => {
-    expect(suspendsCustomerOnClose("停復業登記", "結案")).toBe(true);
-    expect(suspendsCustomerOnClose("停復業登記", "核准")).toBe(false);
-    expect(suspendsCustomerOnClose("變更登記", "結案")).toBe(false);
+describe("停業／復業登記連動收費狀態", () => {
+  it("停業登記結案改停業，復業登記結案改回期收", () => {
+    expect(billingTypeOnClose("停業登記")).toBe("停業");
+    expect(billingTypeOnClose("復業登記")).toBe("期收");
+    expect(billingTypeOnClose("變更登記")).toBe(null);
+  });
+});
+describe("結案權限", () => {
+  it("只有 CA、MN 與管理員可以結案", () => {
+    expect(canCloseFiling(false, "CA")).toBe(true);
+    expect(canCloseFiling(false, "MN")).toBe(true);
+    expect(canCloseFiling(false, "AD")).toBe(false);
+    expect(canCloseFiling(false, null)).toBe(false);
+    expect(canCloseFiling(true, null)).toBe(true);
   });
 });

@@ -522,6 +522,7 @@ export type Database = {
     Functions: {
       bookkeeper_bonus_data: { Args: never; Returns: Json }
       can_see_customer: { Args: { _customer_id: string }; Returns: boolean }
+      close_filing: { Args: { _filing_id: string }; Returns: undefined }
       customer_bonus_rates: {
         Args: { _customer_id?: string }
         Returns: {
