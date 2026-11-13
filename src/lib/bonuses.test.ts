@@ -62,6 +62,13 @@ describe("bookkeeper bonuses", () => {
     const withInvoice = { staff: ["BI"], customers: [c], rows: [row({ customer_code: "BI06", staff_code: "BI", items: { 記帳費: 5000 } })] };
     expect(bonusGroups(withInvoice, 2026, 9).find((g) => g.code === "BI")?.total).toBe(5000);
   });
+  it("CL09 完全不計入獎金：常態攤分與立帳都排除", () => {
+    const c = cust({ id: "c1", customer_code: "CL09", staff_code: "CL", name: "測試客戶", billing_type: "期收", bookkeeping_fee: 5000 });
+    const d = { staff: ["CL"], customers: [c], rows: [row({ customer_code: "CL09", staff_code: "CL", items: { 記帳費: 10000 } })] };
+    const g = bonusGroups(d, 2026, 9).find((x) => x.code === "CL");
+    expect(g?.total ?? 0).toBe(0);
+    expect(g?.rows ?? []).toHaveLength(0);
+  });
   it("combines period, half-year and annual customers in the staff total", () => {
     const d = { staff: ["AC"], customers: [cust({ bookkeeping_fee: 100000 }), cust({ id: "c2", billing_type: "半年收", bookkeeping_fee: 3000 }), cust({ id: "c3", billing_type: "年收", bookkeeping_fee: 6000 })], rows: [] };
     const g = bonusGroups(d, 2026, 11)[0];

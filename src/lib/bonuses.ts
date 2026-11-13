@@ -33,6 +33,9 @@ const before = (r: BonusRow, year: number, month: number) => (r.period_year ?? 0
 /** 獎金每期固定計入的客戶（依客戶編號）：不論收費狀態，每期只算這一筆；立帳金額不受影響。 */
 export const FIXED_PERIOD_SHARE: Record<string, number> = { BF09: 50000, BI06: 5000 };
 
+/** 完全不計入獎金的客戶編號：常態攤分與實際立帳都不列入。 */
+export const EXCLUDED_CODES: readonly string[] = ["CL09"];
+
 /** 每期記帳費依客戶設定計入，不因尚未立帳而漏計；其他狀態依實際立帳。 */
 export function periodShare(c?: Pick<BonusCustomer, "billing_type" | "bookkeeping_fee">): number | null {
   if (!c) return null;
@@ -55,6 +58,7 @@ export function bonusGroups(data: BonusData, year: number, month: number) {
   const fixedSeen = new Set<string>();
   for (const c of [...customers.values()].sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"))) {
     const fixedCode = c.customer_code?.trim() ?? "";
+    if (EXCLUDED_CODES.includes(fixedCode)) continue;
     const fixed = FIXED_PERIOD_SHARE[fixedCode];
     const share = fixed != null ? (fixedSeen.has(fixedCode) ? 0 : fixed) : periodShare(c);
     if (fixed != null) fixedSeen.add(fixedCode);
@@ -64,6 +68,7 @@ export function bonusGroups(data: BonusData, year: number, month: number) {
   }
   for (const r of data.rows) {
     const c = r.customer_id ? customers.get(r.customer_id) : undefined;
+    if (EXCLUDED_CODES.includes((c?.customer_code ?? r.customer_code ?? "").trim())) continue;
     const key = r.customer_id ?? r.id;
     const inPeriod = r.period_year === year && r.period_month === month;
     if (!inPeriod && !(lines.has(key) && before(r, year, month))) continue;
