@@ -177,7 +177,7 @@ function FilingsPage() {
             {rows.map((f) => (
               <TableRow key={f.id}>
                 <TableCell className="font-medium">{filingName(f)}</TableCell>
-                <TableCell className="text-sm">{f.case_type}</TableCell>
+                <TableCell className="text-sm">{f.case_type}{f.change_detail ? `（${f.change_detail}）` : ""}</TableCell>
                 <TableCell>
                   <span className={cn(
                     "rounded-full px-2 py-0.5 text-xs font-medium",

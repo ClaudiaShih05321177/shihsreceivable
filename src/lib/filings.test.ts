@@ -81,6 +81,11 @@ describe("案件類型", () => {
     expect(CASE_TYPES).not.toContain("解散登記");
     expect(CASE_TYPES).toContain("註銷登記");
   });
+  it("遷址、增資併入變更登記", () => {
+    expect(CASE_TYPES).toContain("變更登記");
+    expect(CASE_TYPES).not.toContain("遷址登記");
+    expect(CASE_TYPES).not.toContain("增資登記");
+  });
 });
 describe("停復業登記連動停業", () => {
   it("結案的停復業登記才改客戶為停業", () => {

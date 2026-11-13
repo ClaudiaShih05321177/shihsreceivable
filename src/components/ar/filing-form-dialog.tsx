@@ -29,13 +29,14 @@ type Form = {
   stamp_fee: string;
   notes: string;
   special_authority: string;
+  change_detail: string;
   special_filed_date: string;
   special_approved_date: string;
 };
 
 const NEW = "__new__";
 
-const EMPTY: Form = { customer_id: "", company_name: "", customer_code: "", route: FILING_ROUTES[0], tax_filed_date: "", tax_approved_date: "", case_type: CASE_TYPES[0], filed_date: "", approved_date: "", service_fee: "", advance_fee: "", stamp_fee: "", notes: "", special_authority: "", special_filed_date: "", special_approved_date: "" };
+const EMPTY: Form = { customer_id: "", company_name: "", customer_code: "", route: FILING_ROUTES[0], tax_filed_date: "", tax_approved_date: "", case_type: CASE_TYPES[0], change_detail: "", filed_date: "", approved_date: "", service_fee: "", advance_fee: "", stamp_fee: "", notes: "", special_authority: "", special_filed_date: "", special_approved_date: "" };
 
 function toForm(filing: Filing, serviceFee?: number): Form {
   return {
@@ -53,6 +54,7 @@ function toForm(filing: Filing, serviceFee?: number): Form {
     stamp_fee: filing.stamp_fee ? String(filing.stamp_fee) : "",
     notes: filing.notes ?? "",
     special_authority: filing.special_authority ?? "",
+    change_detail: filing.change_detail ?? "",
     special_filed_date: filing.special_filed_date ?? "",
     special_approved_date: filing.special_approved_date ?? "",
   };
@@ -127,6 +129,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
         stamp_fee: money(form.stamp_fee),
         notes: form.notes.trim() || null,
         special_authority: form.special_authority.trim() || null,
+        change_detail: form.case_type === "變更登記" ? form.change_detail.trim() || null : null,
         special_filed_date: form.special_filed_date || null,
         special_approved_date: form.special_approved_date || null,
       };
@@ -230,6 +233,12 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
               </SelectContent>
             </Select>
           </div>
+          {form.case_type === "變更登記" && (
+            <div className="grid gap-2">
+              <Label htmlFor="f-change">變更內容</Label>
+              <Input id="f-change" value={form.change_detail} onChange={(e) => set({ change_detail: e.target.value })} placeholder="例：遷址、增資、董監事變更" />
+            </div>
+          )}
           {routeHasAuthority(form.route) && <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
               <Label htmlFor="f-filed">主管機關送件日期</Label>

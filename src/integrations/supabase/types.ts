@@ -217,6 +217,7 @@ export type Database = {
           advance_fee: number
           approved_date: string | null
           case_type: string
+          change_detail: string | null
           company_name: string | null
           created_at: string
           created_by: string | null
@@ -241,6 +242,7 @@ export type Database = {
           advance_fee?: number
           approved_date?: string | null
           case_type: string
+          change_detail?: string | null
           company_name?: string | null
           created_at?: string
           created_by?: string | null
@@ -265,6 +267,7 @@ export type Database = {
           advance_fee?: number
           approved_date?: string | null
           case_type?: string
+          change_detail?: string | null
           company_name?: string | null
           created_at?: string
           created_by?: string | null
