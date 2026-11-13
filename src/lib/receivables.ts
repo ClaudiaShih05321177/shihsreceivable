@@ -191,7 +191,6 @@ export const FEE_ITEMS = [
   "文具",
   "結算",
   "22-1申報",
-  "員工酬勞2代",
   "前期餘額",
 ] as const;
 export type FeeItem = (typeof FEE_ITEMS)[number];
@@ -285,7 +284,7 @@ export const TAX_GROUPS = [
   { key: "income", label: "營所稅", items: ["營所稅", "未加徵"] },
   { key: "provisional", label: "暫繳稅額", items: ["暫繳"] },
   { key: "withholding", label: "扣繳稅額", items: ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳"] },
-  { key: "nhi", label: "二代健保", items: ["2代A-B", "2代-4X獎金", "租金2代", "個人2代", "員工酬勞2代"] },
+  { key: "nhi", label: "二代健保", items: ["2代A-B", "2代-4X獎金", "租金2代", "個人2代"] },
   { key: "dividend", label: "股利二代", items: ["股利2代"] },
 ] as const;
 

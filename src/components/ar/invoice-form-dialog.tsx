@@ -19,7 +19,7 @@ import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, 
 
 const PICK_GROUPS = [
   { title: "各類扣繳", items: ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳"] },
-  { title: "二代健保", items: ["租金2代", "股利2代", "2代-4X獎金", "個人2代", "2代A-B", "員工酬勞2代"] },
+  { title: "二代健保", items: ["租金2代", "股利2代", "2代-4X獎金", "個人2代", "2代A-B"] },
 ] as const;
 const PICK_KEYS: readonly string[] = PICK_GROUPS.flatMap((g) => g.items);
 /** 標籤顯示用：去掉「扣繳-」「二代健保-」前綴。 */

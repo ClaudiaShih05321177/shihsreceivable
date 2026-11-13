@@ -26,13 +26,18 @@ describe("feeLabel", () => {
 
   it("has removed the 其他 fee field", () => {
     expect(FEE_ITEMS).not.toContain("其他");
-    expect(FEE_ITEMS).toHaveLength(25);
+    expect(FEE_ITEMS).toHaveLength(24);
+  });
+
+  it("has removed the 員工酬勞 fee field", () => {
+    expect(FEE_ITEMS).not.toContain("員工酬勞2代");
+    expect(feeLabel("員工酬勞2代")).toBe("員工酬勞2代");
   });
 
   it("hides only the retired field", () => {
     expect(isFeeHidden("前期餘額")).toBe(true);
     expect(isFeeHidden("記帳費")).toBe(false);
-    expect(feeItemCount()).toBe(24);
+    expect(feeItemCount()).toBe(23);
   });
 
   it("shows a hidden fee field when it already holds money", () => {
