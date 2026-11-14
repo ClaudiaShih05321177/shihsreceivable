@@ -152,7 +152,7 @@ function FilingsPage() {
               <TableHead>國稅局 送件／核准</TableHead>
               {me.isAdmin && <TableHead className="text-right">代辦費</TableHead>}
               <TableHead className="text-right">代墊規費</TableHead>
-              <TableHead className="text-right">印章</TableHead>
+              <TableHead className="text-right">代刻印章</TableHead>
               {me.isAdmin && <TableHead>應收帳款</TableHead>}
               <TableHead className="text-right">操作</TableHead>
             </TableRow>

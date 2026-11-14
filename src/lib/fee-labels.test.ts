@@ -6,7 +6,7 @@ import { feeItemCount, feeLabel, isFeeHidden, visibleFeeItems } from "./fee-labe
 describe("feeLabel", () => {
   it("uses the saved display name", () => {
     expect(feeLabel("文具")).toBe("文具費");
-    expect(feeLabel("印章")).toBe("印章代刻");
+    expect(feeLabel("印章")).toBe("代刻印章");
     expect(feeLabel("暫繳")).toBe("暫繳稅額");
   });
 

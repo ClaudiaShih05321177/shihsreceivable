@@ -293,7 +293,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
               <Input id="f-advance" type="number" min={0} value={form.advance_fee} onChange={(e) => set({ advance_fee: e.target.value })} placeholder="0" />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="f-stamp">印章</Label>
+              <Label htmlFor="f-stamp">代刻印章</Label>
               <Input id="f-stamp" type="number" min={0} value={form.stamp_fee} onChange={(e) => set({ stamp_fee: e.target.value })} placeholder="0" />
             </div>
             {me.isAdmin && (

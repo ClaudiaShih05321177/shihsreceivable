@@ -55,8 +55,8 @@ describe("國稅局進度", () => {
 import { filingBillingPeriod, mergeFeeItems, staffFromCode } from "./filings";
 
 describe("工商費用與派案", () => {
-  it("印章費列為自訂項目並計入合計", () => {
-    expect(filingInvoiceItems({ service_fee: 0, advance_fee: 1000, stamp_fee: 800 })).toEqual({ "其他：代墊規費": 1000, "其他：印章": 800 });
+  it("代刻印章存入印章欄位並計入合計", () => {
+    expect(filingInvoiceItems({ service_fee: 0, advance_fee: 1000, stamp_fee: 800 })).toEqual({ "其他：代墊規費": 1000, 印章: 800 });
     expect(filingTotal({ service_fee: 5000, advance_fee: 1000, stamp_fee: 800 })).toBe(6800);
   });
   it("客戶代碼前兩位英文字母為會計專員代號", () => {

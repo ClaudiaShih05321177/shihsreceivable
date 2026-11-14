@@ -46,7 +46,7 @@ export function filingName(f: { customer?: { name: string } | null; company_name
 export type FilingFeeLike = { service_fee?: number | string | null; advance_fee: number | string; stamp_fee?: number | string | null };
 
 /** 印章費在帳款費用項目裡的說明文字。 */
-export const STAMP_FEE_LABEL = "印章";
+export const STAMP_FEE_LABEL = "代刻印章";
 
 /** 客戶代碼前兩位英文字母即會計專員代號（例 AC15 → AC）；不符合則為 null。 */
 export function staffFromCode(code: string | null | undefined): string | null {
@@ -84,7 +84,7 @@ export function filingInvoiceItems(filing: FilingFeeLike): FeeItems {
   if (service > 0) items["工商"] = service;
   const stamp = Math.round(Number(filing.stamp_fee) || 0);
   if (advance > 0) items[otherKey(ADVANCE_FEE_LABEL)] = advance;
-  if (stamp > 0) items[otherKey(STAMP_FEE_LABEL)] = stamp;
+  if (stamp > 0) items["印章"] = stamp; // 存入顯示為「代刻印章」的欄位，與工商代辦費分列
   return items;
 }
 
