@@ -1,0 +1,1 @@
+- Fee-field display names live in `FEE_LABELS` in `src/lib/fee-labels.ts` (code, not a database table); screens render them through `feeLabel()` / `visibleFeeItems()`, never the raw fee key. Why: the user edits names by asking in chat, and a rename must never rewrite stored amounts or tax grouping.
