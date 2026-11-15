@@ -32,6 +32,8 @@ export const Route = createFileRoute("/_authenticated/factory-doc/$id")({
   component: FactoryDocPage,
 });
 
+const isSummary = (label: string) => label.startsWith("營業稅") || label === "簽約金";
+
 const Blank = ({ v }: { v?: string | null }) => (
   <input defaultValue={v ?? ""} className="w-full min-w-0 bg-transparent outline-none" />
 );
@@ -90,8 +92,15 @@ function FactoryDocPage() {
               <td className={`${cell} text-right font-mono`}>{formatTWD(s.consulting)}</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.consulting)}</td>
             </tr>
             <tr><td className={cell} colSpan={5}>小計(發票金額)</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.subtotal)}</td></tr>
-            {s.lines.map((l, i) => (
+            {s.lines.filter((l) => isSummary(l.label)).map((l, i) => (
               <tr key={`${l.label}-${i}`}><td className={cell} colSpan={5}>{l.label}</td><td className={`${cell} text-right font-mono`}>{l.amount < 0 ? `−${formatTWD(-l.amount)}` : formatTWD(l.amount)}</td></tr>
+            ))}
+            {s.lines.filter((l) => !isSummary(l.label)).map((l, i) => (
+              <tr key={`fee-${l.label}-${i}`}>
+                <td className={`${cell} text-center`}>{i + 2}</td><td className={cell}>{l.label}</td>
+                <td className={`${cell} text-center`}>1</td><td className={`${cell} text-center`}>式</td>
+                <td className={`${cell} text-right font-mono`}>{formatTWD(l.amount)}</td><td className={`${cell} text-right font-mono`}>{formatTWD(l.amount)}</td>
+              </tr>
             ))}
             <tr className="font-bold"><td className={cell} colSpan={5}>總計新台幣：</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.total)}</td></tr>
           </tbody>
