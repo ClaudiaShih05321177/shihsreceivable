@@ -233,7 +233,9 @@ function InvoiceDetail() {
                         <Money value={Number(p.amount)} />
                         {Number(p.bank_fee) > 0 && <span className="block text-xs font-normal text-muted-foreground">實收 {formatTWD(Number(p.amount) - Number(p.bank_fee))}・匯費 {formatTWD(Number(p.bank_fee))}</span>}
                       </td>
-                      {me.canDelete && <td className="py-2.5 text-right">
+                      {me.canDelete && <td className="whitespace-nowrap py-2.5 text-right">
+                        <PaymentFormDialog invoiceId={inv.id} balance={balance} payment={p}
+                          trigger={<Button variant="ghost" size="icon" aria-label="修改收款"><Pencil className="text-muted-foreground" /></Button>} />
                         <Button
                           variant="ghost"
                           size="icon"

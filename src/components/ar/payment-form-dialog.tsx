@@ -16,7 +16,9 @@ import { filingsQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { formatTWD, outstanding, PAYMENT_METHODS, paymentOffset, periodMonthLabel, rocYear } from "@/lib/receivables";
 import { compareCustomerCode } from "@/lib/customer-sort";
 
-export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalance, trigger }: { invoiceId: string; balance: number; trigger: ReactNode }) {
+type EditPayment = { id: string; amount: number | string; bank_fee: number | string | null; paid_date: string; method: string | null; notes: string | null };
+
+export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalance, trigger, payment }: { invoiceId: string; balance: number; trigger: ReactNode; payment?: EditPayment }) {
   const qc = useQueryClient();
   const [target, setTarget] = useState<{ id: string; balance: number; label: string } | null>(null);
   const [picking, setPicking] = useState(false);
@@ -42,19 +44,20 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
       const value = Math.round(Number(amount));
       if (!value || value <= 0) throw new Error("請輸入實收金額");
       if (!paidDate) throw new Error("請選擇收款日期");
-      const { error } = await supabase.from("payments").insert({
-        invoice_id: invoiceId,
-        amount: paymentOffset(value, feeNum),
-        bank_fee: feeNum,
-        paid_date: paidDate,
-        method,
-        notes: notes.trim() || null,
-      });
+      const row = { amount: paymentOffset(value, feeNum), bank_fee: feeNum, paid_date: paidDate, method, notes: notes.trim() || null };
+      if (payment) {
+        const { data, error } = await supabase.from("payments").update(row).eq("id", payment.id).select("id");
+        if (error) throw error;
+        if (!data?.length) throw new Error("未能修改收款，請確認權限");
+        return;
+      }
+      const { error } = await supabase.from("payments").insert({ invoice_id: invoiceId, ...row });
       if (error) throw error;
     },
     onSuccess: async (_d, next) => {
-      toast.success("已登錄收款");
+      toast.success(payment ? "已修改收款" : "已登錄收款");
       await qc.invalidateQueries({ queryKey: ["invoices"] });
+      if (payment) { setOpen(false); return; }
       if (next) {
         setSavedCount((n) => n + 1);
         setNotes(""); setFee("0"); setAmount(""); setSearch(""); setPicking(true);
@@ -95,6 +98,15 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
         if (!o && savedCount > 0) void qc.invalidateQueries({ queryKey: ["filings"] });
         if (o) {
           setTarget(null); setPicking(false); setSearch(""); setSavedCount(0);
+          if (payment) {
+            const bf = Number(payment.bank_fee ?? 0);
+            setAmount(String(Number(payment.amount) - bf));
+            setPaidDate(payment.paid_date);
+            setMethod(payment.method ?? "匯款");
+            setNotes(payment.notes ?? "");
+            setFee(String(bf));
+            return;
+          }
           setAmount(balance > 0 ? String(balance) : "");
           setPaidDate(todayISO());
           setMethod("匯款");
@@ -106,10 +118,10 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">登錄收款</DialogTitle>
+          <DialogTitle className="font-display text-xl">{payment ? "修改收款" : "登錄收款"}</DialogTitle>
           {picking ? (
             <p className="text-sm text-muted-foreground">本次已沖 {savedCount} 筆，請選下一位客戶</p>
-          ) : (
+          ) : payment ? null : (
             <p className="text-sm text-muted-foreground">{target ? `${target.label}・` : ""}目前應收餘額 {formatTWD(balance)}{savedCount > 0 ? `（本次已沖 ${savedCount} 筆）` : ""}</p>
           )}
         </DialogHeader>
@@ -171,8 +183,8 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>取消</Button>
-            <Button type="button" variant="outline" disabled={save.isPending} onClick={(e) => { const f = e.currentTarget.form; if (f && !f.reportValidity()) return; save.mutate(true); }}>儲存並沖下一筆</Button>
-            <Button type="submit" disabled={save.isPending}>{save.isPending ? "儲存中…" : "登錄收款"}</Button>
+            {!payment && <Button type="button" variant="outline" disabled={save.isPending} onClick={(e) => { const f = e.currentTarget.form; if (f && !f.reportValidity()) return; save.mutate(true); }}>儲存並沖下一筆</Button>}
+            <Button type="submit" disabled={save.isPending}>{save.isPending ? "儲存中…" : payment ? "儲存修改" : "登錄收款"}</Button>
           </DialogFooter>
         </form>
         )}
