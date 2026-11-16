@@ -214,7 +214,6 @@ function InvoiceDetail() {
                 <thead>
                   <tr className="border-b border-border text-left text-xs text-muted-foreground">
                     <th className="py-2 font-normal">#</th>
-                    <th className="py-2 font-normal">登帳日期</th>
                     <th className="py-2 font-normal">收款日期</th>
                     <th className="py-2 font-normal">支付方式</th>
                     <th className="py-2 text-right font-normal">沖銷金額</th>
@@ -225,7 +224,6 @@ function InvoiceDetail() {
                   {payments.map((p, i) => (
                     <tr key={p.id} className="border-b border-dashed border-border last:border-0">
                       <td className="py-2.5 text-muted-foreground">{i + 1}</td>
-                      <td className="tabular py-2.5">{formatDate(p.posted_date)}</td>
                       <td className="tabular py-2.5">{formatDate(p.paid_date)}</td>
                       <td className="py-2.5">
                         {p.method ?? "—"}

@@ -1,3 +1,4 @@
+import { todayISO } from "@/lib/receivables";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -47,7 +48,7 @@ export function CombinedPaymentDialog({ invoices, trigger, onDone }: { invoices:
 
   if (!me.canRecordPayment) return null;
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setAmount(String(total)); setFee("0"); setPaidDate(""); setMethod("匯款"); } }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setAmount(String(total)); setFee("0"); setPaidDate(todayISO()); setMethod("匯款"); } }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>

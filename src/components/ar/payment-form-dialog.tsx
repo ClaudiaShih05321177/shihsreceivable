@@ -1,3 +1,4 @@
+import { todayISO } from "@/lib/receivables";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -21,7 +22,6 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
   const [retirementCustomer, setRetirementCustomer] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [paidDate, setPaidDate] = useState("");
-  const [postedDate, setPostedDate] = useState("");
   const [method, setMethod] = useState<string>("匯款");
   const [notes, setNotes] = useState("");
   const [fee, setFee] = useState("0");
@@ -40,7 +40,6 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
         amount: paymentOffset(value, feeNum),
         bank_fee: feeNum,
         paid_date: paidDate,
-        posted_date: postedDate || null,
         method,
         notes: notes.trim() || null,
       });
@@ -68,8 +67,7 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
         setOpen(o);
         if (o) {
           setAmount(balance > 0 ? String(balance) : "");
-          setPaidDate("");
-          setPostedDate("");
+          setPaidDate(todayISO());
           setMethod("匯款");
           setNotes("");
           setFee("0");
@@ -103,15 +101,9 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
             </div>
             <p className="text-sm text-muted-foreground">實收 {formatTWD(Number(amount) || 0)} ＋ 匯費 {formatTWD(feeNum)} ＝ 沖銷 <span className="font-semibold text-foreground">{formatTWD(offset)}</span></p>
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="p-paid">收款日期 *</Label>
-              <RocDateInput id="p-paid" required value={paidDate} onChange={setPaidDate} />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="p-posted">登帳日期</Label>
-              <RocDateInput id="p-posted" value={postedDate} onChange={setPostedDate} />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="p-paid">收款日期 *</Label>
+            <RocDateInput id="p-paid" required value={paidDate} onChange={setPaidDate} />
           </div>
           <div className="space-y-1.5">
             <Label>支付方式</Label>
