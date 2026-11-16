@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowRight, CheckCheck, FileText, Pencil, Plus, Receipt, Search, Trash2 } from "lucide-react";
+import { FileText, Pencil, Plus, Receipt, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { FACTORY_STAGES, needsEnv, nextFactoryStage } from "@/lib/factory";
+import { FACTORY_STAGES, needsEnv } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery, type FactoryRegistration } from "@/lib/queries";
 import { formatDate } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -52,15 +52,6 @@ function FactoryPage() {
 
   const shown = searched.filter((r) => (stage === "all" ? true : stage === "open" ? r.stage !== "核准結案" : r.stage === stage));
 
-  const advance = useMutation({
-    mutationFn: async ({ r, skip }: { r: FactoryRegistration; skip?: boolean }) => {
-      const next = nextFactoryStage(r.stage, skip);
-      const { error } = await supabase.rpc("update_factory_progress", { _id: r.id, _stage: next, _status_note: r.status_note ?? "", _env_filed_date: r.env_filed_date ?? "", _env_approved_date: r.env_approved_date ?? "", _bureau_filed_date: r.bureau_filed_date ?? "", _inspection_date: r.inspection_date ?? "", _approved_date: r.approved_date ?? "" });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["factory_registrations"] }),
-    onError: (e) => toast.error(e instanceof Error ? e.message : "更新失敗"),
-  });
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("factory_registrations").delete().eq("id", id);
@@ -119,7 +110,6 @@ function FactoryPage() {
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap", r.stage === "核准結案" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{r.stage}</span>
-                  {canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="sm" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /> 變更進度</Button>} />}
                 </div>
               </div>
               {r.status_note && <p className="text-sm whitespace-pre-wrap">{r.status_note}</p>}
@@ -127,12 +117,7 @@ function FactoryPage() {
               <div className="flex flex-wrap items-center gap-1 border-t pt-2">
                 {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "quote", stage: "尾款" }}><FileText className="size-3.5" /> 報價單</Link></Button>}
                 {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: "尾款" }}><Receipt className="size-3.5" /> 請款單</Link></Button>}
-                {canProgress && r.stage !== "核准結案" && (
-                  <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r })} aria-label={`${r.factory_name} 推進到${nextFactoryStage(r.stage)}`}><ArrowRight className="size-3.5" /> {nextFactoryStage(r.stage)}</Button>
-                )}
-                {canProgress && r.stage === "送件工商科" && (
-                  <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r, skip: true })}><CheckCheck className="size-3.5" /> 免會勘結案</Button>
-                )}
+                  {canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="sm" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /> 變更進度</Button>} />}
                 {me.isAdmin && <Button variant="ghost" size="sm" className="ml-auto" aria-label={`刪除 ${r.factory_name}`} onClick={() => { if (window.confirm(`確定刪除「${r.factory_name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>}
               </div>
             </div>
