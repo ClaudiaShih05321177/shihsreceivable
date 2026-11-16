@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { invoicesQuery, meQuery, taxFilingsQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { comparePeriod, periodMonths, formatDate, todayISO, periodMonthLabel, rocYear, splitTaxLines, TAX_GROUPS, taxLines, taxSummary, type FeeItems, type SortDirection } from "@/lib/receivables";
+import { comparePeriod, periodMonths, formatDate, todayISO, periodMonthLabel, rocYear, splitTaxLines, TAX_GROUPS, taxLines, type FeeItems, type SortDirection } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_shell/taxes")({
@@ -89,7 +89,6 @@ function TaxesPage() {
         ),
     [invoices, period, filingMap],
   );
-  const summary = taxSummary(lines);
   const needle = q.trim().toLowerCase();
   const staffOf = (l: (typeof lines)[number]) => l.inv.customer?.customer_code?.trim().slice(0, 2).toUpperCase() || "未指定";
   const matched = lines.filter(
@@ -120,7 +119,7 @@ function TaxesPage() {
     return m.set(l.paid_date, v);
   }, new Map<string, { total: number; count: number }>())].sort((a, b) => b[0].localeCompare(a[0]));
 
-  const byStaff = [...matched.filter(statusOk).reduce((m, l) => {
+  const byStaff = [...matched.reduce((m, l) => {
     const code = staffOf(l);
     const v = m.get(code) ?? { total: 0, paid: 0, count: 0 };
     v.total += l.amount; v.count++; if (l.paid) v.paid += l.amount;
@@ -137,7 +136,6 @@ function TaxesPage() {
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
   });
 
-  const grand = summary.reduce((s, g) => ({ total: s.total + g.total, paid: s.paid + g.paid }), { total: 0, paid: 0 });
 
   return (
     <div className="space-y-6">
@@ -175,7 +173,7 @@ function TaxesPage() {
           <SelectContent>
             <SelectItem value="all">全部會計專員</SelectItem>
             {byStaff.map(([c, v]) => (
-              <SelectItem key={c} value={c}>{c}・{v.count} 筆・{v.total.toLocaleString("zh-TW")}・未繳 {(v.total - v.paid).toLocaleString("zh-TW")}</SelectItem>
+              <SelectItem key={c} value={c}>{c}・應繳 {v.total.toLocaleString("zh-TW")}・待繳 {(v.total - v.paid).toLocaleString("zh-TW")}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -190,20 +188,21 @@ function TaxesPage() {
         </Select>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
-        {summary.map((g) => (
-          <div key={g.label} className="ledger-card p-4">
-            <p className="text-xs text-muted-foreground">{g.label}</p>
-            <Money value={g.total} className="text-lg font-semibold" />
-            <p className="mt-1 text-xs text-muted-foreground">未繳 {g.unpaid.toLocaleString("zh-TW")}</p>
+      {(() => {
+        const base = matched.filter((l) => staff === "all" || staffOf(l) === staff);
+        const total = base.reduce((t, l) => t + l.amount, 0);
+        const unpaid = base.filter((l) => !l.paid);
+        const unpaidSum = unpaid.reduce((t, l) => t + l.amount, 0);
+        const f = (n: number) => `NT$ ${n.toLocaleString("zh-TW")}`;
+        return (
+          <div className="ledger-card flex flex-wrap items-baseline gap-x-6 gap-y-1 px-4 py-3 text-sm">
+            <span className="font-semibold">{staff === "all" ? "全部專員" : `專員 ${staff}`} 對帳</span>
+            <span>已登帳應繳 <b className="font-mono text-base">{f(total)}</b>（{base.length} 筆）</span>
+            <span className="text-muted-foreground">已繳 {f(total - unpaidSum)}</span>
+            <span className={unpaidSum ? "font-semibold text-destructive" : "text-muted-foreground"}>待繳 {f(unpaidSum)}（{unpaid.length} 筆）</span>
           </div>
-        ))}
-        <div className="ledger-card bg-muted/60 p-4">
-          <p className="text-xs text-muted-foreground">總和</p>
-          <Money value={grand.total} className="text-lg font-semibold" />
-          <p className="mt-1 text-xs text-muted-foreground">未繳 {(grand.total - grand.paid).toLocaleString("zh-TW")}</p>
-        </div>
-      </div>
+        );
+      })()}
 
       {shown.length === 0 ? (
         <div className="ledger-card px-6 py-16 text-center text-sm text-muted-foreground">{needle ? "找不到符合的稅額資料" : "這一期沒有稅額資料"}</div>
