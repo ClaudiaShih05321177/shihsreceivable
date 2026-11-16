@@ -29,3 +29,11 @@ export function byStaffCode(a: StaffSortable, b: StaffSortable): number {
 export function sortByStaff<T extends StaffSortable>(rows: readonly T[]): T[] {
   return [...rows].sort(byStaffCode);
 }
+
+/** 依客戶代號排序；沒有代號的排最後，再依名稱。 */
+export function compareCustomerCode(ca: string | null | undefined, cb: string | null | undefined, na = "", nb = ""): number {
+  const a = ca?.trim() ?? "";
+  const b = cb?.trim() ?? "";
+  if (!a !== !b) return a ? -1 : 1;
+  return (a && b ? collator.compare(a, b) : 0) || collator.compare(na, nb);
+}

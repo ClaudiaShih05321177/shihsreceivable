@@ -22,6 +22,7 @@ import {
   type SortDirection,
 } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
+import { compareCustomerCode } from "@/lib/customer-sort";
 
 /** 月份/期別的排序狀態：未排序 → 由新到舊 → 由舊到新。 */
 type PeriodSort = SortDirection | null;
@@ -31,7 +32,7 @@ const nextSort = (s: PeriodSort): PeriodSort => (s === null ? "desc" : s === "de
 export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invoice[]; showCustomer?: boolean }) {
   const { data: me } = useSuspenseQuery(meQuery);
   const [sort, setSort] = useState<PeriodSort>(null);
-  const rows = sort ? sortByPeriod(invoices, sort) : invoices;
+  const rows = sort ? sortByPeriod(invoices, sort) : [...invoices].sort((a, b) => compareCustomerCode(a.customer?.customer_code, b.customer?.customer_code, a.customer?.name, b.customer?.name));
 
   if (invoices.length === 0) {
     return (

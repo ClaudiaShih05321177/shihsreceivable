@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { bonusesQuery, meQuery } from "@/lib/queries";
 import { bonusGroups } from "@/lib/bonuses";
+import { compareCustomerCode } from "@/lib/customer-sort";
 import { rocYear, bookkeepingCollectionMonth, suggestPeriod } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/_shell/bonuses")({
@@ -58,7 +59,7 @@ function BonusLedger({ isAdmin }: { isAdmin: boolean }) {
     {selected.map((g) => <section key={g.code} className="space-y-3 print:break-after-page">
       <div className="flex flex-wrap items-baseline justify-between gap-2"><h2 className="font-display text-xl">{g.code} 會計專員獎金明細 · 民國{year}年{month}月（{suggestPeriod(Number(month))}期）</h2><p className="text-sm">獎金總額 <Money value={g.bonus} className="font-semibold text-primary" /></p></div>
       <div className="overflow-x-auto border border-border rounded-md"><Table><TableHeader><TableRow><TableHead>公司名稱</TableHead><TableHead className="text-right">記帳費</TableHead><TableHead className="text-right">結算費</TableHead><TableHead className="text-right">年度加收</TableHead><TableHead className="text-right">應收餘額</TableHead></TableRow></TableHeader><TableBody>
-        {g.rows.map((r) => <TableRow key={r.key}><TableCell className="whitespace-nowrap">{r.customer_code} · {r.customer_name}{r.annual && <span className="ml-1 text-xs text-muted-foreground">（{r.shareLabel}）</span>}{isAdmin && r.rate != null && <span className="ml-1 text-xs text-primary">（加收 {r.rate}%）</span>}</TableCell>{[r.bookkeeping,r.settlement,r.annualExtra,r.balance].map((amount,i) => <TableCell key={i} className="text-right whitespace-nowrap"><Money value={Math.round(amount)} /></TableCell>)}</TableRow>)}
+        {[...g.rows].sort((a, b) => compareCustomerCode(a.customer_code, b.customer_code, a.customer_name, b.customer_name)).map((r) => <TableRow key={r.key}><TableCell className="whitespace-nowrap">{r.customer_code} · {r.customer_name}{r.annual && <span className="ml-1 text-xs text-muted-foreground">（{r.shareLabel}）</span>}{isAdmin && r.rate != null && <span className="ml-1 text-xs text-primary">（加收 {r.rate}%）</span>}</TableCell>{[r.bookkeeping,r.settlement,r.annualExtra,r.balance].map((amount,i) => <TableCell key={i} className="text-right whitespace-nowrap"><Money value={Math.round(amount)} /></TableCell>)}</TableRow>)}
         {!g.rows.length && <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">本期無帳款</TableCell></TableRow>}
         {!!g.rows.length && <>
           <TableRow className="font-semibold"><TableCell>合計</TableCell>{[g.total,g.settlement,g.annualExtra,g.balance].map((a,i) => <TableCell key={i} className="text-right"><Money value={Math.round(a)} /></TableCell>)}</TableRow>

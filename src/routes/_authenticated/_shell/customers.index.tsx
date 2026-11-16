@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { customersQuery, invoicesQuery } from "@/lib/queries";
-import { sortByStaff } from "@/lib/customer-sort";
+import { compareCustomerCode } from "@/lib/customer-sort";
 import { invoiceStatus, outstanding } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/_shell/customers/")({
@@ -41,18 +41,18 @@ function CustomersPage() {
     stats.set(inv.customer_id, s);
   }
 
-  const rows = sortByStaff(
+  const rows = (
     customers.filter((c) =>
       `${c.name} ${c.customer_code ?? ""} ${c.tax_id ?? ""} ${c.staff_code ?? ""}`.toLowerCase().includes(q.toLowerCase()),
-    ),
-  );
+    )
+  ).sort((a, b) => compareCustomerCode(a.customer_code, b.customer_code, a.name, b.name));
 
   return (
     <>
       <PageHeader
         eyebrow="客戶名冊"
         title="客戶資料"
-        description={`共 ${customers.length} 位客戶 · 依會計專員排序`}
+        description={`共 ${customers.length} 位客戶 · 依客戶代號排序`}
         actions={<CustomerFormDialog trigger={<Button><Plus /> 新增客戶</Button>} />}
       />
       <div className="relative mb-5">

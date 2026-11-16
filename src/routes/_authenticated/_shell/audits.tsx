@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { auditFee, auditSummary } from "@/lib/auditors";
+import { compareCustomerCode } from "@/lib/customer-sort";
 import { invoicesQuery, meQuery } from "@/lib/queries";
 import { comparePeriod, formatDate, outstanding, periodMonthLabel, rocYear } from "@/lib/receivables";
 
@@ -68,7 +69,7 @@ function AuditsPage() {
       {groups.filter((g) => g.rows.length).map((g) => {
         const rows = g.rows
           .filter((inv) => status === "all" || (status === "paid" ? outstanding(inv) <= 0 : outstanding(inv) > 0))
-          .sort((a, b) => -comparePeriod(a, b));
+          .sort((a, b) => compareCustomerCode(a.customer?.customer_code, b.customer?.customer_code, a.customer?.name, b.customer?.name) || -comparePeriod(a, b));
         return (
           <section key={g.name} className="space-y-2">
             <h2 className="font-serif text-lg font-semibold">{g.name}　<Money value={g.total} /></h2>
@@ -92,7 +93,7 @@ function AuditsPage() {
                     return (
                       <TableRow key={inv.id}>
                         <TableCell className="font-medium">
-                          <Link to="/invoices/$id" params={{ id: inv.id }} className="hover:text-primary hover:underline">{inv.customer?.name ?? "—"}</Link>
+                          <Link to="/invoices/$id" params={{ id: inv.id }} className="hover:text-primary hover:underline">{inv.customer?.customer_code && <span className="mr-2 font-mono text-sm text-muted-foreground">{inv.customer.customer_code}</span>}{inv.customer?.name ?? "—"}</Link>
                         </TableCell>
                         <TableCell className="text-sm">{inv.period_year ? `${rocYear(inv.period_year)}年 ` : ""}{periodMonthLabel(inv.period_month)}{inv.period_label ? ` · ${inv.period_label}` : ""}</TableCell>
                         <TableCell className="text-right"><Money value={auditFee(inv)} /></TableCell>

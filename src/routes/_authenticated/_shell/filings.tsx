@@ -13,6 +13,7 @@ import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, fil
 import { customersQuery, filingServiceFeesQuery, filingsQuery, meQuery, type Filing } from "@/lib/queries";
 import { formatDate, scheduledCustomerFees, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
+import { compareCustomerCode } from "@/lib/customer-sort";
 
 export const Route = createFileRoute("/_authenticated/_shell/filings")({
   head: () => ({
@@ -40,7 +41,8 @@ function FilingsPage() {
 
   const counts = Object.fromEntries(FILING_STAGES.map((s) => [s, filings.filter((f) => f.stage === s).length]));
   const openCount = filings.filter((f) => f.stage !== "結案").length;
-  const rows = filings.filter((f) => (stage === "all" ? true : stage === "open" ? f.stage !== "結案" : stage === "pending" ? pendingBill(f) : f.stage === stage));
+  const rows = filings.filter((f) => (stage === "all" ? true : stage === "open" ? f.stage !== "結案" : stage === "pending" ? pendingBill(f) : f.stage === stage))
+    .sort((a, b) => compareCustomerCode(a.customer?.customer_code ?? a.customer_code, b.customer?.customer_code ?? b.customer_code, filingName(a), filingName(b)));
 
   const canClose = canCloseFiling(me.isAdmin, me.staffCode);
   const pendingBill = (f: Filing) => f.stage === "結案" && !f.invoice_id;
@@ -165,7 +167,7 @@ function FilingsPage() {
             )}
             {rows.map((f) => (
               <TableRow key={f.id}>
-                <TableCell className="font-medium">{filingName(f)}</TableCell>
+                <TableCell className="font-medium">{(f.customer?.customer_code ?? f.customer_code) && <span className="mr-2 font-mono text-sm text-muted-foreground">{f.customer?.customer_code ?? f.customer_code}</span>}{filingName(f)}</TableCell>
                 <TableCell className="text-sm">{f.case_type}{f.change_detail ? `（${f.change_detail}）` : ""}{f.suspended_period ? `（${f.suspended_period}）` : ""}</TableCell>
                 <TableCell>
                   <span className={cn(

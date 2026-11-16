@@ -95,6 +95,13 @@ function TaxesPage() {
     sort ? (sort === "desc" ? -1 : 1) * comparePeriod(a.inv, b.inv) || byCode(a, b) : byCode(a, b) || comparePeriod(a.inv, b.inv),
   );
 
+  const byDate = [...shown.reduce((m, l) => {
+    if (!l.paid || !l.paid_date) return m;
+    const v = m.get(l.paid_date) ?? { total: 0, count: 0 };
+    v.total += l.amount; v.count++;
+    return m.set(l.paid_date, v);
+  }, new Map<string, { total: number; count: number }>())].sort((a, b) => b[0].localeCompare(a[0]));
+
   const save = useMutation({
     mutationFn: async (v: { invoice_id: string; item: string; paid: boolean; paid_date: string | null }) => {
       if (!me.isAdmin) throw new Error("只有管理員可以登錄繳費");
@@ -155,6 +162,21 @@ function TaxesPage() {
         </div>
       </div>
 
+      {byDate.length > 0 && (
+        <section className="ledger-card p-4">
+          <h2 className="mb-2 text-sm font-semibold">各繳費日期合計</h2>
+          <div className="flex flex-wrap gap-2">
+            {byDate.map(([d, v]) => (
+              <div key={d} className="rounded-md border border-border bg-card px-3 py-2 text-sm">
+                <span className="tabular font-medium">{formatDate(d)}</span>
+                <span className="ml-2 text-xs text-muted-foreground">{v.count} 筆</span>
+                <Money value={v.total} className="ml-2 font-semibold" />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {shown.length === 0 ? (
         <div className="ledger-card px-6 py-16 text-center text-sm text-muted-foreground">{needle ? "找不到符合的稅額資料" : "這一期沒有稅額資料"}</div>
       ) : (
@@ -162,7 +184,6 @@ function TaxesPage() {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
-                <TableHead>客戶代號</TableHead>
                 <TableHead>客戶名稱</TableHead>
                 <TableHead>
                   <button
@@ -188,9 +209,8 @@ function TaxesPage() {
             <TableBody>
               {ordered.map((l) => (
                 <TableRow key={`${l.inv.id}-${l.key}`}>
-                  <TableCell className="font-mono text-sm text-muted-foreground">{l.inv.customer?.customer_code ?? "—"}</TableCell>
-                  <TableCell className="font-medium">
-                    <Link to="/invoices/$id" params={{ id: l.inv.id }} className="hover:text-primary hover:underline">{l.inv.customer?.name ?? "—"}</Link>
+                                    <TableCell className="font-medium">
+                    <Link to="/invoices/$id" params={{ id: l.inv.id }} className="hover:text-primary hover:underline">{l.inv.customer?.customer_code && <span className="mr-2 font-mono text-sm text-muted-foreground">{l.inv.customer.customer_code}</span>}{l.inv.customer?.name ?? "—"}</Link>
                   </TableCell>
                   <TableCell className="text-sm">{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</TableCell>
                   <TableCell className="text-sm">{l.group}</TableCell>
