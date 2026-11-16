@@ -52,3 +52,4 @@ use the editor.
 - Non-admin members see only customers (and their invoices/payments/tax rows) whose staff code (customers.staff_code or first 2 letters of customer_code) matches profiles.staff_code, via `can_see_customer()` RLS; admins set codes through the admin-checked `set_staff_code` RPC (column not user-updatable). Why: each staff member sees only their own clients.
 
 - Members open /invoices, /filings, /customers; MN also opens /factory, inserts nonfinancial cases via RLS and changes progress via an MN/admin-checked RPC. Why: case access must not permit financial edits.
+- Combined billing/payment: selected invoices print via `/statement-combined?ids=`; combined payments split by tested `allocateCombined` in `src/lib/combined.ts` (one payment row per invoice, fee on first, excess on last). Why: keeps per-invoice ledgers intact.

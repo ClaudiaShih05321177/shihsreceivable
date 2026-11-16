@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedShellRouteImport } from './routes/_authenticated/_shell'
+import { Route as AuthenticatedStatementCombinedRouteImport } from './routes/_authenticated/statement-combined'
 import { Route as AuthenticatedShellAuditsRouteImport } from './routes/_authenticated/_shell/audits'
 import { Route as AuthenticatedShellBonusesRouteImport } from './routes/_authenticated/_shell/bonuses'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
@@ -49,6 +50,12 @@ const AuthenticatedShellRoute = AuthenticatedShellRouteImport.update({
   id: '/_shell',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStatementCombinedRoute =
+  AuthenticatedStatementCombinedRouteImport.update({
+    id: '/statement-combined',
+    path: '/statement-combined',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedShellAuditsRoute =
   AuthenticatedShellAuditsRouteImport.update({
     id: '/audits',
@@ -153,6 +160,7 @@ const AuthenticatedShellInvoicesIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/statement-combined': typeof AuthenticatedStatementCombinedRoute
   '/audits': typeof AuthenticatedShellAuditsRoute
   '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
@@ -174,6 +182,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/statement-combined': typeof AuthenticatedStatementCombinedRoute
   '/audits': typeof AuthenticatedShellAuditsRoute
   '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
@@ -198,6 +207,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/_shell': typeof AuthenticatedShellRouteWithChildren
+  '/_authenticated/statement-combined': typeof AuthenticatedStatementCombinedRoute
   '/_authenticated/_shell/audits': typeof AuthenticatedShellAuditsRoute
   '/_authenticated/_shell/bonuses': typeof AuthenticatedShellBonusesRoute
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/statement-combined'
     | '/audits'
     | '/bonuses'
     | '/dashboard'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/statement-combined'
     | '/audits'
     | '/bonuses'
     | '/dashboard'
@@ -265,6 +277,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/_shell'
+    | '/_authenticated/statement-combined'
     | '/_authenticated/_shell/audits'
     | '/_authenticated/_shell/bonuses'
     | '/_authenticated/_shell/dashboard'
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedShellRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/statement-combined': {
+      id: '/_authenticated/statement-combined'
+      path: '/statement-combined'
+      fullPath: '/statement-combined'
+      preLoaderRoute: typeof AuthenticatedStatementCombinedRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/_shell/audits': {
@@ -480,6 +500,7 @@ const AuthenticatedShellRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedShellRoute: typeof AuthenticatedShellRouteWithChildren
+  AuthenticatedStatementCombinedRoute: typeof AuthenticatedStatementCombinedRoute
   AuthenticatedFactoryDocIdRoute: typeof AuthenticatedFactoryDocIdRoute
   AuthenticatedFilingQuoteIdRoute: typeof AuthenticatedFilingQuoteIdRoute
   AuthenticatedFilingReceiptIdRoute: typeof AuthenticatedFilingReceiptIdRoute
@@ -488,6 +509,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShellRoute: AuthenticatedShellRouteWithChildren,
+  AuthenticatedStatementCombinedRoute: AuthenticatedStatementCombinedRoute,
   AuthenticatedFactoryDocIdRoute: AuthenticatedFactoryDocIdRoute,
   AuthenticatedFilingQuoteIdRoute: AuthenticatedFilingQuoteIdRoute,
   AuthenticatedFilingReceiptIdRoute: AuthenticatedFilingReceiptIdRoute,

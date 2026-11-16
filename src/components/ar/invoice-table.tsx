@@ -5,6 +5,7 @@ import { useState } from "react";
 
 import { PaymentFormDialog } from "@/components/ar/payment-form-dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/ar/status-badge";
 import { Money } from "@/components/ar/page-header";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -29,7 +30,7 @@ type PeriodSort = SortDirection | null;
 
 const nextSort = (s: PeriodSort): PeriodSort => (s === null ? "desc" : s === "desc" ? "asc" : null);
 
-export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invoice[]; showCustomer?: boolean }) {
+export function InvoiceTable({ invoices, showCustomer = true, selected, onToggle }: { invoices: Invoice[]; showCustomer?: boolean; selected?: Set<string>; onToggle?: (id: string) => void }) {
   const { data: me } = useSuspenseQuery(meQuery);
   const [sort, setSort] = useState<PeriodSort>(null);
   const rows = sort ? sortByPeriod(invoices, sort) : [...invoices].sort((a, b) => compareCustomerCode(a.customer?.customer_code, b.customer?.customer_code, a.customer?.name, b.customer?.name));
@@ -46,6 +47,7 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
       <Table>
         <TableHeader>
           <TableRow className="bg-muted/60 hover:bg-muted/60">
+            {onToggle && <TableHead className="w-8" />}
             {showCustomer && <TableHead>客戶名稱</TableHead>}
             <TableHead>
               <button
@@ -76,6 +78,7 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
             const balance = outstanding(inv);
             return (
               <TableRow key={inv.id} className="group">
+                {onToggle && <TableCell><Checkbox aria-label={`選取 ${inv.customer?.name ?? ""}`} checked={selected?.has(inv.id) ?? false} onCheckedChange={() => onToggle(inv.id)} /></TableCell>}
                 {showCustomer && (
                   <TableCell className="font-medium">
                     <Link to="/invoices/$id" params={{ id: inv.id }} className="group-hover:text-primary group-hover:underline">

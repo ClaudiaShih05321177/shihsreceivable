@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { HandCoins, Plus, Printer, Search, X } from "lucide-react";
+import { CombinedPaymentDialog } from "@/components/ar/combined-payment-dialog";
 import { useMemo, useState } from "react";
 
 import { BatchInvoiceDialog } from "@/components/ar/batch-invoice-dialog";
@@ -39,6 +40,8 @@ function InvoicesPage() {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("open");
   const [staff, setStaff] = useState("all");
   const [q, setQ] = useState("");
+  const [sel, setSel] = useState<Set<string>>(new Set());
+  const toggle = (id: string) => setSel((s) => { const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const staffById = useMemo(() => new Map(customers.map((c) => [c.id, c.staff_code ?? ""])), [customers]);
   const staffCodes = [...new Set(customers.map((c) => c.staff_code).filter(Boolean))].sort() as string[];
@@ -103,7 +106,20 @@ function InvoicesPage() {
           </Select>
         )}
       </div>
-      <InvoiceTable invoices={rows} />
+      {sel.size > 0 && (() => {
+        const picked = invoices.filter((i) => sel.has(i.id));
+        return (
+          <div className="sticky top-2 z-10 mb-3 flex flex-wrap items-center gap-2 rounded-md border border-primary bg-card px-4 py-2 shadow">
+            <span className="text-sm">已選 {picked.length} 筆・未收合計 <span className="font-semibold">{formatTWD(picked.reduce((s, i) => s + outstanding(i), 0))}</span></span>
+            <div className="ml-auto flex gap-2">
+              <Button asChild size="sm" variant="outline"><Link to="/statement-combined" search={{ ids: picked.map((i) => i.id).join(",") }}><Printer /> 合併請款單</Link></Button>
+              <CombinedPaymentDialog invoices={picked} onDone={() => setSel(new Set())} trigger={<Button size="sm"><HandCoins /> 合併收款</Button>} />
+              <Button size="sm" variant="ghost" onClick={() => setSel(new Set())} aria-label="取消選取"><X /></Button>
+            </div>
+          </div>
+        );
+      })()}
+      <InvoiceTable invoices={rows} selected={sel} onToggle={toggle} />
     </>
   );
 }
