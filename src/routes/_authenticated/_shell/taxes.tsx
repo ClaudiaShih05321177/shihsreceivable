@@ -102,6 +102,13 @@ function TaxesPage() {
     return m.set(l.paid_date, v);
   }, new Map<string, { total: number; count: number }>())].sort((a, b) => b[0].localeCompare(a[0]));
 
+  const byStaff = [...shown.reduce((m, l) => {
+    const code = l.inv.customer?.customer_code?.trim().slice(0, 2).toUpperCase() || "未指定";
+    const v = m.get(code) ?? { total: 0, paid: 0, count: 0 };
+    v.total += l.amount; v.count++; if (l.paid) v.paid += l.amount;
+    return m.set(code, v);
+  }, new Map<string, { total: number; paid: number; count: number }>())].sort((a, b) => (a[0] === "未指定" ? 1 : b[0] === "未指定" ? -1 : codeCollator.compare(a[0], b[0])));
+
   const save = useMutation({
     mutationFn: async (v: { invoice_id: string; item: string; paid: boolean; paid_date: string | null }) => {
       if (!me.isAdmin) throw new Error("只有管理員可以登錄繳費");
@@ -161,6 +168,22 @@ function TaxesPage() {
           <p className="mt-1 text-xs text-muted-foreground">未繳 {(grand.total - grand.paid).toLocaleString("zh-TW")}</p>
         </div>
       </div>
+
+      {byStaff.length > 0 && (
+        <section className="ledger-card p-4">
+          <h2 className="mb-2 text-sm font-semibold">各會計專員稅額合計</h2>
+          <div className="flex flex-wrap gap-2">
+            {byStaff.map(([c, v]) => (
+              <button key={c} type="button" onClick={() => setQ(c === "未指定" ? "" : c)} className="rounded-md border border-border bg-card px-3 py-2 text-left text-sm hover:bg-accent">
+                <span className="font-mono font-medium">{c}</span>
+                <span className="ml-2 text-xs text-muted-foreground">{v.count} 筆</span>
+                <Money value={v.total} className="ml-2 font-semibold" />
+                <span className="ml-2 text-xs text-muted-foreground">未繳 {(v.total - v.paid).toLocaleString("zh-TW")}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
 
       {byDate.length > 0 && (
         <section className="ledger-card p-4">

@@ -141,10 +141,17 @@ export function bookkeepingPeriodFee(monthlyFee: number | string, month: number)
   return Math.round(Number(monthlyFee) * 2) || 0;
 }
 
-/** 收款月份收當期：1月收1-2月、3月收3-4月…11月收11-12月。 */
+/** 後收：1月收前一年11-12月、3月收1-2月…11月收9-10月。 */
 export function suggestPeriod(month: number): string {
-  if (month >= 1 && month <= 11 && month % 2 === 1) return `${month}-${month + 1}`;
+  if (month === 1) return "11-12";
+  if (month >= 3 && month <= 11 && month % 2 === 1) return `${month - 2}-${month - 1}`;
   return "";
+}
+
+/** 請款單期別文字：1月收的11-12月屬前一年度。 */
+export function periodText(inv: { period_year: number | null; period_month: number | null; period_label: string | null }): string {
+  const y = inv.period_year ? rocYear(inv.period_year) - (inv.period_month === 1 && inv.period_label === "11-12" ? 1 : 0) : null;
+  return `${y ? `${y}年` : ""}${inv.period_label ? `${inv.period_label}月` : ""}`;
 }
 
 /** 停業客戶：記帳費、文具費、結算費一律為 0。 */

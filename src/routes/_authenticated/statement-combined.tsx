@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { OFFICE } from "@/lib/billing";
 import { invoicesQuery, meQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { formatDate, formatTWD, itemEntries, outstanding, paidTotal, rocYear, todayISO, type FeeItems } from "@/lib/receivables";
+import { formatDate, formatTWD, itemEntries, outstanding, paidTotal, rocYear, todayISO, type FeeItems , periodText } from "@/lib/receivables";
 import { compareCustomerCode } from "@/lib/customer-sort";
 
 export const Route = createFileRoute("/_authenticated/statement-combined")({
@@ -58,7 +58,7 @@ function CombinedStatement() {
         <p className="mt-6 font-medium">◎ 合併請款明細如下：</p>
         {picked.length === 0 && <p className="mt-4 text-muted-foreground">沒有選取的帳款</p>}
         {picked.map((inv) => {
-          const period = `${inv.period_year ? `${rocYear(inv.period_year)}年` : ""}${inv.period_label ? `${inv.period_label}月` : ""}`;
+          const period = periodText(inv);
           const paid = paidTotal(inv);
           const credit = inv.credit_applied ?? 0;
           return (

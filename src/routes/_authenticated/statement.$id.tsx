@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { OFFICE, priorBalance } from "@/lib/billing";
 import { customersQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { formatDate, formatTWD, itemEntries, rocYear, vatDue, type FeeItems, todayISO } from "@/lib/receivables";
+import { formatDate, formatTWD, itemEntries, rocYear, vatDue, type FeeItems, todayISO , periodText } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/statement/$id")({
   head: () => ({
@@ -45,7 +45,7 @@ function StatementPage() {
   const prior = priorBalance(inv, invoices);
   const credit = inv.credit_applied ?? 0;
   const total = Math.max(0, Number(inv.amount) - credit) + prior;
-  const period = `${inv.period_year ? `${rocYear(inv.period_year)}年` : ""}${inv.period_label ? `${inv.period_label}月` : ""}`;
+  const period = periodText(inv);
 
   return (
     <div className="min-h-screen bg-muted/40 py-8 print:bg-background print:py-0">

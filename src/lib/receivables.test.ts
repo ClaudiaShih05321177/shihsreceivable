@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agingBucket, applyScheduledFees, BILLING_TYPES, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, isOtherKey, itemEntries, itemsTotal, monthlySeries, otherEntries, otherLabel, outstanding, overpaid, scheduledCustomerFees, sortByPeriod, suggestPeriod, withOtherItems } from "./receivables";
+import { agingBucket, applyScheduledFees, BILLING_TYPES, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, isOtherKey, itemEntries, itemsTotal, monthlySeries, otherEntries, otherLabel, outstanding, overpaid, scheduledCustomerFees, sortByPeriod, suggestPeriod, periodText, withOtherItems } from "./receivables";
 
 const today = "2026-11-12";
 const inv = (due_date: string, amount: number, paid: number[] = []) => ({
@@ -100,7 +100,7 @@ describe("bimonthly bookkeeping collection", () => {
   });
 
   it("keeps the preceding two-month ledger period", () => {
-    expect([1, 3, 5, 7, 9, 11].map(suggestPeriod)).toEqual(["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"]);
+    expect([1, 3, 5, 7, 9, 11].map(suggestPeriod)).toEqual(["11-12", "1-2", "3-4", "5-6", "7-8", "9-10"]);
   });
 });
 
@@ -231,4 +231,9 @@ describe("bank fee offset", () => {
     expect(paymentOffset(3985, 15)).toBe(4000);
     expect(receivedAmount({ amount: 4000, bank_fee: 15 })).toBe(3985);
   });
+});
+
+describe("periodText", () => {
+  it("January collection shows prior year 11-12", () => expect(periodText({ period_year: 2026, period_month: 1, period_label: "11-12" })).toBe("114年11-12月"));
+  it("March collection shows same year 1-2", () => expect(periodText({ period_year: 2026, period_month: 3, period_label: "1-2" })).toBe("115年1-2月"));
 });
