@@ -39,6 +39,12 @@ describe("帳號權限", () => {
   });
 });
 describe("一般使用者可見頁面", () => {
+  it("MN 與管理員可新增工廠案件，其他同仁不可", () => {
+    expect(canManageFactoryProgress({ isAdmin: false, staffCode: "MN" })).toBe(true);
+    expect(canManageFactoryProgress({ isAdmin: true })).toBe(true);
+    expect(canManageFactoryProgress({ isAdmin: false, staffCode: "CA" })).toBe(false);
+    expect(canManageFactoryProgress({ isAdmin: false, staffCode: null })).toBe(false);
+  });
   it("MN 可以查看並變更工廠進度", () => {
     expect(canSeePage(false, "/factory", "MN")).toBe(true);
     expect(canManageFactoryProgress({ isAdmin: false, staffCode: "MN" })).toBe(true);

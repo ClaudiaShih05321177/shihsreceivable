@@ -15,6 +15,7 @@ import { lookupCompany } from "@/lib/company-lookup.functions";
 import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv } from "@/lib/factory";
 import { meQuery, type FactoryRegistration } from "@/lib/queries";
 import type { Database } from "@/integrations/supabase/types";
+import { canManageFactoryProgress } from "@/lib/permissions";
 
 type Update = Database["public"]["Tables"]["factory_registrations"]["Update"];
 
@@ -71,6 +72,20 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   const save = useMutation({
     mutationFn: async () => {
       if (!form.factory_name.trim()) throw new Error("請輸入廠名");
+      if (!me.isAdmin) {
+        if (record || !canManageFactoryProgress(me)) throw new Error("無權限新增工廠案件");
+        const { error } = await supabase.from("factory_registrations").insert({
+          factory_name: form.factory_name.trim(), company_name: form.company_name.trim() || null,
+          branch_name: form.branch_name.trim() || null, tax_id: form.tax_id.trim() || null,
+          application_item: form.application_item.trim() || null, contact: form.contact.trim() || null,
+          status_note: form.status_note.trim() || null, env_mode: form.env_mode, stage: factoryInitialStage(form.env_mode),
+          env_filed_date: form.env_filed_date || null, env_approved_date: form.env_approved_date || null,
+          bureau_filed_date: form.bureau_filed_date || null, inspection_date: form.inspection_date || null,
+          approved_date: form.approved_date || null,
+        });
+        if (error) throw error;
+        return;
+      }
       const row: Record<string, string | number | null> = { env_mode: form.env_mode, invoice_type: form.invoice_type };
       const typed = row as Update;
       for (const k of TEXT) row[k] = form[k].trim() || null;
@@ -159,7 +174,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             {date("inspection_date", "現場會勘日期（選辦）")}
             {date("approved_date", "核准結案日期")}
           </section>
-          <section className={`grid gap-4 rounded-md border border-dashed p-3 sm:grid-cols-2 ${focus === "ar" ? "order-first" : ""}`}>
+          {me.isAdmin && <section className={`grid gap-4 rounded-md border border-dashed p-3 sm:grid-cols-2 ${focus === "ar" ? "order-first" : ""}`}>
             <p className="text-sm font-semibold sm:col-span-2">應收帳款{!me.isAdmin && record ? "（僅管理員可修改）" : ""}</p>
             <div className="grid gap-2">
               <Label>發票</Label>
@@ -193,7 +208,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             {money("final_received_amount", "尾款收款金額")}
             {date("final_received_date", "尾款收款日期")}
             <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-ar_notes">帳款備註</Label><Textarea id="fr-ar_notes" rows={2} value={form.ar_notes} onChange={(e) => set("ar_notes", e.target.value)} /></div>
-          </section>
+          </section>}
         </div>
         <DialogFooter><Button onClick={() => save.mutate()} disabled={save.isPending}>{save.isPending ? "儲存中…" : "儲存"}</Button></DialogFooter>
       </DialogContent>

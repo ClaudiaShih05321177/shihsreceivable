@@ -51,4 +51,4 @@ use the editor.
 - Team accounts are created by admins via admin-checked server functions in src/lib/team.functions.ts; public signup is disabled and app_metadata.must_change_password forces a first-login password change in the shell. Why: staff must not self-register.
 - Non-admin members see only customers (and their invoices/payments/tax rows) whose staff code (customers.staff_code or first 2 letters of customer_code) matches profiles.staff_code, via `can_see_customer()` RLS; admins set codes through the admin-checked `set_staff_code` RPC (column not user-updatable). Why: each staff member sees only their own clients.
 
-- Members open /invoices, /filings, /customers; MN also opens /factory and changes progress via an MN/admin-checked RPC only. Why: progress access must not permit financial edits.
+- Members open /invoices, /filings, /customers; MN also opens /factory, inserts nonfinancial cases via RLS and changes progress via an MN/admin-checked RPC. Why: case access must not permit financial edits.

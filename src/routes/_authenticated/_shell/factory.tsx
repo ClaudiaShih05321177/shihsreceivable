@@ -67,7 +67,7 @@ function FactoryPage() {
 
   return (
     <>
-      <PageHeader eyebrow="勤豐工商顧問有限公司" title="工廠登記進度表" description="環保與現場會勘為選辦；免跑環保或客戶自辦環保的案件從送件工商科開始。" actions={me.isAdmin ? <FactoryFormDialog trigger={<Button><Plus /> 新增案件</Button>} /> : undefined} />
+      <PageHeader eyebrow="勤豐工商顧問有限公司" title="工廠登記進度表" description="環保與現場會勘為選辦；免跑環保或客戶自辦環保的案件從送件工商科開始。" actions={canProgress ? <FactoryFormDialog trigger={<Button><Plus /> 新增案件</Button>} /> : undefined} />
       <div className="mb-5 flex flex-wrap gap-2">
         {btn("open", "進行中", rows.filter((r) => r.stage !== "核准結案").length)}
         {FACTORY_STAGES.map((s) => btn(s, s, rows.filter((r) => r.stage === s).length))}
