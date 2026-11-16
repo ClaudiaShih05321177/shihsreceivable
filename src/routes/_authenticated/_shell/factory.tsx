@@ -9,7 +9,6 @@ import { FactoryProgressDialog } from "@/components/ar/factory-progress-dialog";
 import { canManageFactoryProgress } from "@/lib/permissions";
 import { PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { FACTORY_STAGES, needsEnv, nextFactoryStage } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery, type FactoryRegistration } from "@/lib/queries";
@@ -73,51 +72,44 @@ function FactoryPage() {
         {FACTORY_STAGES.map((s) => btn(s, s, rows.filter((r) => r.stage === s).length))}
         {btn("all", "全部", rows.length)}
       </div>
-      <div className="ledger-card overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-muted/60 hover:bg-muted/60">
-              <TableHead>廠名</TableHead><TableHead>申辦項目</TableHead><TableHead>Status</TableHead><TableHead>聯絡人</TableHead>
-              <TableHead>階段</TableHead><TableHead>環保 送件／核准</TableHead><TableHead>工商科送件</TableHead><TableHead>現場會勘</TableHead><TableHead>核准結案</TableHead>
-<TableHead className="text-right">操作</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {shown.length === 0 && <TableRow><TableCell colSpan={10} className="py-10 text-center text-sm text-muted-foreground">尚無案件</TableCell></TableRow>}
-            {shown.map((r) => (
-              <TableRow key={r.id}>
-                <TableCell className="font-medium">{r.factory_name}{r.tax_id && <div className="tabular text-xs font-normal text-muted-foreground">{r.tax_id}</div>}</TableCell>
-                <TableCell className="text-sm">{r.application_item ?? "—"}</TableCell>
-                <TableCell className="min-w-64 max-w-96 text-sm whitespace-pre-wrap">{r.status_note ?? "—"}</TableCell>
-                <TableCell className="text-sm">{r.contact ?? "—"}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2 whitespace-nowrap">
-                    <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", r.stage === "核准結案" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{r.stage}</span>
-                    {canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="sm" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /> 變更進度</Button>} />}
-                  </div>
-                </TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{needsEnv(r.env_mode) ? d(r.env_filed_date, r.env_approved_date) : r.env_mode}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{d(r.bureau_filed_date)}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{d(r.inspection_date)}</TableCell>
-                <TableCell className="text-sm whitespace-nowrap">{d(r.approved_date)}</TableCell>
-                <TableCell>
-                  <div className="flex items-center justify-end gap-1">
-                    {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "quote", stage: "尾款" }}><FileText className="size-3.5" /> 報價單</Link></Button>}
-                    {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: "尾款" }}><Receipt className="size-3.5" /> 請款單</Link></Button>}
-                    {canProgress && r.stage !== "核准結案" && (
-                      <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r })} aria-label={`${r.factory_name} 推進到${nextFactoryStage(r.stage)}`}><ArrowRight className="size-3.5" /> {nextFactoryStage(r.stage)}</Button>
-                    )}
-                    {canProgress && r.stage === "送件工商科" && (
-                      <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r, skip: true })}><CheckCheck className="size-3.5" /> 免會勘結案</Button>
-                    )}
-                    {me.isAdmin && <FactoryFormDialog record={r} trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${r.factory_name}`}><Pencil className="size-3.5" /></Button>} />}
-                    {me.isAdmin && <Button variant="ghost" size="icon" aria-label={`刪除 ${r.factory_name}`} onClick={() => { if (window.confirm(`確定刪除「${r.factory_name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>}
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="grid gap-3">
+        {shown.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">尚無案件</div>}
+        {shown.map((r) => {
+          const title = <span className="font-medium">{r.factory_name}</span>;
+          const steps = [
+            needsEnv(r.env_mode) ? `環保：${d(r.env_filed_date, r.env_approved_date)}` : `環保：${r.env_mode}`,
+            `工商科送件：${d(r.bureau_filed_date)}`, `會勘：${d(r.inspection_date)}`, `核准結案：${d(r.approved_date)}`,
+          ];
+          return (
+            <div key={r.id} className="ledger-card grid gap-3 p-4">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
+                <div className="min-w-0">
+                  {me.isAdmin ? (
+                    <FactoryFormDialog record={r} trigger={<button type="button" className="text-left text-primary underline-offset-4 hover:underline" aria-label={`編輯 ${r.factory_name}`}>{title}</button>} />
+                  ) : title}
+                  <div className="text-xs text-muted-foreground">{[r.tax_id, r.application_item, r.contact].filter(Boolean).join(" · ") || "—"}</div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap", r.stage === "核准結案" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{r.stage}</span>
+                  {canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="sm" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /> 變更進度</Button>} />}
+                </div>
+              </div>
+              {r.status_note && <p className="text-sm whitespace-pre-wrap">{r.status_note}</p>}
+              <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">{steps.map((s) => <span key={s}>{s}</span>)}</div>
+              <div className="flex flex-wrap items-center gap-1 border-t pt-2">
+                {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "quote", stage: "尾款" }}><FileText className="size-3.5" /> 報價單</Link></Button>}
+                {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: "尾款" }}><Receipt className="size-3.5" /> 請款單</Link></Button>}
+                {canProgress && r.stage !== "核准結案" && (
+                  <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r })} aria-label={`${r.factory_name} 推進到${nextFactoryStage(r.stage)}`}><ArrowRight className="size-3.5" /> {nextFactoryStage(r.stage)}</Button>
+                )}
+                {canProgress && r.stage === "送件工商科" && (
+                  <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r, skip: true })}><CheckCheck className="size-3.5" /> 免會勘結案</Button>
+                )}
+                {me.isAdmin && <Button variant="ghost" size="sm" className="ml-auto" aria-label={`刪除 ${r.factory_name}`} onClick={() => { if (window.confirm(`確定刪除「${r.factory_name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </>
   );
