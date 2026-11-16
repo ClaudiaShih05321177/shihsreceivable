@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      bank_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          created_by: string | null
+          fingerprint: string
+          id: string
+          memo: string
+          txn_date: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          fingerprint: string
+          id?: string
+          memo?: string
+          txn_date?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          fingerprint?: string
+          id?: string
+          memo?: string
+          txn_date?: string | null
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null

@@ -19,6 +19,7 @@ import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellFactoryRouteImport } from './routes/_authenticated/_shell/factory'
 import { Route as AuthenticatedShellFactoryReceivablesRouteImport } from './routes/_authenticated/_shell/factory-receivables'
 import { Route as AuthenticatedShellFilingsRouteImport } from './routes/_authenticated/_shell/filings'
+import { Route as AuthenticatedShellReconcileRouteImport } from './routes/_authenticated/_shell/reconcile'
 import { Route as AuthenticatedShellTaxesRouteImport } from './routes/_authenticated/_shell/taxes'
 import { Route as AuthenticatedShellTeamRouteImport } from './routes/_authenticated/_shell/team'
 import { Route as AuthenticatedFactoryDocIdRouteImport } from './routes/_authenticated/factory-doc.$id'
@@ -83,6 +84,12 @@ const AuthenticatedShellFilingsRoute =
     path: '/filings',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
+const AuthenticatedShellReconcileRoute =
+  AuthenticatedShellReconcileRouteImport.update({
+    id: '/reconcile',
+    path: '/reconcile',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
 const AuthenticatedShellTaxesRoute = AuthenticatedShellTaxesRouteImport.update({
   id: '/taxes',
   path: '/taxes',
@@ -145,6 +152,7 @@ export interface FileRoutesByFullPath {
   '/factory': typeof AuthenticatedShellFactoryRoute
   '/factory-receivables': typeof AuthenticatedShellFactoryReceivablesRoute
   '/filings': typeof AuthenticatedShellFilingsRoute
+  '/reconcile': typeof AuthenticatedShellReconcileRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
   '/factory-doc/$id': typeof AuthenticatedFactoryDocIdRoute
@@ -164,6 +172,7 @@ export interface FileRoutesByTo {
   '/factory': typeof AuthenticatedShellFactoryRoute
   '/factory-receivables': typeof AuthenticatedShellFactoryReceivablesRoute
   '/filings': typeof AuthenticatedShellFilingsRoute
+  '/reconcile': typeof AuthenticatedShellReconcileRoute
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
   '/factory-doc/$id': typeof AuthenticatedFactoryDocIdRoute
@@ -186,6 +195,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/factory': typeof AuthenticatedShellFactoryRoute
   '/_authenticated/_shell/factory-receivables': typeof AuthenticatedShellFactoryReceivablesRoute
   '/_authenticated/_shell/filings': typeof AuthenticatedShellFilingsRoute
+  '/_authenticated/_shell/reconcile': typeof AuthenticatedShellReconcileRoute
   '/_authenticated/_shell/taxes': typeof AuthenticatedShellTaxesRoute
   '/_authenticated/_shell/team': typeof AuthenticatedShellTeamRoute
   '/_authenticated/factory-doc/$id': typeof AuthenticatedFactoryDocIdRoute
@@ -207,6 +217,7 @@ export interface FileRouteTypes {
     | '/factory'
     | '/factory-receivables'
     | '/filings'
+    | '/reconcile'
     | '/taxes'
     | '/team'
     | '/factory-doc/$id'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '/factory'
     | '/factory-receivables'
     | '/filings'
+    | '/reconcile'
     | '/taxes'
     | '/team'
     | '/factory-doc/$id'
@@ -247,6 +259,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/factory'
     | '/_authenticated/_shell/factory-receivables'
     | '/_authenticated/_shell/filings'
+    | '/_authenticated/_shell/reconcile'
     | '/_authenticated/_shell/taxes'
     | '/_authenticated/_shell/team'
     | '/_authenticated/factory-doc/$id'
@@ -336,6 +349,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShellFilingsRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
+    '/_authenticated/_shell/reconcile': {
+      id: '/_authenticated/_shell/reconcile'
+      path: '/reconcile'
+      fullPath: '/reconcile'
+      preLoaderRoute: typeof AuthenticatedShellReconcileRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
     '/_authenticated/_shell/taxes': {
       id: '/_authenticated/_shell/taxes'
       path: '/taxes'
@@ -409,6 +429,7 @@ interface AuthenticatedShellRouteChildren {
   AuthenticatedShellFactoryRoute: typeof AuthenticatedShellFactoryRoute
   AuthenticatedShellFactoryReceivablesRoute: typeof AuthenticatedShellFactoryReceivablesRoute
   AuthenticatedShellFilingsRoute: typeof AuthenticatedShellFilingsRoute
+  AuthenticatedShellReconcileRoute: typeof AuthenticatedShellReconcileRoute
   AuthenticatedShellTaxesRoute: typeof AuthenticatedShellTaxesRoute
   AuthenticatedShellTeamRoute: typeof AuthenticatedShellTeamRoute
   AuthenticatedShellCustomersIdRoute: typeof AuthenticatedShellCustomersIdRoute
@@ -425,6 +446,7 @@ const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellFactoryReceivablesRoute:
     AuthenticatedShellFactoryReceivablesRoute,
   AuthenticatedShellFilingsRoute: AuthenticatedShellFilingsRoute,
+  AuthenticatedShellReconcileRoute: AuthenticatedShellReconcileRoute,
   AuthenticatedShellTaxesRoute: AuthenticatedShellTaxesRoute,
   AuthenticatedShellTeamRoute: AuthenticatedShellTeamRoute,
   AuthenticatedShellCustomersIdRoute: AuthenticatedShellCustomersIdRoute,

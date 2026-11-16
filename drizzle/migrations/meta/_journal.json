@@ -281,6 +281,13 @@
       "when": 1794806280031,
       "tag": "0039_mn_create_factory_cases",
       "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794808868689,
+      "tag": "0040_create_bank_transactions",
+      "breakpoints": true
     }
   ]
 }

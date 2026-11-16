@@ -173,6 +173,17 @@ export const taxFilingsQuery = queryOptions({
   },
 });
 
+export type BankTransaction = Database["public"]["Tables"]["bank_transactions"]["Row"];
+
+export const bankTransactionsQuery = queryOptions({
+  queryKey: ["bank_transactions"],
+  queryFn: async () => {
+    const { data, error } = await supabase.from("bank_transactions").select("*").order("created_at", { ascending: false });
+    if (error) throw error;
+    return data;
+  },
+});
+
 export type FactoryRegistration = Database["public"]["Tables"]["factory_registrations"]["Row"];
 
 export const factoryRegistrationsQuery = queryOptions({
