@@ -42,7 +42,8 @@ function StatementPage() {
   const customer = customers.find((c) => c.id === inv.customer_id);
   const items = itemEntries(inv.items as FeeItems);
   const prior = priorBalance(inv, invoices);
-  const total = Number(inv.amount) + prior;
+  const credit = inv.credit_applied ?? 0;
+  const total = Math.max(0, Number(inv.amount) - credit) + prior;
   const period = `${inv.period_year ? `${rocYear(inv.period_year)}年` : ""}${inv.period_label ? `${inv.period_label}月` : ""}`;
 
   return (
@@ -71,6 +72,7 @@ function StatementPage() {
               <tr key={i.name}><td className="py-1 pl-6">{period ? `${period}` : ""}{feeLabel(i.name)}：</td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
             ))}
             {prior > 0 && <tr><td className="py-1 pl-6">前期未收餘額：</td><td className="text-right font-mono">{formatTWD(prior)}</td></tr>}
+            {credit > 0 && <tr><td className="py-1 pl-6">前期溢繳折抵：</td><td className="text-right font-mono">−{formatTWD(credit)}</td></tr>}
             <tr className="border-t border-foreground font-bold"><td className="py-2">總計本期應收款項：</td><td className="text-right font-mono">{formatTWD(total)}</td></tr>
           </tbody>
         </table>

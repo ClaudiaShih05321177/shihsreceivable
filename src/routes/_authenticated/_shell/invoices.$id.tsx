@@ -197,6 +197,8 @@ function InvoiceDetail() {
               <dt>合計</dt>
               <dd><Money value={Number(inv.amount)} /></dd>
             </div>
+            {(inv.credit_applied ?? 0) > 0 && <div className="flex justify-between py-2"><dt>前期溢繳折抵</dt><dd>−<Money value={inv.credit_applied ?? 0} /></dd></div>}
+            {(inv.credit_used ?? 0) > 0 && <div className="flex justify-between py-2"><dt>溢繳已折抵後期</dt><dd><Money value={inv.credit_used ?? 0} /></dd></div>}
           </dl>
           <p className="mt-5 text-xs text-muted-foreground">開立日期 {formatDate(inv.issue_date)}</p>
           {inv.notes && <p className="mt-3 whitespace-pre-wrap rounded-md bg-muted p-3 text-sm">{inv.notes}</p>}

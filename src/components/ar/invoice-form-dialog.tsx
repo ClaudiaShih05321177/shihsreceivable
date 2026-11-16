@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/queries";
 import { feeItemCount, feeLabel, visibleFeeItems } from "@/lib/fee-labels";
 import { canEditInvoice } from "@/lib/permissions";
+import { allocateCredits } from "@/lib/credits";
 import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems } from "@/lib/receivables";
 
 const PICK_GROUPS = [
@@ -101,6 +102,12 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   );
   const numericItems = withOtherItems(baseItems, form.others);
   const total = itemsTotal(numericItems);
+  const previewId = invoice?.id ?? "draft";
+  const preview = allocateCredits([
+    ...allInvoices.filter((i) => i.id !== previewId),
+    { id: previewId, customer_id: form.customer_id, period_year: Number(form.roc_year) + 1911, period_month: Number(form.month), period_label: form.period_label, amount: total, payments: invoice?.payments ?? [] },
+  ]).find((i) => i.id === previewId);
+  const credit = preview?.credit_applied ?? 0;
   const setOther = (i: number, k: "label" | "amount", v: string) =>
     setForm((f) => ({ ...f, others: f.others.map((o, j) => (j === i ? { ...o, [k]: v } : o)) }));
   const addOther = () => setForm((f) => ({ ...f, others: [...f.others, { label: "", amount: "" }] }));
@@ -376,6 +383,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                 <span className="text-sm text-muted-foreground">應收帳款合計</span>
                 <span className="tabular text-2xl font-semibold">{formatTWD(total)}</span>
               </div>
+              {credit > 0 && <div className="mt-2 space-y-1 text-right text-sm"><p>前期溢繳折抵：−{formatTWD(credit)}</p><p className="font-semibold">折抵後本期請款：{formatTWD(Math.max(0, total - credit))}</p></div>}
             </div>
 
             <div className="space-y-1.5">

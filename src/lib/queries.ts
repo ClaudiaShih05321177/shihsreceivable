@@ -5,6 +5,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { permissionsFor } from "@/lib/permissions";
 import type { BonusData } from "@/lib/bonuses";
 import { CUSTOMER_SELECT } from "@/lib/customer-fields";
+import { allocateCredits } from "@/lib/credits";
 
 export type Customer = Omit<Database["public"]["Tables"]["customers"]["Row"], "annual_extra_rate"> & { annual_extra_rate?: number | null };
 export type Payment = Database["public"]["Tables"]["payments"]["Row"];
@@ -12,6 +13,8 @@ export type InvoiceRow = Database["public"]["Tables"]["invoices"]["Row"];
 export type Invoice = InvoiceRow & {
   customer: Pick<Customer, "id" | "name" | "customer_code"> | null;
   payments: Payment[];
+  credit_applied?: number;
+  credit_used?: number;
 };
 export type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -72,9 +75,7 @@ export const bonusesQuery = queryOptions({
   },
 });
 
-export const invoicesQuery = queryOptions({
-  queryKey: ["invoices"],
-  queryFn: async () => {
+async function fetchInvoices() {
     // The backend returns at most 1000 rows per request, so read in pages.
     const all: Invoice[] = [];
     for (let from = 0; ; from += 1000) {
@@ -86,22 +87,21 @@ export const invoicesQuery = queryOptions({
         .range(from, from + 999);
       if (error) throw error;
       all.push(...(data as unknown as Invoice[]));
-      if (data.length < 1000) return all;
+      if (data.length < 1000) return allocateCredits(all);
     }
-  },
+}
+
+export const invoicesQuery = queryOptions({
+  queryKey: ["invoices"],
+  queryFn: fetchInvoices,
 });
 
 export const invoiceQuery = (id: string) =>
   queryOptions({
     queryKey: ["invoices", id],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("invoices")
-        .select(INVOICE_SELECT)
-        .eq("id", id)
-        .maybeSingle();
-      if (error) throw error;
-      return data as unknown as Invoice | null;
+      const invoices = await fetchInvoices();
+      return invoices.find((invoice) => invoice.id === id) ?? null;
     },
   });
 

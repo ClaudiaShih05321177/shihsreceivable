@@ -13,7 +13,7 @@ export const OFFICE = {
 };
 
 type CustomerLike = { id: string; billing_type?: string | null; bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string };
-type InvoiceLike = { id: string; customer_id: string; period_year: number | null; period_month: number | null; period_label: string | null; amount: number | string; payments?: { amount: number | string }[] | null };
+type InvoiceLike = { id: string; customer_id: string; period_year: number | null; period_month: number | null; period_label: string | null; amount: number | string; credit_applied?: number; payments?: { amount: number | string }[] | null };
 
 /** 一鍵立帳：為該收款月份尚無帳款、且排定費用大於 0 的客戶產生帳款草稿。 */
 export function batchInvoiceDrafts(customers: CustomerLike[], invoices: InvoiceLike[], year: number, month: number) {
@@ -31,5 +31,5 @@ export function batchInvoiceDrafts(customers: CustomerLike[], invoices: InvoiceL
 export function priorBalance(invoice: InvoiceLike, invoices: InvoiceLike[]): number {
   return invoices
     .filter((i) => i.customer_id === invoice.customer_id && i.id !== invoice.id && comparePeriod(i, invoice) < 0)
-    .reduce((s, i) => s + Math.max(0, Number(i.amount) - (i.payments ?? []).reduce((p, x) => p + Number(x.amount), 0)), 0);
+    .reduce((s, i) => s + Math.max(0, Number(i.amount) - (i.payments ?? []).reduce((p, x) => p + Number(x.amount), 0) - (i.credit_applied ?? 0)), 0);
 }

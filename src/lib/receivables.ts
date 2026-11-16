@@ -3,12 +3,14 @@ import { addDays, differenceInCalendarDays, format, parseISO, startOfMonth, subM
 /** Invoices due within this many days (and not yet paid) count as "due soon". */
 export const DUE_SOON_DAYS = 7;
 
-export type PaymentLike = { amount: number | string; paid_date: string };
+export type PaymentLike = { amount: number | string; paid_date: string; bank_fee?: number | string | null };
 export type InvoiceLike = {
   amount: number | string;
   issue_date: string;
   due_date: string | null;
   payments?: PaymentLike[] | null;
+  credit_applied?: number;
+  credit_used?: number;
 };
 
 export type InvoiceStatus = "paid" | "overdue" | "due_soon" | "partial" | "unpaid";
@@ -34,12 +36,13 @@ export function paidTotal(invoice: InvoiceLike): number {
 }
 
 export function outstanding(invoice: InvoiceLike): number {
-  return Math.max(0, Number(invoice.amount) - paidTotal(invoice));
+  return Math.max(0, Number(invoice.amount) - paidTotal(invoice) - (invoice.credit_applied ?? 0));
 }
 
 /** 溢收金額：客戶多付的部分（沒有多付為 0）。 */
 export function overpaid(invoice: InvoiceLike): number {
-  return Math.max(0, paidTotal(invoice) - Number(invoice.amount));
+  const cash = (invoice.payments ?? []).reduce((sum, payment) => sum + Number(payment.amount) - Number(payment.bank_fee ?? 0), 0);
+  return Math.max(0, cash - Number(invoice.amount) - (invoice.credit_used ?? 0));
 }
 
 /** Days past the due date (negative = days until due). */
@@ -53,7 +56,7 @@ export function invoiceStatus(invoice: InvoiceLike, today: string = todayISO()):
   const late = daysOverdue(invoice, today);
   if (late !== null && late > 0) return "overdue";
   if (late !== null && -late <= DUE_SOON_DAYS) return "due_soon";
-  if (paidTotal(invoice) > 0) return "partial";
+  if (paidTotal(invoice) + (invoice.credit_applied ?? 0) > 0) return "partial";
   return "unpaid";
 }
 

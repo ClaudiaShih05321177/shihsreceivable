@@ -24,6 +24,11 @@ describe("batchInvoiceDrafts", () => {
 });
 
 describe("priorBalance", () => {
+  it("does not bill carried credit again as prior unpaid balance", () => {
+    const older = { ...inv("old", "a", 3, 5000), credit_applied: 1000 };
+    const current = inv("current", "a", 5, 5000);
+    expect(priorBalance(current, [older, current])).toBe(4000);
+  });
   it("sums unpaid amounts of earlier periods for the same customer only", () => {
     const all = [inv("1", "a", 7, 5000, 2000), inv("2", "a", 9, 5000), inv("3", "a", 11, 7500), inv("4", "b", 7, 9999)];
     expect(priorBalance(all[2]!, all)).toBe(8000);

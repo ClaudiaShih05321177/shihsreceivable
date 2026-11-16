@@ -95,6 +95,8 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
                   ) : (
                     <Money value={outstanding(inv)} className={status === "overdue" ? "text-overdue" : ""} />
                   )}
+                  {(inv.credit_applied ?? 0) > 0 && <span className="block text-xs font-normal text-muted-foreground">溢繳折抵 <Money value={inv.credit_applied ?? 0} /></span>}
+                  {(inv.credit_used ?? 0) > 0 && <span className="block text-xs font-normal text-muted-foreground">已折抵後期 <Money value={inv.credit_used ?? 0} /></span>}
                 </TableCell>
                 <TableCell className="tabular text-sm">
                   {formatDate(inv.due_date)}
