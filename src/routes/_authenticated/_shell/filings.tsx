@@ -190,6 +190,7 @@ function FilingsPage() {
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">
                     {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-receipt/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 收據`}><Printer className="size-3.5" />收據</Link></Button>}
+                    {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-quote/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 報價單`}><Printer className="size-3.5" />報價單</Link></Button>}
                     {canClose && f.stage !== "結案" && (
                       <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`確定將「${filingName(f)}」結案？`)) close.mutate(f); }} disabled={close.isPending} aria-label={`${filingName(f)} 結案`}>
                         <CheckCircle2 className="size-3.5" /> 結案

@@ -23,6 +23,7 @@ import { Route as AuthenticatedShellReconcileRouteImport } from './routes/_authe
 import { Route as AuthenticatedShellTaxesRouteImport } from './routes/_authenticated/_shell/taxes'
 import { Route as AuthenticatedShellTeamRouteImport } from './routes/_authenticated/_shell/team'
 import { Route as AuthenticatedFactoryDocIdRouteImport } from './routes/_authenticated/factory-doc.$id'
+import { Route as AuthenticatedFilingQuoteIdRouteImport } from './routes/_authenticated/filing-quote.$id'
 import { Route as AuthenticatedFilingReceiptIdRouteImport } from './routes/_authenticated/filing-receipt.$id'
 import { Route as AuthenticatedStatementIdRouteImport } from './routes/_authenticated/statement.$id'
 import { Route as AuthenticatedShellCustomersIndexRouteImport } from './routes/_authenticated/_shell/customers.index'
@@ -106,6 +107,12 @@ const AuthenticatedFactoryDocIdRoute =
     path: '/factory-doc/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedFilingQuoteIdRoute =
+  AuthenticatedFilingQuoteIdRouteImport.update({
+    id: '/filing-quote/$id',
+    path: '/filing-quote/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedFilingReceiptIdRoute =
   AuthenticatedFilingReceiptIdRouteImport.update({
     id: '/filing-receipt/$id',
@@ -156,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
   '/factory-doc/$id': typeof AuthenticatedFactoryDocIdRoute
+  '/filing-quote/$id': typeof AuthenticatedFilingQuoteIdRoute
   '/filing-receipt/$id': typeof AuthenticatedFilingReceiptIdRoute
   '/statement/$id': typeof AuthenticatedStatementIdRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
@@ -176,6 +184,7 @@ export interface FileRoutesByTo {
   '/taxes': typeof AuthenticatedShellTaxesRoute
   '/team': typeof AuthenticatedShellTeamRoute
   '/factory-doc/$id': typeof AuthenticatedFactoryDocIdRoute
+  '/filing-quote/$id': typeof AuthenticatedFilingQuoteIdRoute
   '/filing-receipt/$id': typeof AuthenticatedFilingReceiptIdRoute
   '/statement/$id': typeof AuthenticatedStatementIdRoute
   '/customers/$id': typeof AuthenticatedShellCustomersIdRoute
@@ -199,6 +208,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/taxes': typeof AuthenticatedShellTaxesRoute
   '/_authenticated/_shell/team': typeof AuthenticatedShellTeamRoute
   '/_authenticated/factory-doc/$id': typeof AuthenticatedFactoryDocIdRoute
+  '/_authenticated/filing-quote/$id': typeof AuthenticatedFilingQuoteIdRoute
   '/_authenticated/filing-receipt/$id': typeof AuthenticatedFilingReceiptIdRoute
   '/_authenticated/statement/$id': typeof AuthenticatedStatementIdRoute
   '/_authenticated/_shell/customers/$id': typeof AuthenticatedShellCustomersIdRoute
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/taxes'
     | '/team'
     | '/factory-doc/$id'
+    | '/filing-quote/$id'
     | '/filing-receipt/$id'
     | '/statement/$id'
     | '/customers/$id'
@@ -241,6 +252,7 @@ export interface FileRouteTypes {
     | '/taxes'
     | '/team'
     | '/factory-doc/$id'
+    | '/filing-quote/$id'
     | '/filing-receipt/$id'
     | '/statement/$id'
     | '/customers/$id'
@@ -263,6 +275,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/taxes'
     | '/_authenticated/_shell/team'
     | '/_authenticated/factory-doc/$id'
+    | '/_authenticated/filing-quote/$id'
     | '/_authenticated/filing-receipt/$id'
     | '/_authenticated/statement/$id'
     | '/_authenticated/_shell/customers/$id'
@@ -377,6 +390,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFactoryDocIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/filing-quote/$id': {
+      id: '/_authenticated/filing-quote/$id'
+      path: '/filing-quote/$id'
+      fullPath: '/filing-quote/$id'
+      preLoaderRoute: typeof AuthenticatedFilingQuoteIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/filing-receipt/$id': {
       id: '/_authenticated/filing-receipt/$id'
       path: '/filing-receipt/$id'
@@ -461,6 +481,7 @@ const AuthenticatedShellRouteWithChildren =
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedShellRoute: typeof AuthenticatedShellRouteWithChildren
   AuthenticatedFactoryDocIdRoute: typeof AuthenticatedFactoryDocIdRoute
+  AuthenticatedFilingQuoteIdRoute: typeof AuthenticatedFilingQuoteIdRoute
   AuthenticatedFilingReceiptIdRoute: typeof AuthenticatedFilingReceiptIdRoute
   AuthenticatedStatementIdRoute: typeof AuthenticatedStatementIdRoute
 }
@@ -468,6 +489,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShellRoute: AuthenticatedShellRouteWithChildren,
   AuthenticatedFactoryDocIdRoute: AuthenticatedFactoryDocIdRoute,
+  AuthenticatedFilingQuoteIdRoute: AuthenticatedFilingQuoteIdRoute,
   AuthenticatedFilingReceiptIdRoute: AuthenticatedFilingReceiptIdRoute,
   AuthenticatedStatementIdRoute: AuthenticatedStatementIdRoute,
 }
