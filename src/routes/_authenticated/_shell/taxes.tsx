@@ -13,7 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { invoicesQuery, meQuery, taxFilingsQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { comparePeriod, formatDate, todayISO, periodMonthLabel, rocYear, splitTaxLines, TAX_GROUPS, taxLines, taxSummary, type FeeItems, type SortDirection } from "@/lib/receivables";
+import { comparePeriod, periodMonths, formatDate, todayISO, periodMonthLabel, rocYear, splitTaxLines, TAX_GROUPS, taxLines, taxSummary, type FeeItems, type SortDirection } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_shell/taxes")({
@@ -36,6 +36,9 @@ export const Route = createFileRoute("/_authenticated/_shell/taxes")({
 });
 
 const codeCollator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: "base" });
+/** 1月收的11-12月屬前一年度。 */
+const lineYear = (inv: { period_year: number | null; period_month: number | null }, mo: number) =>
+  (inv.period_year ?? 0) - (inv.period_month === 1 && mo >= 11 ? 1 : 0);
 const periodKey = (y: number | null, m: number | null, p: string | null) => `${y ?? ""}|${m ?? 0}|${p ?? ""}`;
 
 function TaxesPage() {
@@ -55,6 +58,11 @@ function TaxesPage() {
       const key = periodKey(inv.period_year, inv.period_month, inv.period_label);
       const label = `${inv.period_year ? `${rocYear(inv.period_year)}年 ` : ""}${periodMonthLabel(inv.period_month)}${inv.period_label ? ` · 期別 ${inv.period_label}` : ""}`;
       m.set(key, { key, label, sort: (inv.period_year ?? 0) * 100 + (inv.period_month ?? 0) });
+      const ms = periodMonths(inv.period_label);
+      if (ms) for (const mo of ms) {
+        const y = lineYear(inv, mo);
+        m.set(`m|${y}|${mo}`, { key: `m|${y}|${mo}`, label: `單月 ${y ? `${rocYear(y)}年 ` : ""}${mo}月`, sort: y * 100 + mo - 0.5 });
+      }
     }
     return [...m.values()].sort((a, b) => b.sort - a.sort);
   }, [invoices]);
@@ -65,9 +73,13 @@ function TaxesPage() {
   const lines = useMemo(
     () =>
       invoices
-        .filter((inv) => period === "all" || periodKey(inv.period_year, inv.period_month, inv.period_label) === period)
+        .filter((inv) => period === "all" || period.startsWith("m|") || periodKey(inv.period_year, inv.period_month, inv.period_label) === period)
         .flatMap((inv) =>
-          splitTaxLines(inv.items as FeeItems).map((l) => {
+          splitTaxLines(inv.items as FeeItems, inv.period_label).filter((l) => {
+            if (!period.startsWith("m|")) return true;
+            const [, y, mo] = period.split("|");
+            return !!l.months?.some((x) => x === Number(mo) && lineYear(inv, x) === Number(y));
+          }).map((l) => {
             // 拆月前的舊勾選紀錄（只記項目名稱）仍適用於兩個月。
             const f = filingMap.get(`${inv.id}|${l.key}`) ?? (l.half ? filingMap.get(`${inv.id}|${l.item}`) : undefined);
             return { ...l, inv, paid: !!f?.paid, paid_date: f?.paid_date ?? null };
@@ -123,7 +135,7 @@ function TaxesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；租金扣繳與租金二代分第1、第2個月各自勾選。" />
+      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；租金扣繳、租金二代與公司二代分月各自勾選；期別可選單月。" />
 
       <div className="flex flex-wrap gap-3">
         <div className="relative w-64">
@@ -235,7 +247,7 @@ function TaxesPage() {
                                     <TableCell className="font-medium">
                     <Link to="/invoices/$id" params={{ id: l.inv.id }} className="hover:text-primary hover:underline">{l.inv.customer?.customer_code && <span className="mr-2 font-mono text-sm text-muted-foreground">{l.inv.customer.customer_code}</span>}{l.inv.customer?.name ?? "—"}</Link>
                   </TableCell>
-                  <TableCell className="text-sm">{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</TableCell>
+                  <TableCell className="text-sm">{l.half && l.months ? `${l.inv.period_year ? `${rocYear(lineYear(l.inv, l.months[0]!))}年 ` : ""}${l.months[0]}月` : <>{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</>}</TableCell>
                   <TableCell className="text-sm">{l.group}</TableCell>
                   <TableCell className="text-sm">{feeLabel(l.item)}{l.half ? <span className="ml-1 text-xs text-muted-foreground">（第{l.half}個月）</span> : null}</TableCell>
                   <TableCell className="text-right"><Money value={l.amount} /></TableCell>

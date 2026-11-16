@@ -313,19 +313,30 @@ export function taxLines(items: FeeItems | null | undefined): TaxLine[] {
   );
 }
 
-/** 只有租金扣繳與租金二代每月繳納、一次請兩個月：稅額明細拆成第1個月／第2個月各自勾選。 */
-export const MONTHLY_TAX_ITEMS: readonly string[] = ["租金扣繳", "租金2代"];
+/** 每月繳納、一次請兩個月的項目：稅額明細拆成第1個月／第2個月各自勾選。 */
+export const MONTHLY_TAX_ITEMS: readonly string[] = ["租金扣繳", "租金2代", "2代A-B"];
 
-export type SplitTaxLine = TaxLine & { key: string; half: 0 | 1 | 2 };
+/** 期別文字解析為月份：「11-12」→[11,12]，「11」或「11月」→[11]，無法判斷→null。 */
+export function periodMonths(label: string | null | undefined): number[] | null {
+  const t = (label ?? "").replace(/月/g, "").trim();
+  const r = t.match(/^(\d{1,2})\s*[-~～－]\s*(\d{1,2})$/);
+  if (r) return [Number(r[1]), Number(r[2])];
+  const one = t.match(/^(\d{1,2})$/);
+  return one ? [Number(one[1])] : null;
+}
 
-/** 拆分後的稅額列：key 為勾選紀錄鍵（拆分列為「項目#1」「項目#2」），奇數金額多的 1 元放第1個月。 */
-export function splitTaxLines(items: FeeItems | null | undefined): SplitTaxLine[] {
+export type SplitTaxLine = TaxLine & { key: string; half: 0 | 1 | 2; months: number[] | null };
+
+/** 拆分後的稅額列：期別為單月時不拆；key 為勾選紀錄鍵（拆分列為「項目#1」「項目#2」），奇數金額多的 1 元放第1個月。 */
+export function splitTaxLines(items: FeeItems | null | undefined, periodLabel?: string | null): SplitTaxLine[] {
+  const months = periodMonths(periodLabel);
+  const single = months?.length === 1;
   return taxLines(items).flatMap((l): SplitTaxLine[] => {
-    if (!MONTHLY_TAX_ITEMS.includes(l.item)) return [{ ...l, key: l.item, half: 0 }];
+    if (single || !MONTHLY_TAX_ITEMS.includes(l.item)) return [{ ...l, key: l.item, half: 0, months }];
     const first = Math.ceil(l.amount / 2);
     return [
-      { ...l, amount: first, key: `${l.item}#1`, half: 1 },
-      { ...l, amount: l.amount - first, key: `${l.item}#2`, half: 2 },
+      { ...l, amount: first, key: `${l.item}#1`, half: 1, months: months ? [months[0]!] : null },
+      { ...l, amount: l.amount - first, key: `${l.item}#2`, half: 2, months: months ? [months[1]!] : null },
     ];
   });
 }

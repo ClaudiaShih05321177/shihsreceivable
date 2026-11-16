@@ -26,9 +26,17 @@ describe("tax lines", () => {
 });
 
 import { splitTaxLines } from "./receivables";
-describe("只有租金扣繳與租金二代拆兩個月勾選", () => {
+describe("租金扣繳、租金二代、公司二代拆兩個月勾選", () => {
   it("租金扣繳、租金2代拆兩列，其他扣繳與二代不拆", () => {
     const l = splitTaxLines({ 營業稅: 500, 薪資扣繳: 4000, 租金扣繳: 4001, 租金2代: 100, 個人2代: 100 });
     expect(l.map((x) => [x.key, x.amount])).toEqual([["營業稅", 500], ["租金扣繳#1", 2001], ["租金扣繳#2", 2000], ["薪資扣繳", 4000], ["租金2代#1", 50], ["租金2代#2", 50], ["個人2代", 100]]);
+  });
+  it("公司二代 AD41 844 於 11-12 期拆成 11月 422、12月 422", () => {
+    const l = splitTaxLines({ "2代A-B": 844 }, "11-12");
+    expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["2代A-B#1", 422, [11]], ["2代A-B#2", 422, [12]]]);
+  });
+  it("期別只填單月時不拆，全額歸該月", () => {
+    const l = splitTaxLines({ "2代A-B": 844, 租金扣繳: 500 }, "11");
+    expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["租金扣繳", 500, [11]], ["2代A-B", 844, [11]]]);
   });
 });
