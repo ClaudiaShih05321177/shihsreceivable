@@ -6,7 +6,7 @@ import { ArrowLeft, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { INVOICE_STAGES, invoiceSummary, KINFENG, quoteSummary, type InvoiceStage } from "@/lib/factory-docs";
 import { factoryRegistrationsQuery } from "@/lib/queries";
-import { formatDate, formatTWD } from "@/lib/receivables";
+import { formatDate, formatTWD, todayISO } from "@/lib/receivables";
 
 type DocSearch = { type: "quote" | "invoice"; stage: InvoiceStage };
 
@@ -73,7 +73,7 @@ function FactoryDocPage() {
           <p className="text-sm">統一編號：{KINFENG.taxId}　地址：{KINFENG.address}</p>
           <p className="text-sm">電話：{KINFENG.phone}　傳真：{KINFENG.fax}</p>
         </header>
-        <p className="mt-2 text-right">日期：<input className="w-28 bg-transparent text-right outline-none" placeholder="　　年　　月　　日" /></p>
+        <p className="mt-2 text-right">日期：<input className="w-28 bg-transparent text-right outline-none" aria-label="單據日期" defaultValue={formatDate(todayISO())} suppressHydrationWarning /></p>
         <table className="mt-2 w-full table-fixed border-collapse text-sm">
           <colgroup><col style={{ width: "14%" }} /><col style={{ width: "48%" }} /><col style={{ width: "16%" }} /><col style={{ width: "22%" }} /></colgroup>
           <tbody>

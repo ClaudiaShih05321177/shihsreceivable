@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { OFFICE, priorBalance } from "@/lib/billing";
 import { customersQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { formatDate, formatTWD, itemEntries, rocYear, vatDue, type FeeItems } from "@/lib/receivables";
+import { formatDate, formatTWD, itemEntries, rocYear, vatDue, type FeeItems, todayISO } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/statement/$id")({
   head: () => ({
@@ -64,7 +64,7 @@ function StatementPage() {
             <p>TO：{customer?.name ?? inv.customer?.name ?? "—"}</p>
             <p>FROM：{me.displayName}</p>
           </div>
-          <p>DATE：<input className="w-28 bg-transparent outline-none" placeholder="　　年　　月　　日" /></p>
+          <p>DATE：<input className="w-28 bg-transparent outline-none" aria-label="單據日期" defaultValue={formatDate(todayISO())} suppressHydrationWarning /></p>
         </div>
         <p className="mt-6 font-medium">◎ 本期{period ? `（${period}）` : ""}請款明細如下：</p>
         <table className="mt-3 w-full">

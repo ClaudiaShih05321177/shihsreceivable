@@ -4,6 +4,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { todayISO } from "@/lib/receivables";
 import { RocDateInput } from "@/components/ar/roc-date-input";
 import { OFFICE } from "@/lib/billing";
 import { filingReceiptAmount } from "@/lib/filing-receipt";
@@ -43,7 +44,7 @@ function FilingQuote() {
   const { id } = Route.useParams();
   const { data: filings } = useSuspenseQuery(filingsQuery);
   const { data: fees } = useSuspenseQuery(filingServiceFeesQuery);
-  const [date, setDate] = useState("");
+  const [date, setDate] = useState(() => todayISO());
   const filing = filings.find((f) => f.id === id);
   if (!filing) return null;
   const amount = filingReceiptAmount({ service_fee: fees[id] ?? 0 });
