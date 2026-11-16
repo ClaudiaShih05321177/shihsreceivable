@@ -93,3 +93,15 @@ export function projectArStatus(r: ProjectArLike): "未請款" | "訂金待收" 
   if (n(r.deposit_received_amount) < depositDue(r.deposit_invoice_amount, r.invoice_type)) return "訂金待收";
   return "尾款待收";
 }
+
+const DATE_STAGE: [string, FactoryStage][] = [
+  ["approved_date", "核准結案"], ["inspection_date", "現場會勘"], ["bureau_filed_date", "送件工商科"],
+  ["env_approved_date", "環保核准"], ["env_filed_date", "送件環保"],
+];
+/** 依已填日期推進階段：取最後填入日期對應的階段，只往前推不倒退。 */
+export function stageFromDates(current: string, dates: Record<string, unknown>): string {
+  const hit = DATE_STAGE.find(([k]) => dates[k]);
+  if (!hit) return current;
+  const ci = FACTORY_STAGES.indexOf(current as FactoryStage);
+  return FACTORY_STAGES.indexOf(hit[1]) > ci ? hit[1] : current;
+}

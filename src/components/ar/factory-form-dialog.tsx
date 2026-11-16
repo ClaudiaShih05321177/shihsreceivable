@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupCompany } from "@/lib/company-lookup.functions";
-import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, depositTaxSplit, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv } from "@/lib/factory";
+import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, depositTaxSplit, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv, stageFromDates } from "@/lib/factory";
 import { meQuery, type FactoryRegistration } from "@/lib/queries";
 import type { Database } from "@/integrations/supabase/types";
 import { canManageFactoryProgress } from "@/lib/permissions";
@@ -44,6 +44,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   const extraRows = (): ExtraFee[] => extraFees(extras);
   const set = (k: Key, v: string) => setForm((f) => {
     const next = { ...f, [k]: v };
+    if (next.stage && (DATES as readonly string[]).includes(k)) next.stage = stageFromDates(next.stage, next);
     if ((k === "company_name" || k === "branch_name") && next.company_name.trim()) next.factory_name = `${next.company_name.trim()}${next.branch_name.trim()}`;
     if (k === "quote_amount" || k === "deposit_invoice_amount" || k === "invoice_type") {
       if (!issuesInvoice(next.invoice_type)) { next.deposit_invoice_amount = ""; next.final_invoice_amount = ""; }

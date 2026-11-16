@@ -73,3 +73,10 @@ describe("訂金請款單", () => {
   });
   it("尾款扣含稅簽約金", () => expect(invoiceSummary(r, "尾款").total).toBe(31500));
 });
+
+import { stageFromDates } from "./factory";
+describe("stageFromDates", () => {
+  it("環保核准日期填入後進到環保核准", () => expect(stageFromDates("送件環保", { env_approved_date: "2026-11-01" })).toBe("環保核准"));
+  it("不倒退", () => expect(stageFromDates("送件工商科", { env_approved_date: "2026-11-01" })).toBe("送件工商科"));
+  it("核准結案日期優先", () => expect(stageFromDates("送件環保", { env_filed_date: "x", approved_date: "y" })).toBe("核准結案"));
+});

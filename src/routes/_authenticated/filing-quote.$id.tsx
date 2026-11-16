@@ -70,7 +70,7 @@ function FilingQuote() {
       </table>
       <div className="mt-10 grid grid-cols-2 gap-6 text-sm break-inside-avoid">
         <div className="h-32 border border-foreground p-2">客戶簽章確認</div>
-        <div className="flex h-32 flex-col border border-foreground p-2"><span>事務所簽章</span><img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-1 h-24 w-auto object-contain" /></div>
+        <div className="flex h-32 flex-col border border-foreground p-2"><span>事務所簽章</span><img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" /></div>
       </div>
     </article>
   </main>;
