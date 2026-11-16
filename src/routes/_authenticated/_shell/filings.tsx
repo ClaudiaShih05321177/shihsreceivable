@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { CheckCircle2, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
+import { CheckCircle2, Pencil, Plus, Printer, Receipt, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -189,6 +189,7 @@ function FilingsPage() {
                 </TableCell>}
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">
+                    {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-receipt/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 收據`}><Printer className="size-3.5" />收據</Link></Button>}
                     {canClose && f.stage !== "結案" && (
                       <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`確定將「${filingName(f)}」結案？`)) close.mutate(f); }} disabled={close.isPending} aria-label={`${filingName(f)} 結案`}>
                         <CheckCircle2 className="size-3.5" /> 結案
