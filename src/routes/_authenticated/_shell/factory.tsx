@@ -106,7 +106,7 @@ function FactoryPage() {
                       <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r, skip: true })}><CheckCheck className="size-3.5" /> 免會勘結案</Button>
                     )}
                     {me.isAdmin && <FactoryFormDialog record={r} trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${r.factory_name}`}><Pencil className="size-3.5" /></Button>} />}
-                    {!me.isAdmin && canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="icon" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /></Button>} />}
+                    {canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="sm" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /> 變更進度</Button>} />}
                     {me.isAdmin && <Button variant="ghost" size="icon" aria-label={`刪除 ${r.factory_name}`} onClick={() => { if (window.confirm(`確定刪除「${r.factory_name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>}
                   </div>
                 </TableCell>

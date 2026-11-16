@@ -38,7 +38,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: invoices } = useQuery(invoicesQuery);
   const [company, setCompany] = useCompany();
-  const items = company === FACTORY_COMPANY && me.isAdmin ? factoryNav : !me.isAdmin && canManageFactoryProgress(me) ? [...nav, factoryNav[0]] : nav;
+  const items = company === FACTORY_COMPANY && me.isAdmin ? factoryNav : canManageFactoryProgress(me) ? [...nav, factoryNav[0]] : nav;
   const overdue = (invoices ?? []).filter((i) => invoiceStatus(i) === "overdue").length;
 
   async function signOut() {
