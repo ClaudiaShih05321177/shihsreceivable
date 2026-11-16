@@ -11,9 +11,9 @@ import { invoiceStatus } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 import { useCompany } from "@/hooks/use-company";
 import { COMPANIES, FACTORY_COMPANY } from "@/lib/factory";
-import { canSeePage } from "@/lib/permissions";
+import { canManageFactoryProgress, canSeePage } from "@/lib/permissions";
 
-type Me = { displayName: string; email: string; isAdmin: boolean };
+type Me = { displayName: string; email: string; isAdmin: boolean; staffCode?: string | null };
 
 const nav = [
   { to: "/dashboard", label: "總覽", icon: BarChart3 },
@@ -38,7 +38,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: invoices } = useQuery(invoicesQuery);
   const [company, setCompany] = useCompany();
-  const items = company === FACTORY_COMPANY && me.isAdmin ? factoryNav : nav;
+  const items = company === FACTORY_COMPANY && me.isAdmin ? factoryNav : !me.isAdmin && canManageFactoryProgress(me) ? [...nav, factoryNav[0]] : nav;
   const overdue = (invoices ?? []).filter((i) => invoiceStatus(i) === "overdue").length;
 
   async function signOut() {
@@ -72,7 +72,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           </select>
         </div>}
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-1 md:flex-col md:pb-0">
-          {(items as readonly { to: string; label: string; icon: typeof Factory }[]).filter((item) => canSeePage(me.isAdmin, item.to)).map((item) => {
+          {(items as readonly { to: string; label: string; icon: typeof Factory }[]).filter((item) => canSeePage(me.isAdmin, item.to, me.staffCode)).map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
               <Link

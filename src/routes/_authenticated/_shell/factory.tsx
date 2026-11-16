@@ -5,11 +5,12 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { FactoryFormDialog } from "@/components/ar/factory-form-dialog";
+import { FactoryProgressDialog } from "@/components/ar/factory-progress-dialog";
+import { canManageFactoryProgress } from "@/lib/permissions";
 import { PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import { FACTORY_STAGES, needsEnv, nextFactoryStage } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery, type FactoryRegistration } from "@/lib/queries";
 import { formatDate } from "@/lib/receivables";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/_shell/factory")({
 function FactoryPage() {
   const { data: rows } = useSuspenseQuery(factoryRegistrationsQuery);
   const { data: me } = useSuspenseQuery(meQuery);
+  const canProgress = canManageFactoryProgress(me);
   const qc = useQueryClient();
   const [stage, setStage] = useState("open");
   const shown = rows.filter((r) => (stage === "all" ? true : stage === "open" ? r.stage !== "核准結案" : r.stage === stage));
@@ -41,8 +43,7 @@ function FactoryPage() {
   const advance = useMutation({
     mutationFn: async ({ r, skip }: { r: FactoryRegistration; skip?: boolean }) => {
       const next = nextFactoryStage(r.stage, skip);
-      const patch: Record<string, string> = { stage: next };
-      const { error } = await supabase.from("factory_registrations").update(patch as Database["public"]["Tables"]["factory_registrations"]["Update"]).eq("id", r.id);
+      const { error } = await supabase.rpc("update_factory_progress", { _id: r.id, _stage: next, _status_note: r.status_note ?? "", _env_filed_date: r.env_filed_date ?? "", _env_approved_date: r.env_approved_date ?? "", _bureau_filed_date: r.bureau_filed_date ?? "", _inspection_date: r.inspection_date ?? "", _approved_date: r.approved_date ?? "" });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["factory_registrations"] }),
@@ -66,7 +67,7 @@ function FactoryPage() {
 
   return (
     <>
-      <PageHeader eyebrow="勤豐工商顧問有限公司" title="工廠登記進度表" description="環保與現場會勘為選辦；免跑環保或客戶自辦環保的案件從送件工商科開始。" actions={<FactoryFormDialog trigger={<Button><Plus /> 新增案件</Button>} />} />
+      <PageHeader eyebrow="勤豐工商顧問有限公司" title="工廠登記進度表" description="環保與現場會勘為選辦；免跑環保或客戶自辦環保的案件從送件工商科開始。" actions={me.isAdmin ? <FactoryFormDialog trigger={<Button><Plus /> 新增案件</Button>} /> : undefined} />
       <div className="mb-5 flex flex-wrap gap-2">
         {btn("open", "進行中", rows.filter((r) => r.stage !== "核准結案").length)}
         {FACTORY_STAGES.map((s) => btn(s, s, rows.filter((r) => r.stage === s).length))}
@@ -96,15 +97,16 @@ function FactoryPage() {
                 <TableCell className="text-sm whitespace-nowrap">{d(r.approved_date)}</TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-1">
-                    <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "quote", stage: "尾款" }}><FileText className="size-3.5" /> 報價單</Link></Button>
-                    <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: "尾款" }}><Receipt className="size-3.5" /> 請款單</Link></Button>
-                    {me.isAdmin && r.stage !== "核准結案" && (
+                    {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "quote", stage: "尾款" }}><FileText className="size-3.5" /> 報價單</Link></Button>}
+                    {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: "尾款" }}><Receipt className="size-3.5" /> 請款單</Link></Button>}
+                    {canProgress && r.stage !== "核准結案" && (
                       <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r })} aria-label={`${r.factory_name} 推進到${nextFactoryStage(r.stage)}`}><ArrowRight className="size-3.5" /> {nextFactoryStage(r.stage)}</Button>
                     )}
-                    {me.isAdmin && r.stage === "送件工商科" && (
+                    {canProgress && r.stage === "送件工商科" && (
                       <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r, skip: true })}><CheckCheck className="size-3.5" /> 免會勘結案</Button>
                     )}
                     {me.isAdmin && <FactoryFormDialog record={r} trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${r.factory_name}`}><Pencil className="size-3.5" /></Button>} />}
+                    {!me.isAdmin && canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="icon" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /></Button>} />}
                     {me.isAdmin && <Button variant="ghost" size="icon" aria-label={`刪除 ${r.factory_name}`} onClick={() => { if (window.confirm(`確定刪除「${r.factory_name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>}
                   </div>
                 </TableCell>

@@ -12,6 +12,9 @@ export function canEditInvoice(me: { isAdmin: boolean }, invoice: { payments: un
 }
 /** 一般使用者只能看應收帳款、工商進度、客戶資料（含明細頁）。 */
 export const MEMBER_PAGES = ["/invoices", "/filings", "/customers"] as const;
-export function canSeePage(isAdmin: boolean, pathname: string) {
-  return isAdmin || MEMBER_PAGES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+export function canManageFactoryProgress(me: { isAdmin: boolean; staffCode?: string | null }) {
+  return me.isAdmin || me.staffCode?.trim().toUpperCase() === "MN";
+}
+export function canSeePage(isAdmin: boolean, pathname: string, staffCode?: string | null) {
+  return isAdmin || (pathname === "/factory" && canManageFactoryProgress({ isAdmin, staffCode: staffCode ?? null })) || MEMBER_PAGES.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }

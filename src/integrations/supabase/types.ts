@@ -564,6 +564,19 @@ export type Database = {
         Args: { _code: string; _user_id: string }
         Returns: undefined
       }
+      update_factory_progress: {
+        Args: {
+          _approved_date: string
+          _bureau_filed_date: string
+          _env_approved_date: string
+          _env_filed_date: string
+          _id: string
+          _inspection_date: string
+          _stage: string
+          _status_note: string
+        }
+        Returns: undefined
+      }
       visible_bonus_rate: { Args: { _customer_id: string }; Returns: number }
     }
     Enums: {

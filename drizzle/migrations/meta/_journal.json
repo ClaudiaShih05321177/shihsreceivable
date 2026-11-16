@@ -260,6 +260,20 @@
       "when": 1794802492237,
       "tag": "0036_guard_cancelled_customer_credit_balance",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1794805859248,
+      "tag": "0037_mn_factory_progress",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794805932469,
+      "tag": "0038_factory_progress_blank_dates",
+      "breakpoints": true
     }
   ]
 }

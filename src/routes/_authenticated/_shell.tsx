@@ -16,7 +16,7 @@ function ShellLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   if (me.mustChangePassword) return <ForcePasswordChange />;
   if (!me.isMember) return <PendingApproval email={me.email} />;
-  if (!canSeePage(me.isAdmin, pathname)) return <Navigate to="/invoices" replace />;
+  if (!canSeePage(me.isAdmin, pathname, me.staffCode)) return <Navigate to="/invoices" replace />;
   return (
     <AppShell me={me}>
       <Outlet />
