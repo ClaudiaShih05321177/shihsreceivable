@@ -56,16 +56,20 @@ export function contractTotal(quote: Num, type: string | null | undefined): numb
   return issuesInvoice(type) ? Math.round(n(quote) * (1 + TAX_RATE)) : n(quote);
 }
 
-/** 訂金發票金額（含稅）拆成未稅金額＋5% 營業稅。 */
-export function depositTaxSplit(depositInvoice: Num): { base: number; tax: number } {
-  const dep = n(depositInvoice);
-  const base = Math.round(dep / (1 + TAX_RATE));
-  return { base, tax: dep - base };
+/** 訂金發票金額為未稅，外加 5% 營業稅。 */
+export function depositTaxSplit(depositInvoice: Num): { base: number; tax: number; total: number } {
+  const base = n(depositInvoice);
+  const tax = Math.round(base * TAX_RATE);
+  return { base, tax, total: base + tax };
 }
+
+/** 訂金應收：開發票為未稅訂金＋5%；不開發票為原額。 */
+export const depositDue = (depositInvoice: Num, type: string | null | undefined) =>
+  issuesInvoice(type) ? depositTaxSplit(depositInvoice).total : n(depositInvoice);
 
 /** 開發票時尾款發票自動補齊＝含稅總額−訂金發票；不開發票為 0。 */
 export function autoFinalInvoice(quote: Num, depositInvoice: Num, type: string | null | undefined): number {
-  return issuesInvoice(type) ? Math.max(0, contractTotal(quote, type) - n(depositInvoice)) : 0;
+  return issuesInvoice(type) ? Math.max(0, contractTotal(quote, type) - depositDue(depositInvoice, type)) : 0;
 }
 
 /** 尾款應收＝尾款發票金額＋規費＋其他費用＋自訂費用項目。 */
@@ -78,14 +82,14 @@ export function finalDue(r: ProjectArLike): number {
 /** 未收餘額＝（訂金發票−訂金收款）＋（尾款應收−尾款收款）。 */
 export function projectOutstanding(r: ProjectArLike): number {
   if (!issuesInvoice(r.invoice_type)) return finalDue(r) - n(r.deposit_received_amount) - n(r.final_received_amount);
-  return n(r.deposit_invoice_amount) - n(r.deposit_received_amount) + finalDue(r) - n(r.final_received_amount);
+  return depositDue(r.deposit_invoice_amount, r.invoice_type) - n(r.deposit_received_amount) + finalDue(r) - n(r.final_received_amount);
 }
 
 export function projectArStatus(r: ProjectArLike): "未請款" | "訂金待收" | "尾款待收" | "已收清" {
-  const billed = n(r.deposit_invoice_amount) + finalDue(r);
+  const billed = depositDue(r.deposit_invoice_amount, r.invoice_type) + finalDue(r);
   if (billed === 0) return "未請款";
   if (projectOutstanding(r) <= 0) return "已收清";
   if (!issuesInvoice(r.invoice_type)) return n(r.deposit_received_amount) > 0 ? "尾款待收" : "訂金待收";
-  if (n(r.deposit_received_amount) < n(r.deposit_invoice_amount)) return "訂金待收";
+  if (n(r.deposit_received_amount) < depositDue(r.deposit_invoice_amount, r.invoice_type)) return "訂金待收";
   return "尾款待收";
 }

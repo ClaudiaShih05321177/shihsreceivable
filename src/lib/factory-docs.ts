@@ -1,5 +1,5 @@
 /** 勤豐工商顧問 報價單／請款單內容（依使用者提供之 Excel 範本）。 */
-import { contractTotal, depositTaxSplit, extraFees, issuesInvoice, TAX_RATE, type ProjectArLike } from "./factory";
+import { contractTotal, depositDue, depositTaxSplit, extraFees, issuesInvoice, TAX_RATE, type ProjectArLike } from "./factory";
 
 export const KINFENG = {
   name: "勤豐工商顧問有限公司",
@@ -46,16 +46,16 @@ export function quoteSummary(r: ProjectArLike): DocSummary {
 export function invoiceSummary(r: ProjectArLike, stage: InvoiceStage): DocSummary {
   const inv = issuesInvoice(r.invoice_type);
   if (stage === "訂金") {
-    const dep = inv ? n(r.deposit_invoice_amount) : n(r.deposit_received_amount);
-    const base = inv ? depositTaxSplit(dep).base : dep;
-    const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: dep - base }];
-    return { consulting: base, subtotal: base, lines, total: dep };
+    const base = inv ? n(r.deposit_invoice_amount) : n(r.deposit_received_amount);
+    const tax = inv ? depositTaxSplit(base).tax : 0;
+    const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: tax }];
+    return { consulting: base, subtotal: base, lines, total: base + tax };
   }
   const q = n(r.quote_amount);
   const tax = inv ? contractTotal(q, r.invoice_type) - q : 0;
   const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: tax }];
   if (stage === "尾款") {
-    const deposit = inv ? n(r.deposit_invoice_amount) : n(r.deposit_received_amount);
+    const deposit = inv ? depositDue(r.deposit_invoice_amount, r.invoice_type) : n(r.deposit_received_amount);
     lines.push({ label: "簽約金", amount: -deposit });
   }
   lines.push({ label: "規費(收據)", amount: n(r.government_fee) });

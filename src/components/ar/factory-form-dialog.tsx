@@ -187,11 +187,11 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             </div>
             {money("quote_amount", inv ? "報價金額（未稅）" : "報價金額")}
             {inv && <div className="grid gap-2"><Label>含稅總額（外加 5%）</Label><p className="tabular py-2 text-sm font-semibold">{contractTotal(form.quote_amount, form.invoice_type).toLocaleString("zh-TW")}</p></div>}
-            {inv && money("deposit_invoice_amount", "訂金發票金額")}
+            {inv && money("deposit_invoice_amount", "訂金發票金額（未稅）")}
             {inv && Number(form.deposit_invoice_amount) > 0 && (
               <div className="grid gap-2">
-                <Label>訂金稅金（自動計算）</Label>
-                <p className="tabular py-2 text-sm">未稅 {depositTaxSplit(form.deposit_invoice_amount).base.toLocaleString("zh-TW")} ＋ 稅 {depositTaxSplit(form.deposit_invoice_amount).tax.toLocaleString("zh-TW")}</p>
+                <Label>訂金含稅（自動外加 5%）</Label>
+                <p className="tabular py-2 text-sm">稅 {depositTaxSplit(form.deposit_invoice_amount).tax.toLocaleString("zh-TW")} ＝ 含稅 {depositTaxSplit(form.deposit_invoice_amount).total.toLocaleString("zh-TW")}</p>
               </div>
             )}
             {money("deposit_received_amount", "訂金收款金額")}

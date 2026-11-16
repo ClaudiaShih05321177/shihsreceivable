@@ -2,15 +2,11 @@ import { describe, expect, it } from "vitest";
 import { depositTaxSplit, factoryInitialStage, finalDue, nextFactoryStage, projectArStatus, projectOutstanding } from "./factory";
 
 describe("訂金稅金拆分", () => {
-  it("訂金發票 34,125 拆成未稅 32,500＋稅 1,625", () => {
-    expect(depositTaxSplit(34125)).toEqual({ base: 32500, tax: 1625 });
-  });
-  it("訂金 30,000 拆成未稅 28,571＋稅 1,429", () => {
-    expect(depositTaxSplit(30000)).toEqual({ base: 28571, tax: 1429 });
+  it("訂金未稅 30,000 外加稅 1,500＝含稅 31,500", () => {
+    expect(depositTaxSplit(30000)).toEqual({ base: 30000, tax: 1500, total: 31500 });
   });
   it("空白或 0 回傳 0", () => {
-    expect(depositTaxSplit(null)).toEqual({ base: 0, tax: 0 });
-    expect(depositTaxSplit("")).toEqual({ base: 0, tax: 0 });
+    expect(depositTaxSplit(null)).toEqual({ base: 0, tax: 0, total: 0 });
   });
 });
 
@@ -33,11 +29,12 @@ describe("專案應收帳款", () => {
   it("尾款應收＝尾款發票＋規費＋其他費用", () => {
     expect(finalDue(ar)).toBe(75000);
   });
-  it("未收餘額與狀態", () => {
-    expect(projectOutstanding(ar)).toBe(105000);
+  it("未收餘額與狀態（訂金含稅 31,500）", () => {
+    expect(projectOutstanding(ar)).toBe(106500);
     expect(projectArStatus(ar)).toBe("訂金待收");
-    expect(projectArStatus({ ...ar, deposit_received_amount: 30000 })).toBe("尾款待收");
-    expect(projectArStatus({ ...ar, deposit_received_amount: 30000, final_received_amount: 75000 })).toBe("已收清");
+    expect(projectArStatus({ ...ar, deposit_received_amount: 30000 })).toBe("訂金待收");
+    expect(projectArStatus({ ...ar, deposit_received_amount: 31500 })).toBe("尾款待收");
+    expect(projectArStatus({ ...ar, deposit_received_amount: 31500, final_received_amount: 75000 })).toBe("已收清");
   });
 });
 
@@ -45,7 +42,7 @@ import { autoFinalInvoice as afi, contractTotal as ct, finalDue as fd, projectOu
 describe("發票類型", () => {
   const base = { quote_amount: 100000, deposit_invoice_amount: 0, deposit_received_amount: 0, final_invoice_amount: 0, government_fee: 3000, other_fee: 2000, final_received_amount: 0 };
   it("開發票報價外加5%", () => expect(ct(100000, "開發票")).toBe(105000));
-  it("尾款發票自動補齊", () => expect(afi(100000, 30000, "開發票")).toBe(75000));
+  it("尾款發票＝含稅總額−含稅訂金", () => expect(afi(100000, 30000, "開發票")).toBe(73500));
   it("不開發票全額列入尾款應收", () => {
     const r = { ...base, invoice_type: "不開發票", deposit_received_amount: 40000 };
     expect(fd(r)).toBe(105000);
@@ -64,4 +61,15 @@ describe("自訂費用項目", () => {
     expect(s.lines.map((l) => l.label)).toEqual(["營業稅(5%)", "規費(收據)", "竣工圖燒錄費", "代刻印章"]);
     expect(s.total).toBe(110000);
   });
+});
+
+import { invoiceSummary } from "./factory-docs";
+describe("訂金請款單", () => {
+  const r = { quote_amount: 60000, deposit_invoice_amount: 30000, deposit_received_amount: 0, final_invoice_amount: 31500, government_fee: 0, other_fee: 0, final_received_amount: 0, invoice_type: "開發票" };
+  it("訂金未稅 30,000＋稅 1,500＝31,500", () => {
+    const s = invoiceSummary(r, "訂金");
+    expect(s.consulting).toBe(30000);
+    expect(s.total).toBe(31500);
+  });
+  it("尾款扣含稅簽約金", () => expect(invoiceSummary(r, "尾款").total).toBe(31500));
 });
