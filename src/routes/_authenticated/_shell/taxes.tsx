@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, Money } from "@/components/ar/page-header";
@@ -89,6 +89,9 @@ function TaxesPage() {
         ),
     [invoices, period, filingMap],
   );
+  // 剛勾選的項目暫留畫面以顯示日期，切換篩選後才隱藏。
+  const [justPaid, setJustPaid] = useState<Set<string>>(new Set());
+  useEffect(() => setJustPaid(new Set()), [period, staff, status, group, payDate]);
   const needle = q.trim().toLowerCase();
   const staffOf = (l: (typeof lines)[number]) => l.inv.customer?.customer_code?.trim().slice(0, 2).toUpperCase() || "未指定";
   const matched = lines.filter(
@@ -98,7 +101,7 @@ function TaxesPage() {
   );
   // 選了繳費日期時只看該日已繳，不受繳費狀態影響。
   const statusOk = (l: (typeof lines)[number]) =>
-    payDate !== "all" ? l.paid_date === payDate : status === "all" || (status === "paid" ? l.paid : !l.paid);
+    (status === "unpaid" && payDate === "all" && justPaid.has(`${l.inv.id}|${l.key}`)) || (payDate !== "all" ? l.paid_date === payDate : status === "all" || (status === "paid" ? l.paid : !l.paid));
   const shown = matched.filter((l) => statusOk(l) && (staff === "all" || staffOf(l) === staff));
   /** 期別排序：未排序 → 由新到舊 → 由舊到新。 */
   /** 預設依客戶代號排序（沒有代號的排最後）；點期別可改依期別排序。 */
@@ -248,9 +251,10 @@ function TaxesPage() {
                       aria-label={`${l.inv.customer?.name ?? ""} ${l.item}${l.half ? ` 第${l.half}個月` : ""} 已繳費`}
                       checked={l.paid}
                       disabled={!me.isAdmin}
-                      onCheckedChange={(c) =>
-                        save.mutate({ invoice_id: l.inv.id, item: l.key, paid: c === true, paid_date: c === true ? l.paid_date ?? todayISO() : null })
-                      }
+                      onCheckedChange={(c) => {
+                        if (c === true) setJustPaid((s) => new Set(s).add(`${l.inv.id}|${l.key}`));
+                        save.mutate({ invoice_id: l.inv.id, item: l.key, paid: c === true, paid_date: c === true ? l.paid_date ?? todayISO() : null });
+                      }}
                     />
                   </TableCell>
                   <TableCell>
