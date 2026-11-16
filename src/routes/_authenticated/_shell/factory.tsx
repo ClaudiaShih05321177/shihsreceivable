@@ -88,6 +88,7 @@ function FactoryPage() {
                     <FactoryFormDialog record={r} trigger={<button type="button" className="text-left text-primary underline-offset-4 hover:underline" aria-label={`編輯 ${r.factory_name}`}>{title}</button>} />
                   ) : title}
                   <div className="text-xs text-muted-foreground">{[r.tax_id, r.application_item, r.contact].filter(Boolean).join(" · ") || "—"}</div>
+                  {r.factory_address && <div className="text-xs text-muted-foreground">地址：{r.factory_address}</div>}
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
                   <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap", r.stage === "核准結案" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{r.stage}</span>

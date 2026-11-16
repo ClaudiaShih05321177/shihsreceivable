@@ -1,0 +1,1 @@
+ALTER TABLE public.factory_registrations ADD COLUMN IF NOT EXISTS factory_address text;
