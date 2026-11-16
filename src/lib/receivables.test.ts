@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { agingBucket, applyScheduledFees, BILLING_TYPES, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, isOtherKey, itemEntries, itemsTotal, monthlySeries, otherEntries, otherLabel, outstanding, scheduledCustomerFees, sortByPeriod, suggestPeriod, withOtherItems } from "./receivables";
+import { agingBucket, applyScheduledFees, BILLING_TYPES, bookkeepingCollectionMonth, bookkeepingPeriodFee, formatDate, invoiceStatus, isOtherKey, itemEntries, itemsTotal, monthlySeries, otherEntries, otherLabel, outstanding, overpaid, scheduledCustomerFees, sortByPeriod, suggestPeriod, withOtherItems } from "./receivables";
 
 const today = "2026-11-12";
 const inv = (due_date: string, amount: number, paid: number[] = []) => ({
@@ -39,6 +39,12 @@ describe("outstanding balance", () => {
 
   it("never goes below zero when overpaid", () => {
     expect(outstanding(inv("2026-12-01", 1000, [1500]))).toBe(0);
+  });
+
+  it("reports the overpaid amount separately", () => {
+    expect(overpaid(inv("2026-12-01", 1000, [1500]))).toBe(500);
+    expect(overpaid(inv("2026-12-01", 1000, [1000]))).toBe(0);
+    expect(overpaid(inv("2026-12-01", 1000, [300]))).toBe(0);
   });
 });
 

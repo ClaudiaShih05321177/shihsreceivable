@@ -15,6 +15,7 @@ import {
   invoiceStatus,
   lastPaidDate,
   outstanding,
+  overpaid,
   periodMonthLabel,
   rocYear,
   sortByPeriod,
@@ -88,7 +89,13 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
                   </Link>
                 </TableCell>
                 <TableCell className="text-right"><Money value={Number(inv.amount)} /></TableCell>
-                <TableCell className="text-right font-semibold"><Money value={outstanding(inv)} className={status === "overdue" ? "text-overdue" : ""} /></TableCell>
+                <TableCell className="text-right font-semibold">
+                  {overpaid(inv) > 0 ? (
+                    <span className="text-warning-foreground">溢收 <Money value={overpaid(inv)} /></span>
+                  ) : (
+                    <Money value={outstanding(inv)} className={status === "overdue" ? "text-overdue" : ""} />
+                  )}
+                </TableCell>
                 <TableCell className="tabular text-sm">
                   {formatDate(inv.due_date)}
                   {status === "overdue" && <span className="ml-1.5 text-xs text-overdue">逾 {late} 天</span>}

@@ -29,6 +29,7 @@ import {
   invoiceStatus,
   itemEntries,
   outstanding,
+  overpaid,
   paidTotal,
   periodMonthLabel,
   rocYear,
@@ -104,6 +105,7 @@ function InvoiceDetail() {
   const customer = customers.find((c) => c.id === inv.customer_id);
   const status = invoiceStatus(inv);
   const balance = outstanding(inv);
+  const over = overpaid(inv);
   const paid = paidTotal(inv);
   const items = itemEntries(inv.items as FeeItems);
   const payments = [...inv.payments].sort((a, b) => a.paid_date.localeCompare(b.paid_date));
@@ -169,7 +171,11 @@ function InvoiceDetail() {
         </div>
         <div className={`ledger-card p-5 ${status === "overdue" ? "border-overdue/50" : ""}`}>
           <p className="text-xs text-muted-foreground">應收餘額</p>
-          <p className={`mt-2 text-2xl font-semibold ${status === "overdue" ? "text-overdue" : ""}`}>{formatTWD(balance)}</p>
+          {over > 0 ? (
+            <p className="mt-2 text-2xl font-semibold text-warning-foreground">溢收 {formatTWD(over)}</p>
+          ) : (
+            <p className={`mt-2 text-2xl font-semibold ${status === "overdue" ? "text-overdue" : ""}`}>{formatTWD(balance)}</p>
+          )}
           <p className="mt-1 text-xs text-muted-foreground">
             到期日 {formatDate(inv.due_date)}
             {status === "overdue" && <span className="text-overdue"> · 已逾期 {daysOverdue(inv)} 天</span>}

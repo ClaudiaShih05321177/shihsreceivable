@@ -37,6 +37,11 @@ export function outstanding(invoice: InvoiceLike): number {
   return Math.max(0, Number(invoice.amount) - paidTotal(invoice));
 }
 
+/** 溢收金額：客戶多付的部分（沒有多付為 0）。 */
+export function overpaid(invoice: InvoiceLike): number {
+  return Math.max(0, paidTotal(invoice) - Number(invoice.amount));
+}
+
 /** Days past the due date (negative = days until due). */
 export function daysOverdue(invoice: InvoiceLike, today: string = todayISO()): number | null {
   if (!invoice.due_date) return null;
