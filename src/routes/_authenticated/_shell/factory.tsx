@@ -90,7 +90,12 @@ function FactoryPage() {
                 <TableCell className="text-sm">{r.application_item ?? "—"}</TableCell>
                 <TableCell className="min-w-64 max-w-96 text-sm whitespace-pre-wrap">{r.status_note ?? "—"}</TableCell>
                 <TableCell className="text-sm">{r.contact ?? "—"}</TableCell>
-                <TableCell><span className={cn("rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap", r.stage === "核准結案" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{r.stage}</span></TableCell>
+                <TableCell>
+                  <div className="flex items-center gap-2 whitespace-nowrap">
+                    <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium", r.stage === "核准結案" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{r.stage}</span>
+                    {canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="sm" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /> 變更進度</Button>} />}
+                  </div>
+                </TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{needsEnv(r.env_mode) ? d(r.env_filed_date, r.env_approved_date) : r.env_mode}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{d(r.bureau_filed_date)}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{d(r.inspection_date)}</TableCell>
@@ -106,7 +111,6 @@ function FactoryPage() {
                       <Button variant="ghost" size="sm" onClick={() => advance.mutate({ r, skip: true })}><CheckCheck className="size-3.5" /> 免會勘結案</Button>
                     )}
                     {me.isAdmin && <FactoryFormDialog record={r} trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${r.factory_name}`}><Pencil className="size-3.5" /></Button>} />}
-                    {canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="sm" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /> 變更進度</Button>} />}
                     {me.isAdmin && <Button variant="ghost" size="icon" aria-label={`刪除 ${r.factory_name}`} onClick={() => { if (window.confirm(`確定刪除「${r.factory_name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>}
                   </div>
                 </TableCell>
