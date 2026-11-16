@@ -78,6 +78,7 @@ export function InvoiceTable({ invoices, showCustomer = true }: { invoices: Invo
                 {showCustomer && (
                   <TableCell className="font-medium">
                     <Link to="/invoices/$id" params={{ id: inv.id }} className="group-hover:text-primary group-hover:underline">
+                      {inv.customer?.customer_code && <span className="mr-2 font-mono text-sm text-muted-foreground">{inv.customer.customer_code}</span>}
                       {inv.customer?.name ?? "—"}
                     </Link>
                   </TableCell>
