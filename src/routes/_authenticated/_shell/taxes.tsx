@@ -1,11 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader, Money } from "@/components/ar/page-header";
 import { RocDateInput } from "@/components/ar/roc-date-input";
+import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/_authenticated/_shell/taxes")({
   component: TaxesPage,
 });
 
+const codeCollator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: "base" });
 const periodKey = (y: number | null, m: number | null, p: string | null) => `${y ?? ""}|${m ?? 0}|${p ?? ""}`;
 
 function TaxesPage() {
@@ -44,6 +46,7 @@ function TaxesPage() {
   const [group, setGroup] = useState("all");
   const [status, setStatus] = useState("all");
   const [sort, setSort] = useState<SortDirection | null>(null);
+  const [q, setQ] = useState("");
 
   const periods = useMemo(() => {
     const m = new Map<string, { key: string; label: string; sort: number }>();
@@ -73,13 +76,24 @@ function TaxesPage() {
     [invoices, period, filingMap],
   );
   const summary = taxSummary(lines);
+  const needle = q.trim().toLowerCase();
   const shown = lines.filter(
-    (l) => (group === "all" || l.group === group) && (status === "all" || (status === "paid" ? l.paid : !l.paid)),
+    (l) =>
+      (group === "all" || l.group === group) &&
+      (status === "all" || (status === "paid" ? l.paid : !l.paid)) &&
+      (!needle || `${l.inv.customer?.customer_code ?? ""} ${l.inv.customer?.name ?? ""} ${feeLabel(l.item)} ${l.group}`.toLowerCase().includes(needle)),
   );
   /** 期別排序：未排序 → 由新到舊 → 由舊到新。 */
-  const ordered = sort
-    ? [...shown].sort((a, b) => (sort === "desc" ? -1 : 1) * comparePeriod(a.inv, b.inv))
-    : shown;
+  /** 預設依客戶代號排序（沒有代號的排最後）；點期別可改依期別排序。 */
+  const byCode = (a: (typeof shown)[number], b: (typeof shown)[number]) => {
+    const ca = a.inv.customer?.customer_code?.trim() ?? "";
+    const cb = b.inv.customer?.customer_code?.trim() ?? "";
+    if (!ca !== !cb) return ca ? -1 : 1;
+    return codeCollator.compare(ca, cb) || codeCollator.compare(a.inv.customer?.name ?? "", b.inv.customer?.name ?? "");
+  };
+  const ordered = [...shown].sort((a, b) =>
+    sort ? (sort === "desc" ? -1 : 1) * comparePeriod(a.inv, b.inv) || byCode(a, b) : byCode(a, b) || comparePeriod(a.inv, b.inv),
+  );
 
   const save = useMutation({
     mutationFn: async (v: { invoice_id: string; item: string; paid: boolean; paid_date: string | null }) => {
@@ -98,6 +112,10 @@ function TaxesPage() {
       <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；租金扣繳與租金二代分第1、第2個月各自勾選。" />
 
       <div className="flex flex-wrap gap-3">
+        <div className="relative w-64">
+          <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜尋客戶代號、名稱或項目" aria-label="搜尋稅額明細" className="pl-8" />
+        </div>
         <Select value={period} onValueChange={setPeriod}>
           <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -138,12 +156,13 @@ function TaxesPage() {
       </div>
 
       {shown.length === 0 ? (
-        <div className="ledger-card px-6 py-16 text-center text-sm text-muted-foreground">這一期沒有稅額資料</div>
+        <div className="ledger-card px-6 py-16 text-center text-sm text-muted-foreground">{needle ? "找不到符合的稅額資料" : "這一期沒有稅額資料"}</div>
       ) : (
         <div className="ledger-card overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/60 hover:bg-muted/60">
+                <TableHead>客戶代號</TableHead>
                 <TableHead>客戶名稱</TableHead>
                 <TableHead>
                   <button
@@ -169,6 +188,7 @@ function TaxesPage() {
             <TableBody>
               {ordered.map((l) => (
                 <TableRow key={`${l.inv.id}-${l.key}`}>
+                  <TableCell className="font-mono text-sm text-muted-foreground">{l.inv.customer?.customer_code ?? "—"}</TableCell>
                   <TableCell className="font-medium">
                     <Link to="/invoices/$id" params={{ id: l.inv.id }} className="hover:text-primary hover:underline">{l.inv.customer?.name ?? "—"}</Link>
                   </TableCell>
