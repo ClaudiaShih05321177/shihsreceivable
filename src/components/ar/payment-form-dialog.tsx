@@ -104,7 +104,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
       }}
     >
       <DialogTrigger asChild>{trigger}</DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">登錄收款</DialogTitle>
           {picking ? (
@@ -167,7 +167,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="p-notes">備註</Label>
-            <Textarea id="p-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} />
+            <Textarea id="p-notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} />
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>取消</Button>
