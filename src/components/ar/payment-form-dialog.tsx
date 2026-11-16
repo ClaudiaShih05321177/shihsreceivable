@@ -1,6 +1,6 @@
 import { todayISO } from "@/lib/receivables";
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { RocDateInput } from "@/components/ar/roc-date-input";
@@ -13,10 +13,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { filingsQuery, invoicesQuery, meQuery } from "@/lib/queries";
-import { formatTWD, PAYMENT_METHODS, paymentOffset } from "@/lib/receivables";
+import { formatTWD, outstanding, PAYMENT_METHODS, paymentOffset, periodMonthLabel, rocYear } from "@/lib/receivables";
+import { compareCustomerCode } from "@/lib/customer-sort";
 
-export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: string; balance: number; trigger: ReactNode }) {
+export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalance, trigger }: { invoiceId: string; balance: number; trigger: ReactNode }) {
   const qc = useQueryClient();
+  const [target, setTarget] = useState<{ id: string; balance: number; label: string } | null>(null);
+  const [picking, setPicking] = useState(false);
+  const [search, setSearch] = useState("");
+  const [savedCount, setSavedCount] = useState(0);
+  const invoiceId = target?.id ?? initialId;
+  const balance = target?.balance ?? initialBalance;
   const { data: me } = useSuspenseQuery(meQuery);
   const [open, setOpen] = useState(false);
   const [retirementCustomer, setRetirementCustomer] = useState<string | null>(null);
@@ -30,7 +37,7 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
   const pickFee = (f: number) => { setFee(String(f)); setAmount(String(Math.max(0, balance - f))); };
 
   const save = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (_next: boolean) => {
       if (!me.canRecordPayment) throw new Error("只有管理員可以銷帳");
       const value = Math.round(Number(amount));
       if (!value || value <= 0) throw new Error("請輸入實收金額");
@@ -45,10 +52,15 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
       });
       if (error) throw error;
     },
-    onSuccess: async () => {
+    onSuccess: async (_d, next) => {
       toast.success("已登錄收款");
-      setOpen(false);
       await qc.invalidateQueries({ queryKey: ["invoices"] });
+      if (next) {
+        setSavedCount((n) => n + 1);
+        setNotes(""); setFee("0"); setAmount(""); setSearch(""); setPicking(true);
+        return;
+      }
+      setOpen(false);
       try {
         const [invoices] = await Promise.all([qc.fetchQuery(invoicesQuery), qc.fetchQuery(filingsQuery)]);
         const customerId = invoices.find((i) => i.id === invoiceId)?.customer_id;
@@ -58,6 +70,21 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
   });
 
+  const { data: allInvoices } = useQuery({ ...invoicesQuery, enabled: open && picking });
+  const candidates = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return (allInvoices ?? [])
+      .filter((i) => outstanding(i) > 0)
+      .filter((i) => !q || `${i.customer?.customer_code ?? ""} ${i.customer?.name ?? ""}`.toLowerCase().includes(q))
+      .sort((a, b) => compareCustomerCode(a.customer?.customer_code, b.customer?.customer_code, a.customer?.name, b.customer?.name))
+      .slice(0, 30);
+  }, [allInvoices, search]);
+  const pick = (i: NonNullable<typeof allInvoices>[number]) => {
+    const b = outstanding(i);
+    setTarget({ id: i.id, balance: b, label: `${i.customer?.customer_code ?? ""} ${i.customer?.name ?? ""}`.trim() });
+    setAmount(String(b)); setFee("0"); setPicking(false);
+  };
+
   if (!me.canRecordPayment) return null;
   return (
     <>
@@ -65,7 +92,9 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
       open={open}
       onOpenChange={(o) => {
         setOpen(o);
+        if (!o && savedCount > 0) void qc.invalidateQueries({ queryKey: ["filings"] });
         if (o) {
+          setTarget(null); setPicking(false); setSearch(""); setSavedCount(0);
           setAmount(balance > 0 ? String(balance) : "");
           setPaidDate(todayISO());
           setMethod("匯款");
@@ -78,12 +107,34 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">登錄收款</DialogTitle>
-          <p className="text-sm text-muted-foreground">目前應收餘額 {formatTWD(balance)}</p>
+          {picking ? (
+            <p className="text-sm text-muted-foreground">本次已沖 {savedCount} 筆，請選下一位客戶</p>
+          ) : (
+            <p className="text-sm text-muted-foreground">{target ? `${target.label}・` : ""}目前應收餘額 {formatTWD(balance)}{savedCount > 0 ? `（本次已沖 ${savedCount} 筆）` : ""}</p>
+          )}
         </DialogHeader>
+        {picking ? (
+          <div className="space-y-3">
+            <Input autoFocus placeholder="輸入客戶代碼或名稱，例如 AD02" value={search} onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && candidates[0]) { e.preventDefault(); pick(candidates[0]); } }} />
+            <div className="max-h-72 overflow-y-auto rounded-md border">
+              {allInvoices === undefined ? <p className="p-3 text-sm text-muted-foreground">載入中…</p>
+                : candidates.length === 0 ? <p className="p-3 text-sm text-muted-foreground">找不到未收清的帳款</p>
+                : candidates.map((i) => (
+                  <button key={i.id} type="button" onClick={() => pick(i)} className="flex w-full items-center justify-between gap-2 border-b px-3 py-2 text-left text-sm last:border-b-0 hover:bg-accent">
+                    <span><span className="mr-2 font-mono text-muted-foreground">{i.customer?.customer_code}</span>{i.customer?.name}
+                      <span className="ml-2 text-xs text-muted-foreground">{i.period_year ? `${rocYear(i.period_year)}年 ` : ""}{periodMonthLabel(i.period_month)}</span></span>
+                    <span className="tabular font-semibold">{formatTWD(outstanding(i))}</span>
+                  </button>
+                ))}
+            </div>
+            <DialogFooter><Button type="button" onClick={() => setOpen(false)}>完成</Button></DialogFooter>
+          </div>
+        ) : (
         <form
           onSubmit={(e: FormEvent) => {
             e.preventDefault();
-            save.mutate();
+            save.mutate(false);
           }}
           className="space-y-4"
         >
@@ -120,9 +171,11 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>取消</Button>
+            <Button type="button" variant="outline" disabled={save.isPending} onClick={(e) => { const f = e.currentTarget.form; if (f && !f.reportValidity()) return; save.mutate(true); }}>儲存並沖下一筆</Button>
             <Button type="submit" disabled={save.isPending}>{save.isPending ? "儲存中…" : "登錄收款"}</Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
     {retirementCustomer && <CustomerRetirementDialog customerId={retirementCustomer} onClose={() => setRetirementCustomer(null)} />}
