@@ -1,3 +1,4 @@
+import officeSeal from "@/assets/office-seal.png.asset.json";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer } from "lucide-react";
@@ -93,13 +94,19 @@ function StatementPage() {
         })()}
         {inv.due_date && <p className="mt-2 text-right">※請於 {formatDate(inv.due_date)} 以前繳納，謝謝！</p>}
         <p className="mt-10 text-sm">{OFFICE.note}</p>
-        <section className="mt-6">
+        <section className="mt-6 grid grid-cols-2 gap-6 break-inside-avoid">
+          <div>
           <p className="font-medium">匯款明細如下：</p>
           <div className="mt-2 pl-6">
             <p>{OFFICE.bank}</p>
             <p>戶　　名：{OFFICE.accountName}</p>
             <p>總行代號：{OFFICE.bankCode}</p>
             <p>帳　　號：{OFFICE.account}</p>
+          </div>
+          </div>
+          <div className="flex flex-col border border-foreground p-2 text-sm">
+            <span>事務所簽章：</span>
+            <img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-1 h-24 w-auto object-contain" />
           </div>
         </section>
       </article>
