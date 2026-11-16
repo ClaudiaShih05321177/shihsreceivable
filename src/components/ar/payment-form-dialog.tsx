@@ -3,6 +3,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { RocDateInput } from "@/components/ar/roc-date-input";
+import { CustomerRetirementDialog } from "@/components/ar/customer-retirement-dialog";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -10,13 +11,14 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { meQuery } from "@/lib/queries";
+import { filingsQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { formatTWD, PAYMENT_METHODS, paymentOffset } from "@/lib/receivables";
 
 export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: string; balance: number; trigger: ReactNode }) {
   const qc = useQueryClient();
   const { data: me } = useSuspenseQuery(meQuery);
   const [open, setOpen] = useState(false);
+  const [retirementCustomer, setRetirementCustomer] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
   const [paidDate, setPaidDate] = useState("");
   const [postedDate, setPostedDate] = useState("");
@@ -44,16 +46,22 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
       });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("已登錄收款");
-      qc.invalidateQueries({ queryKey: ["invoices"] });
       setOpen(false);
+      await qc.invalidateQueries({ queryKey: ["invoices"] });
+      try {
+        const [invoices] = await Promise.all([qc.fetchQuery(invoicesQuery), qc.fetchQuery(filingsQuery)]);
+        const customerId = invoices.find((i) => i.id === invoiceId)?.customer_id;
+        if (customerId) setRetirementCustomer(customerId);
+      } catch { toast.error("收款已登錄，但無法確認註銷客戶狀態，請稍後重試"); }
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
   });
 
   if (!me.canRecordPayment) return null;
   return (
+    <>
     <Dialog
       open={open}
       onOpenChange={(o) => {
@@ -125,5 +133,7 @@ export function PaymentFormDialog({ invoiceId, balance, trigger }: { invoiceId: 
         </form>
       </DialogContent>
     </Dialog>
+    {retirementCustomer && <CustomerRetirementDialog customerId={retirementCustomer} onClose={() => setRetirementCustomer(null)} />}
+    </>
   );
 }

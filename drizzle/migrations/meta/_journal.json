@@ -246,6 +246,20 @@
       "when": 1794796604342,
       "tag": "0034_members_update_own_invoices",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1794802418675,
+      "tag": "0035_archive_settled_cancelled_customers",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1794802492237,
+      "tag": "0036_guard_cancelled_customer_credit_balance",
+      "breakpoints": true
     }
   ]
 }

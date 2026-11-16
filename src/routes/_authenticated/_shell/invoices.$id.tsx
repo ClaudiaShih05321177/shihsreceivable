@@ -122,7 +122,7 @@ function InvoiceDetail() {
           <span className="flex flex-wrap items-center gap-3">
             {customer ? (
               <Link to="/customers/$id" params={{ id: customer.id }} className="hover:text-primary">{customer.name}</Link>
-            ) : "—"}
+            ) : inv.customer?.name ?? "—"}
             <StatusBadge status={status} className="text-sm" />
           </span>
         }

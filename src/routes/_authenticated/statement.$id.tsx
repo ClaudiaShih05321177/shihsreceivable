@@ -60,7 +60,7 @@ function StatementPage() {
         </header>
         <div className="mt-6 flex justify-between border-b border-foreground pb-2">
           <div>
-            <p>TO：{customer?.name ?? "—"}</p>
+            <p>TO：{customer?.name ?? inv.customer?.name ?? "—"}</p>
             <p>FROM：{me.displayName}</p>
           </div>
           <p>DATE：<input className="w-28 bg-transparent outline-none" placeholder="　　年　　月　　日" /></p>

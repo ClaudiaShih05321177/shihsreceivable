@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           address: string | null
           annual_extra_rate: number | null
+          archived_at: string | null
           billing_type: string
           bookkeeping_fee: number
           contact_person: string | null
@@ -39,6 +40,7 @@ export type Database = {
         Insert: {
           address?: string | null
           annual_extra_rate?: number | null
+          archived_at?: string | null
           billing_type?: string
           bookkeeping_fee?: number
           contact_person?: string | null
@@ -60,6 +62,7 @@ export type Database = {
         Update: {
           address?: string | null
           annual_extra_rate?: number | null
+          archived_at?: string | null
           billing_type?: string
           bookkeeping_fee?: number
           contact_person?: string | null
@@ -523,6 +526,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      archive_cancelled_customer: {
+        Args: { _customer_id: string }
+        Returns: undefined
+      }
       bookkeeper_bonus_data: { Args: never; Returns: Json }
       can_see_customer: { Args: { _customer_id: string }; Returns: boolean }
       close_filing: { Args: { _filing_id: string }; Returns: undefined }

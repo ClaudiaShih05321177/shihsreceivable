@@ -48,7 +48,7 @@ export const meQuery = queryOptions({
 export const customersQuery = queryOptions({
   queryKey: ["customers"],
   queryFn: async () => {
-    const { data, error } = await supabase.from("customers").select(CUSTOMER_SELECT).order("name");
+    const { data, error } = await supabase.from("customers").select(CUSTOMER_SELECT).is("archived_at", null).order("name");
     if (error) throw error;
     const rates = await customerRates();
     return data.map((c): Customer => rates ? { ...c, annual_extra_rate: rates.get(c.id) ?? null } : c);
