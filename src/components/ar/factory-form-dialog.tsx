@@ -152,7 +152,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             {text("branch_name", "廠別（選填）", "例：新竹廠；沒有可留空")}
             {text("factory_name", "廠名（公司名稱＋廠別，可修改）")}
             {text("application_item", "申辦項目", "例：工廠登記、變更登記")}
-            {text("factory_address", "工廠地址", "例：新竹市東區…")}
+            <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-factory_address">工廠地址</Label><Input id="fr-factory_address" value={form.factory_address} onChange={(e) => set("factory_address", e.target.value)} placeholder="例：新竹市東區…" /></div>
             <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-status_note">Status</Label><Textarea id="fr-status_note" rows={4} value={form.status_note} onChange={(e) => set("status_note", e.target.value)} placeholder="自由輸入目前狀況，例：等補件" /></div>
             {text("contact", "聯絡人", "姓名／電話")}
             {text("po_number", "PO 號碼（選填）", "客戶採購單號，會印在報價單／請款單上")}
