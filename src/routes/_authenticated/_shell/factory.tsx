@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowRight, CheckCheck, FileText, Pencil, Plus, Receipt, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, CheckCheck, FileText, Pencil, Plus, Receipt, Search, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { FactoryFormDialog } from "@/components/ar/factory-form-dialog";
@@ -9,6 +9,7 @@ import { FactoryProgressDialog } from "@/components/ar/factory-progress-dialog";
 import { canManageFactoryProgress } from "@/lib/permissions";
 import { PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { FACTORY_STAGES, needsEnv, nextFactoryStage } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery, type FactoryRegistration } from "@/lib/queries";
@@ -37,7 +38,19 @@ function FactoryPage() {
   const canProgress = canManageFactoryProgress(me);
   const qc = useQueryClient();
   const [stage, setStage] = useState("open");
-  const shown = rows.filter((r) => (stage === "all" ? true : stage === "open" ? r.stage !== "核准結案" : r.stage === stage));
+  const [q, setQ] = useState("");
+
+  const searched = useMemo(() => {
+    const key = q.trim().toLowerCase();
+    if (!key) return rows;
+    return rows.filter((r) =>
+      `${r.factory_name} ${r.tax_id ?? ""} ${r.application_item ?? ""} ${r.contact ?? ""} ${r.factory_address ?? ""} ${r.status_note ?? ""} ${r.po_number ?? ""} ${r.stage}`
+        .toLowerCase()
+        .includes(key),
+    );
+  }, [rows, q]);
+
+  const shown = searched.filter((r) => (stage === "all" ? true : stage === "open" ? r.stage !== "核准結案" : r.stage === stage));
 
   const advance = useMutation({
     mutationFn: async ({ r, skip }: { r: FactoryRegistration; skip?: boolean }) => {
@@ -67,13 +80,27 @@ function FactoryPage() {
   return (
     <>
       <PageHeader eyebrow="勤豐工商顧問有限公司" title="工廠登記進度表" description="環保與現場會勘為選辦；免跑環保或客戶自辦環保的案件從送件工商科開始。" actions={canProgress ? <FactoryFormDialog trigger={<Button><Plus /> 新增案件</Button>} /> : undefined} />
-      <div className="mb-5 flex flex-wrap gap-2">
-        {btn("open", "進行中", rows.filter((r) => r.stage !== "核准結案").length)}
-        {FACTORY_STAGES.map((s) => btn(s, s, rows.filter((r) => r.stage === s).length))}
-        {btn("all", "全部", rows.length)}
+      <div className="mb-3 flex flex-wrap gap-2">
+        {btn("open", "進行中", searched.filter((r) => r.stage !== "核准結案").length)}
+        {FACTORY_STAGES.map((s) => btn(s, s, searched.filter((r) => r.stage === s).length))}
+        {btn("all", "全部", searched.length)}
+      </div>
+      <div className="relative mb-5">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="搜尋廠名、統一編號、申辦項目、工廠地址、承辦人、PO 號碼…"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="bg-card pl-9"
+          aria-label="搜尋工廠案件"
+        />
       </div>
       <div className="grid gap-3">
-        {shown.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">尚無案件</div>}
+        {shown.length === 0 && (
+          <div className="ledger-card py-10 text-center text-sm text-muted-foreground">
+            {q.trim() ? `找不到符合「${q.trim()}」的案件` : "尚無案件"}
+          </div>
+        )}
         {shown.map((r) => {
           const title = <span className="font-medium">{r.factory_name}</span>;
           const steps = [
