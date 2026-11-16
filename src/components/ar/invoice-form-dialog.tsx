@@ -59,7 +59,7 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
     month: String(month),
     period_label: inv ? inv.period_label ?? "" : suggestPeriod(month),
     invoice_no: inv?.invoice_no ?? "",
-    issue_date: inv?.issue_date ?? "",
+    issue_date: inv?.issue_date ?? todayISO(),
     due_date: inv?.due_date ?? "",
     notes: inv?.notes ?? "",
     auditor: inv?.auditor ?? "",

@@ -33,6 +33,13 @@ const nextSort = (s: PeriodSort): PeriodSort => (s === null ? "desc" : s === "de
 export function InvoiceTable({ invoices, showCustomer = true, selected, onToggle }: { invoices: Invoice[]; showCustomer?: boolean; selected?: Set<string>; onToggle?: (id: string) => void }) {
   const { data: me } = useSuspenseQuery(meQuery);
   const [sort, setSort] = useState<PeriodSort>(null);
+  // 客戶尚餘溢收：同客戶各期未抵完的溢收合計，標示在該客戶最後一筆已折抵帳款上。
+  const remaining = new Map<string, number>();
+  const latestCredited = new Map<string, Invoice>();
+  for (const inv of sortByPeriod(invoices, "asc")) {
+    remaining.set(inv.customer_id, (remaining.get(inv.customer_id) ?? 0) + overpaid(inv));
+    if ((inv.credit_applied ?? 0) > 0) latestCredited.set(inv.customer_id, inv);
+  }
   const rows = sort ? sortByPeriod(invoices, sort) : [...invoices].sort((a, b) => compareCustomerCode(a.customer?.customer_code, b.customer?.customer_code, a.customer?.name, b.customer?.name));
 
   if (invoices.length === 0) {
@@ -102,6 +109,7 @@ export function InvoiceTable({ invoices, showCustomer = true, selected, onToggle
                   )}
                   {(inv.credit_applied ?? 0) > 0 && <span className="block text-xs font-normal text-muted-foreground">溢繳折抵 <Money value={inv.credit_applied ?? 0} /></span>}
                   {(inv.credit_used ?? 0) > 0 && <span className="block text-xs font-normal text-muted-foreground">已折抵後期 <Money value={inv.credit_used ?? 0} /></span>}
+                  {latestCredited.get(inv.customer_id)?.id === inv.id && (remaining.get(inv.customer_id) ?? 0) > 0 && <span className="block text-xs font-medium text-warning-foreground">客戶尚餘溢收 <Money value={remaining.get(inv.customer_id) ?? 0} /></span>}
                 </TableCell>
                 <TableCell className="tabular text-sm">
                   {formatDate(inv.due_date)}
