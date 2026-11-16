@@ -1,5 +1,5 @@
 /** 勤豐工商顧問 報價單／請款單內容（依使用者提供之 Excel 範本）。 */
-import { contractTotal, extraFees, issuesInvoice, TAX_RATE, type ProjectArLike } from "./factory";
+import { contractTotal, depositTaxSplit, extraFees, issuesInvoice, TAX_RATE, type ProjectArLike } from "./factory";
 
 export const KINFENG = {
   name: "勤豐工商顧問有限公司",
@@ -47,7 +47,7 @@ export function invoiceSummary(r: ProjectArLike, stage: InvoiceStage): DocSummar
   const inv = issuesInvoice(r.invoice_type);
   if (stage === "訂金") {
     const dep = inv ? n(r.deposit_invoice_amount) : n(r.deposit_received_amount);
-    const base = inv ? Math.round(dep / (1 + TAX_RATE)) : dep;
+    const base = inv ? depositTaxSplit(dep).base : dep;
     const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: dep - base }];
     return { consulting: base, subtotal: base, lines, total: dep };
   }

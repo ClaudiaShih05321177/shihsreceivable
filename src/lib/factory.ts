@@ -56,6 +56,13 @@ export function contractTotal(quote: Num, type: string | null | undefined): numb
   return issuesInvoice(type) ? Math.round(n(quote) * (1 + TAX_RATE)) : n(quote);
 }
 
+/** 訂金發票金額（含稅）拆成未稅金額＋5% 營業稅。 */
+export function depositTaxSplit(depositInvoice: Num): { base: number; tax: number } {
+  const dep = n(depositInvoice);
+  const base = Math.round(dep / (1 + TAX_RATE));
+  return { base, tax: dep - base };
+}
+
 /** 開發票時尾款發票自動補齊＝含稅總額−訂金發票；不開發票為 0。 */
 export function autoFinalInvoice(quote: Num, depositInvoice: Num, type: string | null | undefined): number {
   return issuesInvoice(type) ? Math.max(0, contractTotal(quote, type) - n(depositInvoice)) : 0;

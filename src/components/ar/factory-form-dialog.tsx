@@ -12,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupCompany } from "@/lib/company-lookup.functions";
-import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv } from "@/lib/factory";
+import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, depositTaxSplit, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv } from "@/lib/factory";
 import { meQuery, type FactoryRegistration } from "@/lib/queries";
 import type { Database } from "@/integrations/supabase/types";
 import { canManageFactoryProgress } from "@/lib/permissions";
@@ -188,6 +188,12 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             {money("quote_amount", inv ? "報價金額（未稅）" : "報價金額")}
             {inv && <div className="grid gap-2"><Label>含稅總額（外加 5%）</Label><p className="tabular py-2 text-sm font-semibold">{contractTotal(form.quote_amount, form.invoice_type).toLocaleString("zh-TW")}</p></div>}
             {inv && money("deposit_invoice_amount", "訂金發票金額")}
+            {inv && Number(form.deposit_invoice_amount) > 0 && (
+              <div className="grid gap-2">
+                <Label>訂金稅金（自動計算）</Label>
+                <p className="tabular py-2 text-sm">未稅 {depositTaxSplit(form.deposit_invoice_amount).base.toLocaleString("zh-TW")} ＋ 稅 {depositTaxSplit(form.deposit_invoice_amount).tax.toLocaleString("zh-TW")}</p>
+              </div>
+            )}
             {money("deposit_received_amount", "訂金收款金額")}
             {date("deposit_received_date", "訂金收款日期")}
             {inv && money("final_invoice_amount", "尾款發票金額（自動補齊，可修改）")}

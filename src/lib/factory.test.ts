@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { factoryInitialStage, finalDue, nextFactoryStage, projectArStatus, projectOutstanding } from "./factory";
+import { depositTaxSplit, factoryInitialStage, finalDue, nextFactoryStage, projectArStatus, projectOutstanding } from "./factory";
+
+describe("訂金稅金拆分", () => {
+  it("訂金發票 34,125 拆成未稅 32,500＋稅 1,625", () => {
+    expect(depositTaxSplit(34125)).toEqual({ base: 32500, tax: 1625 });
+  });
+  it("訂金 30,000 拆成未稅 28,571＋稅 1,429", () => {
+    expect(depositTaxSplit(30000)).toEqual({ base: 28571, tax: 1429 });
+  });
+  it("空白或 0 回傳 0", () => {
+    expect(depositTaxSplit(null)).toEqual({ base: 0, tax: 0 });
+    expect(depositTaxSplit("")).toEqual({ base: 0, tax: 0 });
+  });
+});
 
 const ar = { quote_amount: 100000, deposit_invoice_amount: 30000, deposit_received_amount: 0, final_invoice_amount: 70000, government_fee: 3000, other_fee: 2000, final_received_amount: 0 };
 

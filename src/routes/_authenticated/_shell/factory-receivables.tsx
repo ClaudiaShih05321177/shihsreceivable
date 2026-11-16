@@ -6,7 +6,7 @@ import { FactoryFormDialog } from "@/components/ar/factory-form-dialog";
 import { Money, PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { finalDue, projectArStatus, projectOutstanding } from "@/lib/factory";
+import { depositTaxSplit, finalDue, issuesInvoice, projectArStatus, projectOutstanding } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery } from "@/lib/queries";
 import { formatDate } from "@/lib/receivables";
 
@@ -50,7 +50,7 @@ function FactoryReceivablesPage() {
                 <TableCell className="text-sm">{r.application_item ?? "—"}</TableCell>
                 <TableCell className="text-xs whitespace-nowrap">{r.invoice_type}</TableCell>
                 <TableCell className="text-right"><Money value={Number(r.quote_amount)} /></TableCell>
-                <TableCell className="text-right"><Money value={Number(r.deposit_invoice_amount)} /></TableCell>
+                <TableCell className="text-right"><Money value={Number(r.deposit_invoice_amount)} />{issuesInvoice(r.invoice_type) && Number(r.deposit_invoice_amount) > 0 && <span className="block text-xs text-muted-foreground">未稅 {depositTaxSplit(r.deposit_invoice_amount).base.toLocaleString("zh-TW")}＋稅 {depositTaxSplit(r.deposit_invoice_amount).tax.toLocaleString("zh-TW")}</span>}</TableCell>
                 <TableCell className="text-right"><Money value={Number(r.deposit_received_amount)} /></TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{formatDate(r.deposit_received_date)}</TableCell>
                 <TableCell className="text-right"><Money value={Number(r.final_invoice_amount)} /></TableCell>
