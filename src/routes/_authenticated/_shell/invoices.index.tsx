@@ -59,7 +59,7 @@ function InvoicesPage() {
     if (filter !== "open" && filter !== "all" && s !== filter) return false;
     if (staff !== "all" && staffById.get(inv.customer_id) !== staff) return false;
     if (q) {
-      const hay = `${inv.customer?.name ?? ""} ${inv.invoice_no} ${inv.period_label ?? ""} ${inv.notes ?? ""}`.toLowerCase();
+      const hay = `${inv.customer?.name ?? ""} ${inv.customer?.customer_code ?? ""} ${inv.invoice_no} ${inv.period_label ?? ""} ${inv.notes ?? ""}`.toLowerCase();
       if (!hay.includes(q.toLowerCase())) return false;
     }
     return true;
@@ -91,7 +91,7 @@ function InvoicesPage() {
       <div className="mb-5 flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input placeholder="搜尋客戶名稱、期別、備註…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
+          <Input placeholder="搜尋客戶名稱、客戶代碼、期別、備註…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
         </div>
         {staffCodes.length > 0 && (
           <Select value={staff} onValueChange={setStaff}>

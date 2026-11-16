@@ -10,12 +10,12 @@ export type Customer = Omit<Database["public"]["Tables"]["customers"]["Row"], "a
 export type Payment = Database["public"]["Tables"]["payments"]["Row"];
 export type InvoiceRow = Database["public"]["Tables"]["invoices"]["Row"];
 export type Invoice = InvoiceRow & {
-  customer: Pick<Customer, "id" | "name"> | null;
+  customer: Pick<Customer, "id" | "name" | "customer_code"> | null;
   payments: Payment[];
 };
 export type AppRole = Database["public"]["Enums"]["app_role"];
 
-const INVOICE_SELECT = "*, customer:customers(id, name), payments(*)";
+const INVOICE_SELECT = "*, customer:customers(id, name, customer_code), payments(*)";
 
 export const meQuery = queryOptions({
   queryKey: ["me"],
