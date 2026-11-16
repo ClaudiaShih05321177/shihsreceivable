@@ -239,6 +239,13 @@
       "when": 1794575582013,
       "tag": "0033_extend_suspended_period_days",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794796604342,
+      "tag": "0034_members_update_own_invoices",
+      "breakpoints": true
     }
   ]
 }

@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/queries";
 import { feeItemCount, feeLabel, visibleFeeItems } from "@/lib/fee-labels";
+import { canEditInvoice } from "@/lib/permissions";
 import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems } from "@/lib/receivables";
 
 const PICK_GROUPS = [
@@ -136,7 +137,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
 
   const save = useMutation({
     mutationFn: async () => {
-      if (invoice ? !me.canEdit : !me.canCreate) throw new Error("您沒有此操作的權限");
+      if (invoice ? !canEditInvoice(me, invoice) : !me.canCreate) throw new Error(invoice ? "已有收款紀錄的帳款請由管理員修改" : "您沒有此操作的權限");
       if (!form.customer_id) throw new Error("請選擇客戶");
       if (total <= 0) throw new Error("應收帳款金額需大於 0，請填寫費用項目");
       if (form.due_date && form.issue_date && form.due_date < form.issue_date) throw new Error("到期日不可早於開立日期");
@@ -175,7 +176,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
   });
 
-  if (invoice ? !me.canEdit : !me.canCreate) return null;
+  if (invoice ? !canEditInvoice(me, invoice) : !me.canCreate) return null;
   return (
     <Dialog
       open={open}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canSeePage, permissionsFor } from "./permissions";
+import { canEditInvoice, canSeePage, permissionsFor } from "./permissions";
 
 describe("帳號權限", () => {
   it("使用者可以查看與立帳", () => {
@@ -10,9 +10,14 @@ describe("帳號權限", () => {
     expect(permissionsFor(["member"]).canRecordPayment).toBe(false);
     expect(permissionsFor(["admin"]).canRecordPayment).toBe(true);
   });
-  it("一般使用者只能立帳，不能修改既有資料", () => {
-    expect(permissionsFor(["member"]).canEdit).toBe(false);
+  it("使用者立帳後可以修改，管理員也可以", () => {
+    expect(permissionsFor(["member"]).canEdit).toBe(true);
     expect(permissionsFor(["admin"]).canEdit).toBe(true);
+  });
+  it("已有收款紀錄的帳款只有管理員能修改", () => {
+    expect(canEditInvoice({ isAdmin: false }, { payments: [] })).toBe(true);
+    expect(canEditInvoice({ isAdmin: false }, { payments: [{}] })).toBe(false);
+    expect(canEditInvoice({ isAdmin: true }, { payments: [{}] })).toBe(true);
   });
   it("使用者不能刪除資料", () => {
     expect(permissionsFor(["member"]).canDelete).toBe(false);
