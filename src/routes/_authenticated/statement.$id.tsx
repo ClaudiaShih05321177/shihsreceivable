@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { OFFICE, priorBalance } from "@/lib/billing";
 import { customersQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { formatDate, formatTWD, itemEntries, rocYear, vatDue, type FeeItems, todayISO , periodText } from "@/lib/receivables";
+import { formatDate, formatTWD, itemEntries, vatDue, type FeeItems, todayISO , periodText } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/statement/$id")({
   head: () => ({

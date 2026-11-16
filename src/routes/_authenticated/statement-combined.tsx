@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { OFFICE } from "@/lib/billing";
 import { invoicesQuery, meQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { formatDate, formatTWD, itemEntries, outstanding, paidTotal, rocYear, todayISO, type FeeItems , periodText } from "@/lib/receivables";
+import { formatDate, formatTWD, itemEntries, outstanding, paidTotal, todayISO, type FeeItems , periodText } from "@/lib/receivables";
 import { compareCustomerCode } from "@/lib/customer-sort";
 
 export const Route = createFileRoute("/_authenticated/statement-combined")({
