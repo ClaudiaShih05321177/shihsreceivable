@@ -142,6 +142,7 @@ export type Database = {
           invoice_type: string
           notes: string | null
           other_fee: number
+          po_number: string | null
           quote_amount: number
           stage: string
           status_note: string | null
@@ -176,6 +177,7 @@ export type Database = {
           invoice_type?: string
           notes?: string | null
           other_fee?: number
+          po_number?: string | null
           quote_amount?: number
           stage?: string
           status_note?: string | null
@@ -210,6 +212,7 @@ export type Database = {
           invoice_type?: string
           notes?: string | null
           other_fee?: number
+          po_number?: string | null
           quote_amount?: number
           stage?: string
           status_note?: string | null

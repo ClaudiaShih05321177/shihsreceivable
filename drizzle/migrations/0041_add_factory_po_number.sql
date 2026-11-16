@@ -1,0 +1,1 @@
+ALTER TABLE public.factory_registrations ADD COLUMN po_number TEXT;

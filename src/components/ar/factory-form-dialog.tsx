@@ -19,7 +19,7 @@ import { canManageFactoryProgress } from "@/lib/permissions";
 
 type Update = Database["public"]["Tables"]["factory_registrations"]["Update"];
 
-const TEXT = ["factory_name", "application_item", "status_note", "contact", "ar_notes", "tax_id", "company_name", "branch_name"] as const;
+const TEXT = ["factory_name", "application_item", "status_note", "contact", "ar_notes", "tax_id", "company_name", "branch_name", "po_number"] as const;
 const DATES = ["env_filed_date", "env_approved_date", "bureau_filed_date", "inspection_date", "approved_date", "deposit_received_date", "final_received_date"] as const;
 const MONEY = ["quote_amount", "deposit_invoice_amount", "deposit_received_amount", "final_invoice_amount", "government_fee", "other_fee", "final_received_amount"] as const;
 type Key = (typeof TEXT)[number] | (typeof DATES)[number] | (typeof MONEY)[number] | "env_mode" | "stage" | "invoice_type";
@@ -78,6 +78,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
           factory_name: form.factory_name.trim(), company_name: form.company_name.trim() || null,
           branch_name: form.branch_name.trim() || null, tax_id: form.tax_id.trim() || null,
           application_item: form.application_item.trim() || null, contact: form.contact.trim() || null,
+          po_number: form.po_number.trim() || null,
           status_note: form.status_note.trim() || null, env_mode: form.env_mode, stage: factoryInitialStage(form.env_mode),
           env_filed_date: form.env_filed_date || null, env_approved_date: form.env_approved_date || null,
           bureau_filed_date: form.bureau_filed_date || null, inspection_date: form.inspection_date || null,
@@ -151,6 +152,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             {text("application_item", "申辦項目", "例：工廠登記、變更登記")}
             <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-status_note">Status</Label><Textarea id="fr-status_note" rows={4} value={form.status_note} onChange={(e) => set("status_note", e.target.value)} placeholder="自由輸入目前狀況，例：等補件" /></div>
             {text("contact", "聯絡人", "姓名／電話")}
+            {text("po_number", "PO 號碼（選填）", "客戶採購單號，會印在報價單／請款單上")}
             <div className="grid gap-2">
               <Label>環保</Label>
               <Select value={form.env_mode} onValueChange={(v) => set("env_mode", v)}>
