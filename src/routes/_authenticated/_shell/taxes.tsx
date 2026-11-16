@@ -47,7 +47,9 @@ function TaxesPage() {
   const { data: me } = useSuspenseQuery(meQuery);
   const qc = useQueryClient();
   const [group, setGroup] = useState("all");
-  const [status, setStatus] = useState("all");
+  const [status, setStatus] = useState("unpaid");
+  const [staff, setStaff] = useState("all");
+  const [payDate, setPayDate] = useState("all");
   const [sort, setSort] = useState<SortDirection | null>(null);
   const [q, setQ] = useState("");
 
@@ -89,12 +91,16 @@ function TaxesPage() {
   );
   const summary = taxSummary(lines);
   const needle = q.trim().toLowerCase();
-  const shown = lines.filter(
+  const staffOf = (l: (typeof lines)[number]) => l.inv.customer?.customer_code?.trim().slice(0, 2).toUpperCase() || "未指定";
+  const matched = lines.filter(
     (l) =>
       (group === "all" || l.group === group) &&
-      (status === "all" || (status === "paid" ? l.paid : !l.paid)) &&
       (!needle || `${l.inv.customer?.customer_code ?? ""} ${l.inv.customer?.name ?? ""} ${feeLabel(l.item)} ${l.group}`.toLowerCase().includes(needle)),
   );
+  // 選了繳費日期時只看該日已繳，不受繳費狀態影響。
+  const statusOk = (l: (typeof lines)[number]) =>
+    payDate !== "all" ? l.paid_date === payDate : status === "all" || (status === "paid" ? l.paid : !l.paid);
+  const shown = matched.filter((l) => statusOk(l) && (staff === "all" || staffOf(l) === staff));
   /** 期別排序：未排序 → 由新到舊 → 由舊到新。 */
   /** 預設依客戶代號排序（沒有代號的排最後）；點期別可改依期別排序。 */
   const byCode = (a: (typeof shown)[number], b: (typeof shown)[number]) => {
@@ -107,15 +113,15 @@ function TaxesPage() {
     sort ? (sort === "desc" ? -1 : 1) * comparePeriod(a.inv, b.inv) || byCode(a, b) : byCode(a, b) || comparePeriod(a.inv, b.inv),
   );
 
-  const byDate = [...shown.reduce((m, l) => {
+  const byDate = [...matched.filter((l) => staff === "all" || staffOf(l) === staff).reduce((m, l) => {
     if (!l.paid || !l.paid_date) return m;
     const v = m.get(l.paid_date) ?? { total: 0, count: 0 };
     v.total += l.amount; v.count++;
     return m.set(l.paid_date, v);
   }, new Map<string, { total: number; count: number }>())].sort((a, b) => b[0].localeCompare(a[0]));
 
-  const byStaff = [...shown.reduce((m, l) => {
-    const code = l.inv.customer?.customer_code?.trim().slice(0, 2).toUpperCase() || "未指定";
+  const byStaff = [...matched.filter(statusOk).reduce((m, l) => {
+    const code = staffOf(l);
     const v = m.get(code) ?? { total: 0, paid: 0, count: 0 };
     v.total += l.amount; v.count++; if (l.paid) v.paid += l.amount;
     return m.set(code, v);
@@ -164,6 +170,24 @@ function TaxesPage() {
             <SelectItem value="paid">已繳費</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={staff} onValueChange={setStaff}>
+          <SelectTrigger className="w-72"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全部會計專員</SelectItem>
+            {byStaff.map(([c, v]) => (
+              <SelectItem key={c} value={c}>{c}・{v.count} 筆・{v.total.toLocaleString("zh-TW")}・未繳 {(v.total - v.paid).toLocaleString("zh-TW")}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={payDate} onValueChange={setPayDate}>
+          <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全部繳費日期</SelectItem>
+            {byDate.map(([d, v]) => (
+              <SelectItem key={d} value={d}>{formatDate(d)}・{v.count} 筆・{v.total.toLocaleString("zh-TW")}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
@@ -180,37 +204,6 @@ function TaxesPage() {
           <p className="mt-1 text-xs text-muted-foreground">未繳 {(grand.total - grand.paid).toLocaleString("zh-TW")}</p>
         </div>
       </div>
-
-      {byStaff.length > 0 && (
-        <section className="ledger-card p-4">
-          <h2 className="mb-2 text-sm font-semibold">各會計專員稅額合計</h2>
-          <div className="flex flex-wrap gap-2">
-            {byStaff.map(([c, v]) => (
-              <button key={c} type="button" onClick={() => setQ(c === "未指定" ? "" : c)} className="rounded-md border border-border bg-card px-3 py-2 text-left text-sm hover:bg-accent">
-                <span className="font-mono font-medium">{c}</span>
-                <span className="ml-2 text-xs text-muted-foreground">{v.count} 筆</span>
-                <Money value={v.total} className="ml-2 font-semibold" />
-                <span className="ml-2 text-xs text-muted-foreground">未繳 {(v.total - v.paid).toLocaleString("zh-TW")}</span>
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {byDate.length > 0 && (
-        <section className="ledger-card p-4">
-          <h2 className="mb-2 text-sm font-semibold">各繳費日期合計</h2>
-          <div className="flex flex-wrap gap-2">
-            {byDate.map(([d, v]) => (
-              <div key={d} className="rounded-md border border-border bg-card px-3 py-2 text-sm">
-                <span className="tabular font-medium">{formatDate(d)}</span>
-                <span className="ml-2 text-xs text-muted-foreground">{v.count} 筆</span>
-                <Money value={v.total} className="ml-2 font-semibold" />
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
 
       {shown.length === 0 ? (
         <div className="ledger-card px-6 py-16 text-center text-sm text-muted-foreground">{needle ? "找不到符合的稅額資料" : "這一期沒有稅額資料"}</div>
