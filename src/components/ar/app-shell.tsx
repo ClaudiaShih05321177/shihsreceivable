@@ -73,7 +73,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
             {COMPANIES.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>}
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-1 md:flex-col md:pb-0">
+        <nav className="flex flex-wrap gap-1 px-3 pb-3 md:flex-1 md:flex-col md:pb-0">
           {(items as readonly { to: string; label: string; icon: typeof Factory }[]).filter((item) => canSeePage(me.isAdmin, item.to, me.staffCode)).map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             return (
