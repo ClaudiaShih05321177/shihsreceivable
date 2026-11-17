@@ -1,7 +1,7 @@
 import kinfengSeal from "@/assets/kinfeng-seal.png.asset.json";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Printer, X } from "lucide-react";
+import { ArrowLeft, ExternalLink, Plus, Printer, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -107,7 +107,10 @@ function FactoryDocPage() {
             <Button key={st} variant={stage === st ? "secondary" : "ghost"} size="sm" onClick={() => navigate({ search: { type, stage: st } })}>{st}請款</Button>
           ))}
         </div>
-        <Button onClick={() => window.print()}><Printer /> 列印 / 存成 PDF</Button>
+        <div className="flex gap-1">
+          <Button variant="outline" asChild><a href="https://www.einvoice.nat.gov.tw/" target="_blank" rel="noopener noreferrer"><ExternalLink /> 財政部電子發票平台</a></Button>
+          <Button onClick={() => window.print()}><Printer /> 列印 / 存成 PDF</Button>
+        </div>
       </div>
       {isQuote && <TermsToolbar id={r.id} cfg={termsCfg} canEdit={canManageFactoryProgress(me)} />}
       <article className="mx-auto max-w-[760px] bg-card p-10 text-base leading-8 shadow print:max-w-none print:p-0 print:shadow-none">
