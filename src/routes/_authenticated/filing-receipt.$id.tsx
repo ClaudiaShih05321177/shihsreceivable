@@ -1,3 +1,4 @@
+import receiptSeal from "@/assets/receipt-seal.png.asset.json";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer } from "lucide-react";
@@ -67,7 +68,7 @@ function FilingReceipt() {
         <tbody><tr><td className="py-4">工商代辦費</td><td className="py-4 text-right font-mono">{formatTWD(amount)}</td></tr></tbody>
         <tfoot><tr className="border-t border-foreground font-bold"><td className="py-3">合計</td><td className="py-3 text-right font-mono">{formatTWD(amount)}</td></tr></tfoot>
       </table>
-      <div className="mt-10 flex flex-wrap justify-between gap-6"><p>經手人：________________</p><p>收款章：________________</p></div>
+      <div className="mt-10 flex justify-end"><div className="flex flex-col items-center"><span className="self-start">收款章：</span><img src={receiptSeal.url} alt="事務所收據章" className="mt-1 h-32 w-auto object-contain" /></div></div>
     </article>
   </main>;
 }
