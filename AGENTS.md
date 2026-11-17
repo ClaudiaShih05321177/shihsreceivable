@@ -31,6 +31,9 @@ use the editor.
 
 ## Project rules
 
+- Customer name search uses CustomerPicker; factory forms use the separate factory customer query and derive codes from uniquely matched names/tax IDs. Why: never mix office and factory numbering.
+- Filing fee edits have an admin-only focused dialog calling the existing checked RPC. Why: financial edits need not resave case progress.
+
 - Shared customer queries use an explicit public column list; bonus percentages are fetched only through an admin-checked security-definer RPC, with direct column SELECT revoked. Why: row-level customer sharing must not expose private bonus settings.
 
 - Bonus rules are tested in src/lib/bonuses.ts; bonus rows come from the SECURITY INVOKER RPC bookkeeper_bonus_data, so RLS limits members to their own customers while admins see all and print per-staff sign-off sheets. Why: staff see only their own bonus.

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { FilingFormDialog } from "@/components/ar/filing-form-dialog";
+import { FilingFeeDialog } from "@/components/ar/filing-fee-dialog";
 import { PageHeader, Money } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -190,7 +191,7 @@ function FilingsPage() {
                 <TableCell className="text-sm whitespace-nowrap">{routeHasAuthority(f.route) ? `${formatDate(f.filed_date)}／${formatDate(f.approved_date)}` : "—"}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{f.special_authority ? `${f.special_authority} ${formatDate(f.special_filed_date)}／${formatDate(f.special_approved_date)}` : "—"}</TableCell>
                 <TableCell className="text-sm whitespace-nowrap">{routeHasTaxBureau(f.route) ? `${formatDate(f.tax_filed_date)}／${formatDate(f.tax_approved_date)}` : "—"}</TableCell>
-                {me.isAdmin && <TableCell className="text-right"><Money value={fees?.[f.id] ?? 0} /></TableCell>}
+                {me.isAdmin && <TableCell className="text-right"><FilingFeeDialog id={f.id} name={filingName(f)} fee={fees?.[f.id] ?? 0} /></TableCell>}
                 <TableCell className="text-right"><Money value={Number(f.advance_fee)} /></TableCell>
                 <TableCell className="text-right"><Money value={Number(f.stamp_fee)} /></TableCell>
                 {me.isAdmin && <TableCell className="text-sm">

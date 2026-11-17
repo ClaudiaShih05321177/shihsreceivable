@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -14,19 +14,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { lookupCompany } from "@/lib/company-lookup.functions";
-import { compareCustomerCode } from "@/lib/customer-sort";
+import { factoryCustomersQuery } from "@/lib/factory-customer-queries";
 import { meQuery } from "@/lib/queries";
 
 type FactoryCustomer = Database["public"]["Tables"]["factory_customers"]["Row"];
-
-export const factoryCustomersQuery = queryOptions({
-  queryKey: ["factory_customers"],
-  queryFn: async () => {
-    const { data, error } = await supabase.from("factory_customers").select("*");
-    if (error) throw error;
-    return data.sort((a, b) => compareCustomerCode(a.customer_code, b.customer_code, a.name, b.name));
-  },
-});
 
 export const Route = createFileRoute("/_authenticated/_shell/factory-customers")({
   head: () => ({

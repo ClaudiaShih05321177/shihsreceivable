@@ -1,9 +1,12 @@
-import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { RocDateInput } from "@/components/ar/roc-date-input";
+import { CustomerPicker } from "@/components/ar/customer-picker";
+import { factoryCustomersQuery } from "@/lib/factory-customer-queries";
+import { matchCustomer } from "@/lib/customer-match";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -34,6 +37,7 @@ function toForm(r?: FactoryRegistration): Form {
 
 export function FactoryFormDialog({ trigger, record, focus = "progress" }: { trigger: ReactNode; record?: FactoryRegistration; focus?: "progress" | "ar" }) {
   const { data: me } = useSuspenseQuery(meQuery);
+  const { data: customers = [] } = useQuery(factoryCustomersQuery);
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(toForm(record));
@@ -133,6 +137,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   );
   const due = finalDue({ ...Object.fromEntries(MONEY.map((k) => [k, form[k]])), invoice_type: form.invoice_type, extra_fees: extras } as never);
   const inv = issuesInvoice(form.invoice_type);
+  const matched = matchCustomer(customers, form.company_name, form.tax_id);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -141,6 +146,13 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
         <DialogHeader><DialogTitle>{record ? "編輯工廠登記案件" : "新增工廠登記案件"}</DialogTitle></DialogHeader>
         <div className="grid gap-5 py-2">
           <section className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-2 sm:col-span-2"><Label>勤豐客戶</Label><CustomerPicker customers={customers} value={matched?.id ?? ""} onSelect={(id) => {
+              const c = customers.find((customer) => customer.id === id);
+              if (!c) return;
+              set("company_name", c.name);
+              set("tax_id", c.tax_id ?? "");
+            }} /></div>
+            <div className="grid gap-2"><Label htmlFor="fr-customer-code">客戶代碼</Label><Input id="fr-customer-code" readOnly value={matched?.customer_code ?? ""} /></div>
             <div className="grid gap-2 sm:col-span-2">
               <Label htmlFor="fr-tax_id">統一編號</Label>
               <div className="flex gap-2">

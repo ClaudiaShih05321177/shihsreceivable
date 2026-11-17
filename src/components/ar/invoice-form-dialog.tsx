@@ -6,6 +6,7 @@ import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { RocDateInput } from "@/components/ar/roc-date-input";
+import { CustomerPicker } from "@/components/ar/customer-picker";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -219,16 +220,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
             <div className="grid gap-4 sm:grid-cols-4">
               <div className="space-y-1.5 sm:col-span-2">
                 <Label>客戶名稱 *</Label>
-                <Select value={form.customer_id} onValueChange={pickCustomer}>
-                  <SelectTrigger><SelectValue placeholder="選擇客戶" /></SelectTrigger>
-                  <SelectContent>
-                    {customers.map((c) => (
-                      <SelectItem key={c.id} value={c.id}>
-                        {c.customer_code ? `${c.customer_code} · ` : ""}{c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <CustomerPicker customers={customers} value={form.customer_id} onSelect={pickCustomer} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="i-year">年度（民國）</Label>
