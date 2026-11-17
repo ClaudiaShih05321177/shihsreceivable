@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { CheckCircle2, Pencil, Plus, Printer, Receipt, Search, Trash2 } from "lucide-react";
+import { CheckCircle2, Plus, Printer, Receipt, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -213,12 +213,6 @@ function FilingsPage() {
                       <Button variant="ghost" size="sm" onClick={() => bill.mutate(f)} disabled={bill.isPending} aria-label={`${filingName(f)} 立帳`}>
                         <Receipt className="size-3.5" /> 立帳
                       </Button>
-                    )}
-                    {canClose && (
-                      <FilingFormDialog
-                        filing={f}
-                        trigger={<Button variant="ghost" size="sm" aria-label={`變更進度 ${filingName(f)}`}><Pencil className="size-3.5" /> 變更進度</Button>}
-                      />
                     )}
                     {me.isAdmin && (
                       <Button
