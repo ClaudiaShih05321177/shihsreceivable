@@ -80,8 +80,8 @@ function CombinedStatement() {
         })}
         <div className="mt-4 flex justify-between border-t-2 border-foreground py-2 font-bold"><span>應繳總金額：</span><span className="font-mono">{formatTWD(total)}</span></div>
         <p className="mt-8 text-base">{OFFICE.note}</p>
-        <section className="mt-6 grid grid-cols-2 gap-6 break-inside-avoid">
-          <div>
+        <section className="mt-6 flex items-stretch gap-4 break-inside-avoid">
+          <div className="min-w-0 flex-1">
             <p className="font-medium">匯款明細如下：</p>
             <div className="mt-2 pl-6">
               <p>{OFFICE.bank}</p>
@@ -90,7 +90,7 @@ function CombinedStatement() {
               <p>帳　　號：{OFFICE.account}</p>
             </div>
           </div>
-          <div className="flex h-32 flex-col border border-foreground p-2 text-base">
+          <div className="flex w-48 shrink-0 flex-col border border-foreground p-2 text-base">
             <span>事務所簽章：</span>
             <img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" />
           </div>
