@@ -85,7 +85,7 @@ function CombinedStatement() {
             <p className="font-medium">匯款明細如下：</p>
             <div className="mt-2 pl-6">
               <p>{OFFICE.bank}</p>
-              <p>戶　　名：{OFFICE.accountName}</p>
+              <p className="whitespace-nowrap">戶　　名：{OFFICE.accountName}</p>
               <p>總行代號：{OFFICE.bankCode}</p>
               <p>帳　　號：{OFFICE.account}</p>
             </div>
