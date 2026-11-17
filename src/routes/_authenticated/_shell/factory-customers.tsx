@@ -49,7 +49,7 @@ function FactoryCustomersPage() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const key = q.trim().toLowerCase();
-  const shown = rows.filter((r) => `${r.customer_code ?? ""} ${r.name} ${r.tax_id ?? ""} ${r.contact_person ?? ""} ${r.phone ?? ""}`.toLowerCase().includes(key));
+  const shown = rows.filter((r) => `${r.customer_code ?? ""} ${r.name} ${r.tax_id ?? ""} ${r.responsible_person ?? ""} ${r.address ?? ""} ${r.last_change_year ?? ""} ${r.notes ?? ""}`.toLowerCase().includes(key));
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("factory_customers").delete().eq("id", id);
@@ -63,25 +63,26 @@ function FactoryCustomersPage() {
       <PageHeader eyebrow="勤豐工商顧問有限公司" title="客戶資料" description={`共 ${rows.length} 位客戶 · 依客戶代碼排序`} actions={<CustomerDialog trigger={<Button><Plus /> 新增客戶</Button>} />} />
       <div className="relative mb-5">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-        <Input placeholder="搜尋客戶代碼、名稱、統編、聯絡人…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
+        <Input placeholder="搜尋客戶代碼、名稱、統編、負責人、地址…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
       </div>
       <div className="ledger-card overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/60 hover:bg-muted/60">
-              <TableHead>客戶代碼</TableHead><TableHead>客戶名稱</TableHead><TableHead>統一編號</TableHead><TableHead>聯絡人</TableHead><TableHead>電話</TableHead><TableHead>地址</TableHead><TableHead className="w-24" />
+              <TableHead>客戶代碼</TableHead><TableHead>客戶名稱</TableHead><TableHead>統一編號</TableHead><TableHead>工廠地址</TableHead><TableHead>負責人</TableHead><TableHead>最後變更年度</TableHead><TableHead>備註</TableHead><TableHead className="w-24" />
             </TableRow>
           </TableHeader>
           <TableBody>
-            {shown.length === 0 && <TableRow><TableCell colSpan={7} className="py-10 text-center text-muted-foreground">尚無客戶資料</TableCell></TableRow>}
+            {shown.length === 0 && <TableRow><TableCell colSpan={8} className="py-10 text-center text-muted-foreground">尚無客戶資料</TableCell></TableRow>}
             {shown.map((r) => (
               <TableRow key={r.id}>
                 <TableCell className="font-mono">{r.customer_code ?? "—"}</TableCell>
                 <TableCell className="font-medium">{r.name}</TableCell>
                 <TableCell className="font-mono">{r.tax_id ?? ""}</TableCell>
-                <TableCell>{r.contact_person ?? ""}</TableCell>
-                <TableCell>{r.phone ?? ""}</TableCell>
                 <TableCell className="max-w-64 truncate">{r.address ?? ""}</TableCell>
+                <TableCell>{r.responsible_person ?? ""}</TableCell>
+                <TableCell className="font-mono">{r.last_change_year ?? ""}</TableCell>
+                <TableCell className="max-w-40 truncate">{r.notes ?? ""}</TableCell>
                 <TableCell className="whitespace-nowrap text-right">
                   <CustomerDialog record={r} trigger={<Button variant="ghost" size="icon" aria-label="編輯"><Pencil className="size-4" /></Button>} />
                   {me.isAdmin && <Button variant="ghost" size="icon" aria-label="刪除" onClick={() => { if (confirm(`刪除「${r.name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-4" /></Button>}
@@ -95,9 +96,9 @@ function FactoryCustomersPage() {
   );
 }
 
-const FIELDS = ["customer_code", "name", "tax_id", "contact_person", "phone", "email", "address", "notes"] as const;
+const FIELDS = ["customer_code", "name", "tax_id", "responsible_person", "last_change_year", "address", "notes"] as const;
 type Form = Record<(typeof FIELDS)[number], string>;
-const toForm = (r?: FactoryCustomer): Form => Object.fromEntries(FIELDS.map((k) => [k, r?.[k] ?? ""])) as Form;
+const toForm = (r?: FactoryCustomer): Form => Object.fromEntries(FIELDS.map((k) => [k, r?.[k] == null ? "" : String(r[k])])) as Form;
 
 function CustomerDialog({ record, trigger }: { record?: FactoryCustomer; trigger: ReactNode }) {
   const qc = useQueryClient();
@@ -109,7 +110,8 @@ function CustomerDialog({ record, trigger }: { record?: FactoryCustomer; trigger
     mutationFn: async () => {
       const row = Object.fromEntries(FIELDS.map((k) => [k, form[k].trim() || null])) as Record<keyof Form, string | null>;
       row.customer_code = row.customer_code?.toUpperCase() ?? null;
-      const payload = { ...row, name: form.name.trim() };
+      const year = row.last_change_year ? Number(row.last_change_year) : null;
+      const payload = { ...row, last_change_year: Number.isFinite(year) ? year : null, name: form.name.trim() };
       const { error } = record
         ? await supabase.from("factory_customers").update(payload).eq("id", record.id)
         : await supabase.from("factory_customers").insert(payload);
@@ -147,11 +149,10 @@ function CustomerDialog({ record, trigger }: { record?: FactoryCustomer; trigger
                 <Button type="button" variant="outline" onClick={lookup} disabled={looking}>{looking ? "查詢中…" : "帶入公示資料"}</Button>
               </div>
             </div>
-            {field("contact_person", "聯絡人", { maxLength: 60 })}
-            {field("phone", "電話", { maxLength: 40 })}
-            {field("email", "電子郵件", { type: "email", maxLength: 120 })}
+            {field("responsible_person", "負責人", { maxLength: 60 })}
+            {field("last_change_year", "最後變更年度（民國）", { inputMode: "numeric", maxLength: 3, placeholder: "例：115" })}
           </div>
-          {field("address", "地址", { maxLength: 200 })}
+          {field("address", "工廠地址", { maxLength: 200 })}
           <div className="space-y-1.5"><Label htmlFor="fc-notes">備註</Label><Textarea id="fc-notes" value={form.notes} onChange={(e) => set("notes")(e.target.value)} maxLength={1000} /></div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>取消</Button>

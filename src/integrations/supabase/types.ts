@@ -122,9 +122,11 @@ export type Database = {
           customer_code: string | null
           email: string | null
           id: string
+          last_change_year: number | null
           name: string
           notes: string | null
           phone: string | null
+          responsible_person: string | null
           tax_id: string | null
           updated_at: string
         }
@@ -136,9 +138,11 @@ export type Database = {
           customer_code?: string | null
           email?: string | null
           id?: string
+          last_change_year?: number | null
           name: string
           notes?: string | null
           phone?: string | null
+          responsible_person?: string | null
           tax_id?: string | null
           updated_at?: string
         }
@@ -150,9 +154,11 @@ export type Database = {
           customer_code?: string | null
           email?: string | null
           id?: string
+          last_change_year?: number | null
           name?: string
           notes?: string | null
           phone?: string | null
+          responsible_person?: string | null
           tax_id?: string | null
           updated_at?: string
         }

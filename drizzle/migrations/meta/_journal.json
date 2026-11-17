@@ -316,6 +316,13 @@
       "when": 1794878689954,
       "tag": "0044_factory_customers",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794879494768,
+      "tag": "0045_factory_customers_owner_year",
+      "breakpoints": true
     }
   ]
 }
