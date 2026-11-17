@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildQuoteTerms, invoiceSummary, quoteSummary, readQuoteTerms } from "./factory-docs";
+import { buildQuoteTerms, hasDeposit, invoiceSummary, quoteSummary, readQuoteTerms } from "./factory-docs";
 
 const base = { quote_amount: 65000, deposit_invoice_amount: 34125, deposit_received_amount: 0, final_invoice_amount: 0, government_fee: 5000, other_fee: 0, final_received_amount: 0, invoice_type: "開發票" };
 
@@ -36,6 +36,15 @@ describe("折扣", () => {
   });
   it("全額請款也用折扣後金額：63,000 + 5,000 = 68,000", () => {
     expect(invoiceSummary({ ...base, discount: 5000 }, "全額").total).toBe(68000);
+  });
+});
+
+describe("訂金判斷", () => {
+  it("開發票看訂金發票金額，不開發票看訂金實收", () => {
+    expect(hasDeposit(base)).toBe(true);
+    expect(hasDeposit({ ...base, deposit_invoice_amount: 0 })).toBe(false);
+    expect(hasDeposit({ ...base, invoice_type: "不開發票", deposit_received_amount: 30000 })).toBe(true);
+    expect(hasDeposit({ ...base, invoice_type: "不開發票" })).toBe(false);
   });
 });
 

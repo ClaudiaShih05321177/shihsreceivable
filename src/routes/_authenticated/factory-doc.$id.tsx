@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { canManageFactoryProgress } from "@/lib/permissions";
 
 import { Button } from "@/components/ui/button";
-import { buildQuoteTerms, ENV_TERM_OPTIONS, INVOICE_STAGES, invoiceSummary, KINFENG, PAYMENT_TERM_OPTIONS, quoteSummary, readQuoteTerms, type InvoiceStage, type QuoteTermsConfig } from "@/lib/factory-docs";
+import { buildQuoteTerms, ENV_TERM_OPTIONS, hasDeposit, INVOICE_STAGES, invoiceSummary, KINFENG, PAYMENT_TERM_OPTIONS, quoteSummary, readQuoteTerms, type InvoiceStage, type QuoteTermsConfig } from "@/lib/factory-docs";
 import { factoryRegistrationsQuery, meQuery } from "@/lib/queries";
 import { formatDate, formatTWD, todayISO } from "@/lib/receivables";
 
@@ -157,7 +157,7 @@ function FactoryDocPage() {
         {isQuote ? (
           <>
             <ol className="mt-4 list-decimal pl-6 text-sm">{terms.map((t) => <li key={t}><Area v={t} /></li>)}</ol>
-            <p className="mt-2 text-sm">聯絡人：{KINFENG.contact}　　報價單回傳後本司會開立預付金額之發票及請款單</p>
+            <p className="mt-2 text-sm">聯絡人：{KINFENG.contact}{hasDeposit(r) ? "　　報價單回傳後本司會開立預付金額之發票及請款單" : ""}</p>
             <div className="mt-8 grid grid-cols-2 gap-6 text-sm">
               <div className="h-28 border border-foreground p-2">訂購廠商簽章確認</div>
               <div className="flex h-28 flex-col border border-foreground p-2"><span>承辦公司簽章</span><img src={kinfengSeal.url} alt="勤豐工商大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" /></div>

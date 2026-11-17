@@ -64,6 +64,11 @@ export function invoiceSummary(r: ProjectArLike, stage: InvoiceStage): DocSummar
   return { consulting: n(r.quote_amount), discount: n(r.quote_amount) - q, subtotal: q, lines, total: lines.reduce((s, l) => s + l.amount, q) };
 }
 
+/** 案件是否有訂金（有訂金才在報價單註記會開立預付發票及請款單）。 */
+export function hasDeposit(r: ProjectArLike): boolean {
+  return issuesInvoice(r.invoice_type) ? n(r.deposit_invoice_amount) > 0 : n(r.deposit_received_amount) > 0;
+}
+
 /** 報價條款切換設定（存於 factory_registrations.quote_terms）。 */
 export const ENV_TERM_OPTIONS = ["包含環判", "免跑環保", "客戶自辦環保"] as const;
 export const PAYMENT_TERM_OPTIONS = ["預付50%＋尾款", "全額結案付清", "自訂"] as const;
