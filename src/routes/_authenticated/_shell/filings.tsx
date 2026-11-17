@@ -153,7 +153,7 @@ function FilingsPage() {
         {filterBtn("all", "全部", filings.length)}
       </div>
       {/* 窄螢幕：卡片列表，避免左右捲動 */}
-      <div className="space-y-3 lg:hidden">
+      <div className="grid gap-3 items-start min-[1800px]:hidden md:grid-cols-2 xl:grid-cols-3">
         {rows.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">尚無案件</div>}
         {rows.map((f) => {
           const code = filingCustomerCode(f.customer?.customer_code, f.customer_code);
@@ -216,7 +216,7 @@ function FilingsPage() {
         })}
       </div>
       {/* 寬螢幕：表格 */}
-      <div className="ledger-card hidden overflow-x-auto lg:block">
+      <div className="ledger-card hidden overflow-x-auto min-[1800px]:block">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/60 hover:bg-muted/60">
