@@ -153,12 +153,13 @@ function FilingsPage() {
         {filterBtn("all", "全部", filings.length)}
       </div>
       {/* 窄螢幕：卡片列表，避免左右捲動 */}
-      <div className="grid gap-3 items-start min-[1800px]:hidden md:grid-cols-2 xl:grid-cols-3">
+      <div className="flex flex-col gap-2 min-[1800px]:hidden">
         {rows.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">尚無案件</div>}
         {rows.map((f) => {
           const code = filingCustomerCode(f.customer?.customer_code, f.customer_code);
           return (
-            <div key={f.id} className="ledger-card p-4">
+            <div key={f.id} className="ledger-card flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:gap-6">
+              <div className="min-w-0 lg:w-80 lg:shrink-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 font-medium">
                   {canClose ? (
@@ -177,7 +178,8 @@ function FilingsPage() {
               <div className="mt-1 text-sm text-muted-foreground">
                 {f.case_type}{f.change_detail ? `（${f.change_detail}）` : ""}{f.suspended_period ? `（${f.suspended_period}）` : ""} · {f.route}
               </div>
-              <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              </div>
+              <dl className="grid flex-1 grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
                 {routeHasAuthority(f.route) && <><dt className="text-muted-foreground">主管機關</dt><dd>{formatDate(f.filed_date)}／{formatDate(f.approved_date)}</dd></>}
                 {f.special_authority && <><dt className="text-muted-foreground">{f.special_authority}</dt><dd>{formatDate(f.special_filed_date)}／{formatDate(f.special_approved_date)}</dd></>}
                 {routeHasTaxBureau(f.route) && <><dt className="text-muted-foreground">國稅局</dt><dd>{formatDate(f.tax_filed_date)}／{formatDate(f.tax_approved_date)}</dd></>}
@@ -187,7 +189,7 @@ function FilingsPage() {
                 <dt className="text-muted-foreground">代刻印章</dt><dd className="text-right"><Money value={Number(f.stamp_fee)} /></dd>
                 {me.isAdmin && f.invoice_id && <><dt className="text-muted-foreground">應收帳款</dt><dd className="text-right"><Link to="/invoices/$id" params={{ id: f.invoice_id }} className="text-primary hover:underline">查看帳款</Link></dd></>}
               </dl>
-              <div className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t border-border pt-2">
+              <div className="flex flex-wrap items-center justify-end gap-1 border-t border-border pt-2 lg:w-48 lg:shrink-0 lg:border-0 lg:pt-0">
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-receipt/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 收據`}><Printer className="size-3.5" />收據</Link></Button>}
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-quote/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 報價單`}><Printer className="size-3.5" />報價單</Link></Button>}
                 {canClose && f.stage !== "結案" && (
