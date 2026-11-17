@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
-import { CASE_TYPES, SUSPEND_CASE_TYPES, extendSuspendedPeriod, FILING_ROUTES, initialStage, routeHasAuthority, routeHasTaxBureau, staffFromCode } from "@/lib/filings";
+import { CASE_TYPES, SUSPEND_CASE_TYPES, extendSuspendedPeriod, FILING_ROUTES, initialStage, routeHasAuthority, routeHasTaxBureau, staffFromCode, filingExtraFees } from "@/lib/filings";
 import { lookupCompany } from "@/lib/company-lookup.functions";
 import { customersQuery, filingServiceFeesQuery, meQuery, type Filing } from "@/lib/queries";
 import { filingCustomersQuery } from "@/lib/filing-customer-queries";
@@ -30,6 +30,7 @@ type Form = {
   service_fee: string;
   advance_fee: string;
   stamp_fee: string;
+  extra_fees: { label: string; amount: string }[];
   notes: string;
   special_authority: string;
   change_detail: string;
@@ -40,7 +41,7 @@ type Form = {
 
 const NEW = "__new__";
 
-const EMPTY: Form = { customer_id: "", company_name: "", customer_code: "", route: FILING_ROUTES[0], tax_filed_date: "", tax_approved_date: "", case_type: CASE_TYPES[0], change_detail: "", suspended_period: "", filed_date: "", approved_date: "", service_fee: "", advance_fee: "", stamp_fee: "", notes: "", special_authority: "", special_filed_date: "", special_approved_date: "" };
+const EMPTY: Form = { customer_id: "", company_name: "", customer_code: "", route: FILING_ROUTES[0], tax_filed_date: "", tax_approved_date: "", case_type: CASE_TYPES[0], change_detail: "", suspended_period: "", filed_date: "", approved_date: "", service_fee: "", advance_fee: "", stamp_fee: "", extra_fees: [], notes: "", special_authority: "", special_filed_date: "", special_approved_date: "" };
 
 function toForm(filing: Filing, serviceFee?: number): Form {
   return {
@@ -56,6 +57,7 @@ function toForm(filing: Filing, serviceFee?: number): Form {
     service_fee: serviceFee ? String(serviceFee) : "",
     advance_fee: filing.advance_fee ? String(filing.advance_fee) : "",
     stamp_fee: filing.stamp_fee ? String(filing.stamp_fee) : "",
+    extra_fees: filingExtraFees(filing.extra_fees).map((x) => ({ label: x.label, amount: String(x.amount) })),
     notes: filing.notes ?? "",
     special_authority: filing.special_authority ?? "",
     change_detail: filing.change_detail ?? "",
@@ -158,6 +160,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
         approved_date: form.approved_date || null,
         advance_fee: money(form.advance_fee),
         stamp_fee: money(form.stamp_fee),
+        extra_fees: filingExtraFees(form.extra_fees),
         notes: form.notes.trim() || null,
         special_authority: form.special_authority.trim() || null,
         change_detail: form.case_type === "變更登記" ? form.change_detail.trim() || null : null,
@@ -331,13 +334,26 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           </div>}
           <div className="grid grid-cols-2 gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="f-advance">代墊規費</Label>
+              <Label htmlFor="f-advance">規費</Label>
               <Input id="f-advance" type="number" min={0} value={form.advance_fee} onChange={(e) => set({ advance_fee: e.target.value })} placeholder="0" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="f-stamp">代刻印章</Label>
               <Input id="f-stamp" type="number" min={0} value={form.stamp_fee} onChange={(e) => set({ stamp_fee: e.target.value })} placeholder="0" />
             </div>
+          </div>
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between">
+              <Label>其他費用</Label>
+              <Button type="button" variant="outline" size="sm" onClick={() => set({ extra_fees: [...form.extra_fees, { label: "", amount: "" }] })}>＋ 新增費用</Button>
+            </div>
+            {form.extra_fees.map((x, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <Input aria-label={`其他費用 ${i + 1} 名稱`} placeholder="項目名稱" value={x.label} className="flex-1" onChange={(e) => set({ extra_fees: form.extra_fees.map((y, j) => j === i ? { ...y, label: e.target.value } : y) })} />
+                <Input aria-label={`其他費用 ${i + 1} 金額`} type="number" min={0} placeholder="0" value={x.amount} className="w-28" onChange={(e) => set({ extra_fees: form.extra_fees.map((y, j) => j === i ? { ...y, amount: e.target.value } : y) })} />
+                <Button type="button" variant="ghost" size="sm" aria-label={`刪除其他費用 ${i + 1}`} onClick={() => set({ extra_fees: form.extra_fees.filter((_, j) => j !== i) })}>✕</Button>
+              </div>
+            ))}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="f-notes">備註</Label>

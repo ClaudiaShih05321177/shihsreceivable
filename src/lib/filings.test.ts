@@ -20,7 +20,7 @@ describe("filingInvoiceItems", () => {
     const items = filingInvoiceItems({ service_fee: 5000, advance_fee: 1200 });
     expect(items["工商"]).toBe(5000);
     expect(feeLabel("工商")).toBe("工商代辦費");
-    expect(items["其他：代墊規費"]).toBe(1200);
+    expect(items["其他：規費"]).toBe(1200);
   });
 
   it("金額為 0 的項目不產生", () => {
@@ -56,7 +56,7 @@ import { filingBillingPeriod, mergeFeeItems, staffFromCode } from "./filings";
 
 describe("工商費用與派案", () => {
   it("代刻印章存入印章欄位並計入合計", () => {
-    expect(filingInvoiceItems({ service_fee: 0, advance_fee: 1000, stamp_fee: 800 })).toEqual({ "其他：代墊規費": 1000, 印章: 800 });
+    expect(filingInvoiceItems({ service_fee: 0, advance_fee: 1000, stamp_fee: 800 })).toEqual({ "其他：規費": 1000, 印章: 800 });
     expect(filingTotal({ service_fee: 5000, advance_fee: 1000, stamp_fee: 800 })).toBe(6800);
   });
   it("客戶代碼前兩位英文字母為會計專員代號", () => {
@@ -119,4 +119,12 @@ describe("展延停業", () => {
 describe("展延停業連日推算", () => {
   it("115/1/1-115/12/31 延成 116/1/1-116/12/31", () => { expect(extendSuspendedPeriod("115/1/1-115/12/31")).toBe("116/1/1-116/12/31"); });
   it("114/7/15-115/7/14 延成 115/7/15-116/7/14", () => { expect(extendSuspendedPeriod("114/7/15-115/7/14")).toBe("115/7/15-116/7/14"); });
+});
+
+describe("工商其他費用", () => {
+  it("自訂其他費用列入立帳項目與合計，空白或 0 不列", () => {
+    const f = { service_fee: 5000, advance_fee: 300, extra_fees: [{ label: "公證費", amount: 1500 }, { label: "", amount: 99 }, { label: "零", amount: 0 }] };
+    expect(filingInvoiceItems(f)).toEqual({ 工商: 5000, "其他：規費": 300, "其他：公證費": 1500 });
+    expect(filingTotal(f)).toBe(6800);
+  });
 });

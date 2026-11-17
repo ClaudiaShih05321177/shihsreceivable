@@ -43,7 +43,16 @@ export function filingName(f: { customer?: { name: string } | null; company_name
   return f.customer?.name ?? (f.company_name ? `${f.company_name}（新設立）` : "—");
 }
 
-export type FilingFeeLike = { service_fee?: number | string | null; advance_fee: number | string; stamp_fee?: number | string | null };
+export type FilingFeeLike = { service_fee?: number | string | null; advance_fee: number | string; stamp_fee?: number | string | null; extra_fees?: unknown };
+
+/** 自訂其他費用（同仁自行列入）。 */
+export type FilingExtraFee = { label: string; amount: number };
+export function filingExtraFees(v: unknown): FilingExtraFee[] {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((x) => ({ label: String((x as { label?: unknown })?.label ?? "").trim(), amount: Math.round(Number((x as { amount?: unknown })?.amount) || 0) }))
+    .filter((x) => x.label && x.amount > 0);
+}
 
 /** 印章費在帳款費用項目裡的說明文字。 */
 export const STAMP_FEE_LABEL = "代刻印章";
@@ -74,7 +83,7 @@ export function feeItemsTotal(items: FeeItems): number {
 }
 
 /** 代墊規費在帳款費用項目裡的說明文字。 */
-export const ADVANCE_FEE_LABEL = "代墊規費";
+export const ADVANCE_FEE_LABEL = "規費";
 
 /** 結案立帳的費用項目：代辦費存入顯示為「工商代辦費」的欄位（鍵「工商」），代墊規費存自訂項目。 */
 export function filingInvoiceItems(filing: FilingFeeLike): FeeItems {
@@ -85,6 +94,10 @@ export function filingInvoiceItems(filing: FilingFeeLike): FeeItems {
   const stamp = Math.round(Number(filing.stamp_fee) || 0);
   if (advance > 0) items[otherKey(ADVANCE_FEE_LABEL)] = advance;
   if (stamp > 0) items["印章"] = stamp; // 存入顯示為「代刻印章」的欄位，與工商代辦費分列
+  for (const x of filingExtraFees(filing.extra_fees)) {
+    const k = otherKey(x.label);
+    items[k] = (Number(items[k]) || 0) + x.amount;
+  }
   return items;
 }
 

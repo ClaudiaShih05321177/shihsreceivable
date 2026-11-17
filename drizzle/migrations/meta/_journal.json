@@ -400,6 +400,13 @@
       "when": 1794897580476,
       "tag": "0056_factory_discount_quote_terms",
       "breakpoints": true
+    },
+    {
+      "idx": 57,
+      "version": "7",
+      "when": 1794899672089,
+      "tag": "0057_filings_extra_fees",
+      "breakpoints": true
     }
   ]
 }

@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, billingTypeOnClose, canCloseFiling } from "@/lib/filings";
+import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, billingTypeOnClose, canCloseFiling, filingExtraFees } from "@/lib/filings";
 import { customersQuery, filingServiceFeesQuery, filingsQuery, meQuery, type Filing } from "@/lib/queries";
 import { formatDate, scheduledCustomerFees, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -182,7 +182,8 @@ function FilingsPage() {
                 {f.special_authority && <><dt className="text-muted-foreground">{f.special_authority}</dt><dd>{formatDate(f.special_filed_date)}／{formatDate(f.special_approved_date)}</dd></>}
                 {routeHasTaxBureau(f.route) && <><dt className="text-muted-foreground">國稅局</dt><dd>{formatDate(f.tax_filed_date)}／{formatDate(f.tax_approved_date)}</dd></>}
                 {me.isAdmin && <><dt className="text-muted-foreground">代辦費</dt><dd className="text-right"><FilingFeeDialog id={f.id} name={filingName(f)} fee={fees?.[f.id] ?? 0} /></dd></>}
-                <dt className="text-muted-foreground">代墊規費</dt><dd className="text-right"><Money value={Number(f.advance_fee)} /></dd>
+                <dt className="text-muted-foreground">規費</dt><dd className="text-right"><Money value={Number(f.advance_fee)} /></dd>
+                {filingExtraFees(f.extra_fees).flatMap((x, i) => [<dt key={`l${i}`} className="text-muted-foreground">{x.label}</dt>, <dd key={`a${i}`} className="text-right"><Money value={x.amount} /></dd>])}
                 <dt className="text-muted-foreground">代刻印章</dt><dd className="text-right"><Money value={Number(f.stamp_fee)} /></dd>
                 {me.isAdmin && f.invoice_id && <><dt className="text-muted-foreground">應收帳款</dt><dd className="text-right"><Link to="/invoices/$id" params={{ id: f.invoice_id }} className="text-primary hover:underline">查看帳款</Link></dd></>}
               </dl>
@@ -227,7 +228,7 @@ function FilingsPage() {
               <TableHead>特許 送件／核准</TableHead>
               <TableHead>國稅局 送件／核准</TableHead>
               {me.isAdmin && <TableHead className="text-right">代辦費</TableHead>}
-              <TableHead className="text-right">代墊規費</TableHead>
+              <TableHead className="text-right">規費</TableHead>
               <TableHead className="text-right">代刻印章</TableHead>
               {me.isAdmin && <TableHead>應收帳款</TableHead>}
               <TableHead className="text-right">操作</TableHead>

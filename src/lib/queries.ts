@@ -153,7 +153,7 @@ export const filingsQuery = queryOptions({
   queryFn: async () => {
     const { data, error } = await supabase
       .from("filings")
-      .select("id, customer_id, case_type, stage, filed_date, approved_date, advance_fee, stamp_fee, invoice_id, notes, created_by, created_at, updated_at, company_name, route, tax_filed_date, tax_approved_date, customer_code, special_authority, special_filed_date, special_approved_date, change_detail, suspended_period, customer:customers(id, name, customer_code)")
+      .select("id, customer_id, case_type, stage, filed_date, approved_date, advance_fee, stamp_fee, invoice_id, notes, created_by, created_at, updated_at, company_name, route, tax_filed_date, tax_approved_date, customer_code, special_authority, special_filed_date, special_approved_date, change_detail, suspended_period, extra_fees, customer:customers(id, name, customer_code)")
       .order("created_at", { ascending: false });
     if (error) throw error;
     // 同仁可能看不到案件客戶的完整資料，名稱與代碼另由資料庫函式提供。

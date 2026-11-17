@@ -319,6 +319,7 @@ export type Database = {
           created_by: string | null
           customer_code: string | null
           customer_id: string | null
+          extra_fees: Json
           filed_date: string | null
           id: string
           invoice_id: string | null
@@ -345,6 +346,7 @@ export type Database = {
           created_by?: string | null
           customer_code?: string | null
           customer_id?: string | null
+          extra_fees?: Json
           filed_date?: string | null
           id?: string
           invoice_id?: string | null
@@ -371,6 +373,7 @@ export type Database = {
           created_by?: string | null
           customer_code?: string | null
           customer_id?: string | null
+          extra_fees?: Json
           filed_date?: string | null
           id?: string
           invoice_id?: string | null
