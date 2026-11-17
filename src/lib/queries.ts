@@ -157,11 +157,12 @@ export const filingsQuery = queryOptions({
       .order("created_at", { ascending: false });
     if (error) throw error;
     // 同仁可能看不到案件客戶的完整資料，名稱與代碼另由資料庫函式提供。
-    const { data: names } = await supabase.rpc("filing_customer_names");
+    const { data: names, error: namesError } = await supabase.rpc("filing_customer_names");
+    if (namesError) throw namesError;
     const byId = new Map((names ?? []).map((n) => [n.customer_id, n]));
     return (data ?? []).map((f) => {
       const n = f.customer_id ? byId.get(f.customer_id) : undefined;
-      return f.customer || !n ? f : { ...f, customer: { id: n.customer_id, name: n.name, customer_code: n.customer_code } };
+      return !n ? f : { ...f, customer: { id: n.customer_id, name: n.name, customer_code: n.customer_code || f.customer?.customer_code || f.customer_code } };
     }) as unknown as Filing[];
   },
 });

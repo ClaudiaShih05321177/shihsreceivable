@@ -16,6 +16,7 @@ import { customersQuery, filingServiceFeesQuery, filingsQuery, meQuery, type Fil
 import { formatDate, scheduledCustomerFees, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 import { compareCustomerCode } from "@/lib/customer-sort";
+import { filingCustomerCode } from "@/lib/filing-customers";
 
 export const Route = createFileRoute("/_authenticated/_shell/filings")({
   head: () => ({
@@ -43,13 +44,13 @@ function FilingsPage() {
   const [q, setQ] = useState("");
   const key = q.trim().toLowerCase();
   const custById = new Map(customers.map((c) => [c.id, c]));
-  const matches = (f: Filing) => !key || `${f.customer?.customer_code ?? f.customer_code ?? ""} ${filingName(f)} ${f.customer_id ? custById.get(f.customer_id)?.tax_id ?? "" : ""} ${f.case_type} ${f.notes ?? ""}`.toLowerCase().includes(key);
+  const matches = (f: Filing) => !key || `${filingCustomerCode(f.customer?.customer_code, f.customer_code)} ${filingName(f)} ${f.customer_id ? custById.get(f.customer_id)?.tax_id ?? "" : ""} ${f.case_type} ${f.notes ?? ""}`.toLowerCase().includes(key);
 
   const counts = Object.fromEntries(FILING_STAGES.map((s) => [s, filings.filter((f) => f.stage === s).length]));
   const openCount = filings.filter((f) => f.stage !== "結案").length;
   const pendingBill = (f: Filing) => f.stage === "結案" && !f.invoice_id;
   const rows = filings.filter((f) => (stage === "all" ? true : stage === "open" ? f.stage !== "結案" : stage === "pending" ? pendingBill(f) : f.stage === stage) && matches(f))
-    .sort((a, b) => compareCustomerCode(a.customer?.customer_code ?? a.customer_code, b.customer?.customer_code ?? b.customer_code, filingName(a), filingName(b)));
+    .sort((a, b) => compareCustomerCode(filingCustomerCode(a.customer?.customer_code, a.customer_code), filingCustomerCode(b.customer?.customer_code, b.customer_code), filingName(a), filingName(b)));
 
   const canClose = canCloseFiling(me.isAdmin, me.staffCode);
   const pendingCount = filings.filter(pendingBill).length;
@@ -177,7 +178,7 @@ function FilingsPage() {
             )}
             {rows.map((f) => (
               <TableRow key={f.id}>
-                <TableCell className="min-w-56 font-medium">{canClose ? <FilingFormDialog filing={f} trigger={<button type="button" className="text-left hover:text-primary hover:underline" aria-label={`點公司名稱變更進度 ${filingName(f)}`}>{(f.customer?.customer_code ?? f.customer_code) && <span className="mr-2 font-mono text-sm text-muted-foreground">{f.customer?.customer_code ?? f.customer_code}</span>}{filingName(f)}</button>} /> : <>{(f.customer?.customer_code ?? f.customer_code) && <span className="mr-2 font-mono text-sm text-muted-foreground">{f.customer?.customer_code ?? f.customer_code}</span>}{filingName(f)}</>}</TableCell>
+                <TableCell className="min-w-56 font-medium">{canClose ? <FilingFormDialog filing={f} trigger={<Button type="button" variant="link" className="h-auto justify-start p-0 text-left whitespace-normal text-foreground" aria-label={`點公司名稱變更進度 ${filingName(f)}`}><span>{filingCustomerCode(f.customer?.customer_code, f.customer_code) && <span className="mr-2 font-mono text-sm text-muted-foreground">{filingCustomerCode(f.customer?.customer_code, f.customer_code)} ·</span>}{filingName(f)}</span></Button>} /> : <>{filingCustomerCode(f.customer?.customer_code, f.customer_code) && <span className="mr-2 font-mono text-sm text-muted-foreground">{filingCustomerCode(f.customer?.customer_code, f.customer_code)} ·</span>}{filingName(f)}</>}</TableCell>
                 <TableCell className="text-sm">{f.case_type}{f.change_detail ? `（${f.change_detail}）` : ""}{f.suspended_period ? `（${f.suspended_period}）` : ""}</TableCell>
                 <TableCell>
                   <span className={cn(

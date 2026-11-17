@@ -15,7 +15,7 @@ import { CASE_TYPES, SUSPEND_CASE_TYPES, extendSuspendedPeriod, FILING_ROUTES, i
 import { lookupCompany } from "@/lib/company-lookup.functions";
 import { customersQuery, filingServiceFeesQuery, meQuery, type Filing } from "@/lib/queries";
 import { filingCustomersQuery } from "@/lib/filing-customer-queries";
-import { filingCustomerLink, findFilingCustomer } from "@/lib/filing-customers";
+import { filingCustomerCode, filingCustomerLink, findFilingCustomer } from "@/lib/filing-customers";
 
 type Form = {
   customer_id: string;
@@ -46,7 +46,7 @@ function toForm(filing: Filing, serviceFee?: number): Form {
   return {
     customer_id: filing.customer_id ?? NEW,
     company_name: filing.company_name ?? "",
-    customer_code: filing.customer?.customer_code ?? filing.customer_code ?? "",
+    customer_code: filingCustomerCode(filing.customer?.customer_code, filing.customer_code),
     route: filing.route,
     tax_filed_date: filing.tax_filed_date ?? "",
     tax_approved_date: filing.tax_approved_date ?? "",
@@ -83,6 +83,15 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
   useEffect(() => {
     if (open) { setForm(filing ? toForm(filing, fees?.[filing.id]) : EMPTY); setTaxId(""); setCreated(null); }
   }, [open, filing, fees]);
+
+  useEffect(() => {
+    if (!open || !filing?.customer_id) return;
+    const customer = directory.find((c) => c.id === filing.customer_id);
+    if (!customer?.customer_code) return;
+    setForm((current) => current.customer_id === customer.id && !current.customer_code.trim()
+      ? { ...current, customer_code: customer.customer_code ?? "" }
+      : current);
+  }, [open, directory, filing?.customer_id]);
 
   const set = (patch: Partial<Form>) => setForm((f) => ({ ...f, ...patch }));
   const options = [...directory];

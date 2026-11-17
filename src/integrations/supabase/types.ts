@@ -649,6 +649,7 @@ export type Database = {
           name: string
         }[]
       }
+      filing_directory_code: { Args: { _customer_id: string }; Returns: string }
       filing_service_fees: {
         Args: never
         Returns: {

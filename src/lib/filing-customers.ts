@@ -12,3 +12,8 @@ export function findFilingCustomer(customers: FilingCustomer[], name: string, ta
 export function filingCustomerLink(customer: FilingCustomer) {
   return { customer_id: customer.id, customer_code: customer.customer_code ?? "", company_name: "" };
 }
+
+/** Prefer the current directory code; blank values must not hide the saved case code. */
+export function filingCustomerCode(customerCode?: string | null, caseCode?: string | null) {
+  return customerCode?.trim() || caseCode?.trim() || "";
+}

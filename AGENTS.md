@@ -33,7 +33,7 @@ use the editor.
 
 - Customer name search uses CustomerPicker; factory forms use the separate factory customer query and derive codes from uniquely matched names/tax IDs. Why: never mix office and factory numbering.
 - Filing fee edits have an admin-only focused dialog calling the existing checked RPC. Why: financial edits need not resave case progress.
-- Filing customer search uses a minimal admin/CA/MN RPC and saves the customer UUID with its code. Why: billing links use IDs, never code alone.
+- Filing search uses a minimal closer-only RPC; missing codes use unique factory tax-ID/name matches without changing staff or billing UUIDs. Why: separate ledgers.
 
 - Shared customer queries use an explicit public column list; bonus percentages are fetched only through an admin-checked security-definer RPC, with direct column SELECT revoked. Why: row-level customer sharing must not expose private bonus settings.
 
