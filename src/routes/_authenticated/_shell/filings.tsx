@@ -47,11 +47,11 @@ function FilingsPage() {
 
   const counts = Object.fromEntries(FILING_STAGES.map((s) => [s, filings.filter((f) => f.stage === s).length]));
   const openCount = filings.filter((f) => f.stage !== "結案").length;
+  const pendingBill = (f: Filing) => f.stage === "結案" && !f.invoice_id;
   const rows = filings.filter((f) => (stage === "all" ? true : stage === "open" ? f.stage !== "結案" : stage === "pending" ? pendingBill(f) : f.stage === stage) && matches(f))
     .sort((a, b) => compareCustomerCode(a.customer?.customer_code ?? a.customer_code, b.customer?.customer_code ?? b.customer_code, filingName(a), filingName(b)));
 
   const canClose = canCloseFiling(me.isAdmin, me.staffCode);
-  const pendingBill = (f: Filing) => f.stage === "結案" && !f.invoice_id;
   const pendingCount = filings.filter(pendingBill).length;
 
   const close = useMutation({

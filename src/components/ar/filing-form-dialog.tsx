@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { RocDateInput } from "@/components/ar/roc-date-input";
+import { CustomerPicker } from "@/components/ar/customer-picker";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { CASE_TYPES, SUSPEND_CASE_TYPES, extendSuspendedPeriod, FILING_ROUTES, initialStage, routeHasAuthority, routeHasTaxBureau, staffFromCode } from "@/lib/filings";
 import { lookupCompany } from "@/lib/company-lookup.functions";
 import { customersQuery, filingServiceFeesQuery, meQuery, type Filing } from "@/lib/queries";
+import { filingCustomersQuery } from "@/lib/filing-customer-queries";
+import { filingCustomerLink, findFilingCustomer } from "@/lib/filing-customers";
 
 type Form = {
   customer_id: string;
@@ -73,20 +76,33 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
   const [form, setForm] = useState<Form>(EMPTY);
   const [taxId, setTaxId] = useState("");
   const [looking, setLooking] = useState(false);
+  const { data: directory = [], error: directoryError, isPending: directoryPending } = useQuery({ ...filingCustomersQuery, enabled: open });
   // 同仁新建的客戶尚未派專員代碼，RLS 看不到，先記在本地供選單顯示。
   const [created, setCreated] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
-    if (open) { setForm(filing ? toForm(filing, fees?.[filing.id]) : EMPTY); setTaxId(""); }
+    if (open) { setForm(filing ? toForm(filing, fees?.[filing.id]) : EMPTY); setTaxId(""); setCreated(null); }
   }, [open, filing, fees]);
 
   const set = (patch: Partial<Form>) => setForm((f) => ({ ...f, ...patch }));
+  const options = [...directory];
+  if (filing?.customer && !options.some((c) => c.id === filing.customer?.id)) options.push(filing.customer);
+  if (created && !options.some((c) => c.id === created.id)) options.push({ ...created, customer_code: form.customer_code });
+  const pickCustomer = (id: string) => {
+    if (id === NEW) { set({ customer_id: NEW, customer_code: "", company_name: "" }); return; }
+    const customer = options.find((c) => c.id === id);
+    if (!customer) return;
+    set({ ...filingCustomerLink(customer), ...(form.case_type === "展延停業" && !form.suspended_period ? { suspended_period: extendSuspendedPeriod(customers.find((c) => c.id === id)?.suspended_period) } : {}) });
+  };
 
   const createByTaxId = async () => {
     const id = taxId.trim();
     if (!/^\d{8}$/.test(id)) { toast.error("請輸入 8 位數統一編號"); return; }
-    const existing = customers.find((c) => c.tax_id === id);
-    if (existing) { set({ customer_id: existing.id, customer_code: form.customer_code || existing.customer_code || "" }); toast.success(`已選擇既有客戶：${existing.name}`); return; }
+    if (filing?.invoice_id) return;
+    if (directoryPending || directoryError) { toast.error("客戶名冊尚未載入，請稍後再試"); return; }
+    const existing = findFilingCustomer(directory, "", id);
+    if (existing) { pickCustomer(existing.id); toast.success(`已帶入 ${existing.customer_code ?? ""} · ${existing.name}`); return; }
+    if (directory.some((c) => c.tax_id === id)) { toast.error("此統編有多個客戶帳戶，請在客戶選單選擇正確代碼"); return; }
     setLooking(true);
     try {
       const r = await lookupCompany({ data: { taxId: id } });
@@ -103,6 +119,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
         await supabase.from("customers").update({ customer_code: code, staff_code: staffFromCode(code) }).eq("id", data.id);
       }
       await qc.invalidateQueries({ queryKey: ["customers"] });
+      await qc.invalidateQueries({ queryKey: ["filing_customers"] });
       set({ customer_id: data.id });
       setTaxId("");
       toast.success(`已新增客戶：${r.name}`);
@@ -117,6 +134,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
     mutationFn: async () => {
       const isNew = form.customer_id === NEW;
       if (!form.customer_id) throw new Error("請選擇客戶");
+      if (filing?.invoice_id && form.customer_id !== filing.customer_id) throw new Error("已立帳案件不能更換帳款客戶");
       if (isNew && !form.company_name.trim()) throw new Error("請輸入新設立公司名稱");
       const row = {
         customer_id: isNew ? null : form.customer_id,
@@ -164,6 +182,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
       setOpen(false);
       qc.invalidateQueries({ queryKey: ["filings"] });
       qc.invalidateQueries({ queryKey: ["customers"] });
+      qc.invalidateQueries({ queryKey: ["filing_customers"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
   });
@@ -179,25 +198,16 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
         </DialogHeader>
         <div className="grid gap-4 py-2">
           <div className="grid gap-2">
-            <Label htmlFor="f-taxid">用統編新增客戶</Label>
+            <Label htmlFor="f-taxid">統編查詢客戶</Label>
             <div className="flex gap-2">
-              <Input id="f-taxid" inputMode="numeric" maxLength={8} value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="輸入 8 位數統一編號" />
-              <Button type="button" variant="outline" onClick={createByTaxId} disabled={looking}>{looking ? "查詢中…" : "查詢並新增"}</Button>
+              <Input id="f-taxid" inputMode="numeric" maxLength={8} value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="輸入 8 位數統一編號" disabled={!!filing?.invoice_id} />
+              <Button type="button" variant="outline" onClick={createByTaxId} disabled={looking || directoryPending || !!directoryError || !!filing?.invoice_id}>{looking ? "查詢中…" : "查詢／帶入"}</Button>
             </div>
-            <p className="text-xs text-muted-foreground">自動帶入經濟部公示的公司名稱、負責人與地址，並選為本案客戶。</p>
           </div>
           <div className="grid gap-2">
             <Label htmlFor="f-customer">客戶</Label>
-            <Select value={form.customer_id} onValueChange={(v) => set({ customer_id: v, customer_code: form.customer_code || customers.find((c) => c.id === v)?.customer_code || "", ...(form.case_type === "展延停業" && !form.suspended_period ? { suspended_period: extendSuspendedPeriod(customers.find((c) => c.id === v)?.suspended_period) } : {}) })}>
-              <SelectTrigger id="f-customer" aria-label="客戶"><SelectValue placeholder="選擇客戶" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NEW}>＋ 新設立（尚無統編／客戶資料）</SelectItem>
-                {created && !customers.some((c) => c.id === created.id) && <SelectItem value={created.id}>{created.name}（新建）</SelectItem>}
-                {customers.map((c) => (
-                  <SelectItem key={c.id} value={c.id}>{c.customer_code ? `${c.customer_code} · ` : ""}{c.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <CustomerPicker customers={[{ id: NEW, name: "＋ 新設立（尚無統編／客戶資料）", customer_code: null }, ...options]} value={form.customer_id} onSelect={pickCustomer} searchTaxId disabled={!!filing?.invoice_id || directoryPending || !!directoryError} />
+            {directoryError && <p role="alert" className="text-sm text-destructive">客戶名冊載入失敗，請關閉後重新開啟。</p>}
           </div>
           {form.customer_id === NEW && (
             <div className="grid gap-2">
@@ -209,9 +219,9 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
                 onBlur={() => {
                   const name = form.company_name.trim();
                   if (!name) return;
-                  const match = customers.find((c) => c.name.trim() === name);
+                  const match = findFilingCustomer(directory, name, "");
                   if (match) {
-                    set({ customer_id: match.id, company_name: "", customer_code: form.customer_code || match.customer_code || "" });
+                    pickCustomer(match.id);
                     toast.success(`已帶入既有客戶：${match.customer_code ? `${match.customer_code} · ` : ""}${match.name}`);
                   }
                 }}
@@ -220,17 +230,17 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
               <p className="text-xs text-muted-foreground">輸入的名稱若與既有客戶相同，會自動帶入該客戶與客戶代碼；取得統編後，也可用上方「用統編新增客戶」建立客戶並選擇，才能結案立帳。</p>
             </div>
           )}
-          {me.isAdmin && form.customer_id && (
+          {form.customer_id && (
             <div className="grid gap-2">
-              <Label htmlFor="f-code">客戶代碼（派案）</Label>
-              <Input id="f-code" value={form.customer_code} onChange={(e) => set({ customer_code: e.target.value })} placeholder="例：AC15，可先留空" maxLength={40} />
-              <p className="text-xs text-muted-foreground">
+              <Label htmlFor="f-code">客戶代碼{me.isAdmin ? "（派案）" : ""}</Label>
+              <Input id="f-code" value={form.customer_code} onChange={(e) => set({ customer_code: e.target.value })} placeholder="尚未編碼" maxLength={40} readOnly={!me.isAdmin || !!filing?.invoice_id} />
+              {me.isAdmin && <p className="text-xs text-muted-foreground">
                 {form.customer_id === NEW
                   ? "新設立案件先存在案件上；之後用統編建立或選擇客戶時會一併寫入客戶資料。"
                   : staff
                     ? `派給會計專員 ${staff}，儲存後同步更新客戶資料。`
                     : "前兩位英文字母為會計專員代號；尚未派案可留空。"}
-              </p>
+              </p>}
             </div>
           )}
           <div className="grid gap-2">

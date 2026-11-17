@@ -632,6 +632,15 @@ export type Database = {
         }[]
       }
       extend_suspended_period: { Args: { _p: string }; Returns: string }
+      filing_customer_directory: {
+        Args: never
+        Returns: {
+          customer_code: string
+          id: string
+          name: string
+          tax_id: string
+        }[]
+      }
       filing_customer_names: {
         Args: never
         Returns: {
