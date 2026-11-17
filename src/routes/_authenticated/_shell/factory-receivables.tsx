@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ExternalLink, FileText, Receipt, Search } from "lucide-react";
+import { ExternalLink, FileText, HandCoins, Receipt, Search } from "lucide-react";
 import { useState } from "react";
 
+import { FactoryPaymentDialog } from "@/components/ar/factory-payment-dialog";
 import { FactoryFormDialog } from "@/components/ar/factory-form-dialog";
 import { Money, PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
@@ -93,6 +94,7 @@ function FactoryReceivablesPage() {
               {r.ar_notes && <p className="text-sm text-muted-foreground">{r.ar_notes}</p>}
               {me.isAdmin && (
                 <div className="flex flex-wrap gap-1 border-t pt-2">
+                  {left > 0 ? <FactoryPaymentDialog record={r} trigger={<Button size="sm" variant="outline"><HandCoins className="size-3.5" /> 登帳</Button>} /> : <span className="self-center px-2 text-xs text-muted-foreground">已收訖</span>}
                   <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "quote", stage: "尾款" }}><FileText className="size-3.5" /> 報價單</Link></Button>
                   <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: status === "訂金待收" ? "訂金" : "尾款" }}><Receipt className="size-3.5" /> 請款單</Link></Button>
                   {issuesInvoice(r.invoice_type) && <Button asChild variant="ghost" size="sm"><a href={EINVOICE_URL} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-3.5" /> 開發票</a></Button>}
