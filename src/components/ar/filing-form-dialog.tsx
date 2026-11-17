@@ -140,7 +140,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
         customer_id: isNew ? null : form.customer_id,
         company_name: isNew ? form.company_name.trim() : null,
         // 管理員可先填客戶代碼（新設立案件先存在案件上，連結客戶後同步）。
-        ...(me.isAdmin ? { customer_code: form.customer_code.trim().toUpperCase() || null } : {}),
+        customer_code: form.customer_code.trim().toUpperCase() || null,
         route: form.route,
         tax_filed_date: form.tax_filed_date || null,
         tax_approved_date: form.tax_approved_date || null,
@@ -168,13 +168,13 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
       if (me.isAdmin && id) {
         const { error } = await supabase.rpc("set_filing_service_fee", { _filing_id: id, _fee: money(form.service_fee) });
         if (error) throw error;
-        // 管理員派案：客戶代碼寫回客戶資料，前兩碼即會計專員。
-        const code = form.customer_code.trim().toUpperCase();
-        const current = customers.find((c) => c.id === row.customer_id);
-        if (current && code && code !== (current.customer_code ?? "")) {
-          const { error: cErr } = await supabase.from("customers").update({ customer_code: code, staff_code: staffFromCode(code) ?? current.staff_code }).eq("id", current.id);
-          if (cErr) throw cErr;
-        }
+      }
+      // 客戶代碼寫回客戶資料，前兩碼即會計專員（管理員/CA/MN/CL）。
+      const code = form.customer_code.trim().toUpperCase();
+      const current = directory.find((c) => c.id === row.customer_id);
+      if (current && code && code !== (current.customer_code ?? "")) {
+        const { error: cErr } = await supabase.rpc("set_filing_customer_code", { _customer_id: current.id, _code: code });
+        if (cErr) throw cErr;
       }
     },
     onSuccess: () => {
@@ -238,9 +238,9 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           )}
           {form.customer_id && (
             <div className="grid gap-2">
-              <Label htmlFor="f-code">客戶代碼{me.isAdmin ? "（派案）" : ""}</Label>
-              <Input id="f-code" value={form.customer_code} onChange={(e) => set({ customer_code: e.target.value })} placeholder="尚未編碼" maxLength={40} readOnly={!me.isAdmin || !!filing?.invoice_id} />
-              {me.isAdmin && <p className="text-xs text-muted-foreground">
+              <Label htmlFor="f-code">客戶代碼（派案）</Label>
+              <Input id="f-code" value={form.customer_code} onChange={(e) => set({ customer_code: e.target.value })} placeholder="尚未編碼" maxLength={40} readOnly={!!filing?.invoice_id} />
+              {<p className="text-xs text-muted-foreground">
                 {form.customer_id === NEW
                   ? "新設立案件先存在案件上；之後用統編建立或選擇客戶時會一併寫入客戶資料。"
                   : staff

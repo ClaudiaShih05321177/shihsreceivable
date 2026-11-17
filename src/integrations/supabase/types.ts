@@ -664,7 +664,12 @@ export type Database = {
         Returns: boolean
       }
       is_admin_or_mn: { Args: { _uid: string }; Returns: boolean }
+      is_filing_closer: { Args: { _uid: string }; Returns: boolean }
       is_member: { Args: { _user_id: string }; Returns: boolean }
+      set_filing_customer_code: {
+        Args: { _code: string; _customer_id: string }
+        Returns: undefined
+      }
       set_filing_service_fee: {
         Args: { _fee: number; _filing_id: string }
         Returns: undefined

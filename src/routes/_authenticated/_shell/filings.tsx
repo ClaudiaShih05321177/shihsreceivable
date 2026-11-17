@@ -155,7 +155,7 @@ function FilingsPage() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/60 hover:bg-muted/60">
-              <TableHead>客戶名稱</TableHead>
+              <TableHead className="min-w-56">客戶名稱</TableHead>
               <TableHead>案件類型</TableHead>
               <TableHead>階段</TableHead>
               <TableHead>流程</TableHead>
@@ -177,7 +177,7 @@ function FilingsPage() {
             )}
             {rows.map((f) => (
               <TableRow key={f.id}>
-                <TableCell className="font-medium">{(f.customer?.customer_code ?? f.customer_code) && <span className="mr-2 font-mono text-sm text-muted-foreground">{f.customer?.customer_code ?? f.customer_code}</span>}{filingName(f)}</TableCell>
+                <TableCell className="min-w-56 font-medium">{canClose ? <FilingFormDialog filing={f} trigger={<button type="button" className="text-left hover:text-primary hover:underline" aria-label={`點公司名稱變更進度 ${filingName(f)}`}>{(f.customer?.customer_code ?? f.customer_code) && <span className="mr-2 font-mono text-sm text-muted-foreground">{f.customer?.customer_code ?? f.customer_code}</span>}{filingName(f)}</button>} /> : <>{(f.customer?.customer_code ?? f.customer_code) && <span className="mr-2 font-mono text-sm text-muted-foreground">{f.customer?.customer_code ?? f.customer_code}</span>}{filingName(f)}</>}</TableCell>
                 <TableCell className="text-sm">{f.case_type}{f.change_detail ? `（${f.change_detail}）` : ""}{f.suspended_period ? `（${f.suspended_period}）` : ""}</TableCell>
                 <TableCell>
                   <span className={cn(
