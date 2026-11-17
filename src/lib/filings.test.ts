@@ -1,3 +1,4 @@
+import { scheduledCustomerFees } from "./receivables";
 import { describe, expect, it } from "vitest";
 
 import { filingInvoiceItems, filingTotal, nextStage } from "./filings";
@@ -126,5 +127,12 @@ describe("工商其他費用", () => {
     const f = { service_fee: 5000, advance_fee: 300, extra_fees: [{ label: "公證費", amount: 1500 }, { label: "", amount: 99 }, { label: "零", amount: 0 }] };
     expect(filingInvoiceItems(f)).toEqual({ 工商: 5000, "其他：規費": 300, "其他：公證費": 1500 });
     expect(filingTotal(f)).toBe(6800);
+  });
+});
+
+describe("註銷登記連動收費狀態", () => {
+  it("註銷登記結案改註銷，且不再帶入記帳費", () => {
+    expect(billingTypeOnClose("註銷登記")).toBe("註銷");
+    expect(scheduledCustomerFees({ billing_type: "註銷", bookkeeping_fee: 3000, stationery_fee: 500, settlement_fee: 2000 }, 11, "individual")).toEqual({ 記帳費: 0, 文具: 0, 結算: 0 });
   });
 });

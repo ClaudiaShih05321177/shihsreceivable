@@ -107,9 +107,10 @@ export function filingTotal(filing: FilingFeeLike): number {
 }
 
 /** 停業登記結案 → 客戶改「停業」（記帳費歸零）；復業登記結案 → 改回「期收」，沿用原記帳費。 */
-export function billingTypeOnClose(caseType: string | null | undefined): "停業" | "期收" | null {
+export function billingTypeOnClose(caseType: string | null | undefined): "停業" | "期收" | "註銷" | null {
   if (caseType && SUSPEND_CASE_TYPES.includes(caseType)) return "停業";
   if (caseType === "復業登記") return "期收";
+  if (caseType === "註銷登記") return "註銷";
   return null;
 }
 

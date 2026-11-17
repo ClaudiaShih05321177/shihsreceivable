@@ -421,6 +421,13 @@
       "when": 1794902738953,
       "tag": "0059_auto_stage_from_dates",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1794904553666,
+      "tag": "0060_close_filing_cancel_customer",
+      "breakpoints": true
     }
   ]
 }
