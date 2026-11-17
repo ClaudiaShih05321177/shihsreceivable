@@ -237,3 +237,14 @@ describe("periodText", () => {
   it("January collection shows prior year 11-12", () => expect(periodText({ period_year: 2026, period_month: 1, period_label: "11-12" })).toBe("114年11-12月"));
   it("March collection shows same year 1-2", () => expect(periodText({ period_year: 2026, period_month: 3, period_label: "1-2" })).toBe("115年1-2月"));
 });
+
+import { statementItemPrefix } from "./receivables";
+describe("年度費用請款單標示", () => {
+  const nov = { period_year: 2026, period_month: 11, period_label: "9-10" };
+  const jan = { period_year: 2026, period_month: 1, period_label: "11-12" };
+  it("11月文具費預設收下一年度", () => expect(statementItemPrefix(nov, "文具")).toBe("116年度"));
+  it("1月結算費預設收前一年度", () => expect(statementItemPrefix(jan, "結算")).toBe("114年度"));
+  it("同仁輸入的年度優先（晚請款）", () => expect(statementItemPrefix({ ...jan, item_years: { 文具: 115 } }, "文具")).toBe("115年度"));
+  it("記帳費維持雙月期別", () => expect(statementItemPrefix(nov, "記帳費")).toBe("115年9-10月"));
+  it("其他費用不加期別", () => expect(statementItemPrefix(nov, "印章")).toBe(""));
+});

@@ -323,6 +323,13 @@
       "when": 1794879494768,
       "tag": "0045_factory_customers_owner_year",
       "breakpoints": true
+    },
+    {
+      "idx": 46,
+      "version": "7",
+      "when": 1794880930957,
+      "tag": "0046_invoice_item_years",
+      "breakpoints": true
     }
   ]
 }

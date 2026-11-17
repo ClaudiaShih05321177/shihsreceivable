@@ -17,7 +17,7 @@ import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/quer
 import { feeItemCount, feeLabel, visibleFeeItems } from "@/lib/fee-labels";
 import { canEditInvoice } from "@/lib/permissions";
 import { allocateCredits } from "@/lib/credits";
-import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems } from "@/lib/receivables";
+import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems, defaultFeeYear, isAnnualFee } from "@/lib/receivables";
 
 const PICK_GROUPS = [
   { title: "各類扣繳", items: ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳"] },
@@ -43,6 +43,7 @@ type Form = {
   vat_input: string;
   vat_prior: string;
   items: Record<string, string>;
+  years: Record<string, string>;
   others: { label: string; amount: string }[];
 };
 
@@ -67,6 +68,7 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
     vat_input: inv?.vat_input != null ? String(inv.vat_input) : "",
     vat_prior: inv?.vat_prior_credit != null ? String(inv.vat_prior_credit) : "",
     items,
+    years: Object.fromEntries(Object.entries((inv?.item_years as Record<string, unknown>) ?? {}).map(([k, v]) => [k, String(v)])),
     others: otherEntries(inv?.items as FeeItems),
   };
 }
@@ -80,7 +82,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [form, setForm] = useState<Form>(toForm(invoice, customerId));
-  const set = (k: keyof Omit<Form, "items">) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof Omit<Form, "items" | "years" | "others">) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const setItem = (k: string, v: string) => setForm((f) => ({ ...f, items: { ...f.items, [k]: v } }));
 
   function withPrior(f: Form): Form {
@@ -163,6 +165,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
         vat_input: hasVat ? Number(form.vat_input) || 0 : null,
         vat_prior_credit: hasVat ? Number(form.vat_prior) || 0 : null,
         items: numericItems,
+        item_years: Object.fromEntries(Object.keys(numericItems).filter(isAnnualFee).map((k) => [k, Number(form.years[k]) || defaultFeeYear(k, Number.isFinite(year) ? year : null)]).filter(([, v]) => v)),
         amount: total,
       };
       if (invoice) {
@@ -292,7 +295,15 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {visible.map((k) => (
                   <div key={k} className="space-y-1">
-                    <Label htmlFor={`item-${k}`} className="text-xs text-muted-foreground">{feeLabel(k)}</Label>
+                    <Label htmlFor={`item-${k}`} className="flex items-center gap-1 text-xs text-muted-foreground">
+                      {isAnnualFee(k) && (
+                        <input aria-label={`${feeLabel(k)}所屬年度`} inputMode="numeric" maxLength={3}
+                          placeholder={String(defaultFeeYear(k, Number(form.roc_year) + 1911) ?? "")}
+                          value={form.years[k] ?? ""} onChange={(e) => { const v = e.target.value.replace(/\D/g, ""); setForm((f) => ({ ...f, years: { ...f.years, [k]: v } })); }}
+                          className="w-10 rounded border border-input bg-card px-1 text-center text-foreground tabular" />
+                      )}
+                      {isAnnualFee(k) ? `年度${feeLabel(k)}` : feeLabel(k)}
+                    </Label>
                     <Input
                       id={`item-${k}`}
                       type="number"

@@ -1,1 +1,2 @@
 - Fee-field display names live in `FEE_LABELS` in `src/lib/fee-labels.ts` (code, not a database table); screens render them through `feeLabel()` / `visibleFeeItems()`, never the raw fee key. Why: the user edits names by asking in chat, and a rename must never rewrite stored amounts or tax grouping.
+- Annual fees (文具/結算) store their ROC year in `invoices.item_years`; statement labels come from `statementItemPrefix()` in receivables.ts. Why: late billing must not shift the year shown.

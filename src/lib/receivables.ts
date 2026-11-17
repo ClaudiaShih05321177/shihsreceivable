@@ -154,6 +154,34 @@ export function periodText(inv: { period_year: number | null; period_month: numb
   return `${y ? `${y}年` : ""}${inv.period_label ? `${inv.period_label}月` : ""}`;
 }
 
+/** 年度收費項目：請款單上標「X年度」而非雙月期別。 */
+export const ANNUAL_FEE_KEYS = ["文具", "結算"] as const;
+export function isAnnualFee(key: string): boolean {
+  return (ANNUAL_FEE_KEYS as readonly string[]).includes(key);
+}
+
+/** 年度費用預設所屬年度（民國）：文具費收下一年度、結算費收前一年度（依帳款年度）。 */
+export function defaultFeeYear(key: string, periodYear: number | null): number | null {
+  if (!periodYear) return null;
+  const roc = rocYear(periodYear);
+  if (key === "文具") return roc + 1;
+  if (key === "結算") return roc - 1;
+  return null;
+}
+
+/** 年度費用所屬年度：同仁輸入的年度優先，否則用預設。 */
+export function feeYear(inv: { period_year: number | null; item_years?: unknown }, key: string): number | null {
+  const saved = Number((inv.item_years as Record<string, unknown> | null | undefined)?.[key]);
+  return saved > 0 ? saved : defaultFeeYear(key, inv.period_year);
+}
+
+/** 請款單項目前綴：記帳費帶雙月期別、文具/結算帶「X年度」、其他費用不帶。 */
+export function statementItemPrefix(inv: { period_year: number | null; period_month: number | null; period_label: string | null; item_years?: unknown }, key: string): string {
+  if (isAnnualFee(key)) { const y = feeYear(inv, key); return y ? `${y}年度` : ""; }
+  if (key === "記帳費") return periodText(inv);
+  return "";
+}
+
 /** 停業客戶：記帳費、文具費、結算費一律為 0。 */
 export function isSuspended(billingType?: string | null): boolean {
   return !!billingType?.trim().startsWith("停業");

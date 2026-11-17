@@ -412,6 +412,7 @@ export type Database = {
           id: string
           invoice_no: string
           issue_date: string
+          item_years: Json
           items: Json
           notes: string | null
           period_label: string | null
@@ -435,6 +436,7 @@ export type Database = {
           id?: string
           invoice_no?: string
           issue_date?: string
+          item_years?: Json
           items?: Json
           notes?: string | null
           period_label?: string | null
@@ -458,6 +460,7 @@ export type Database = {
           id?: string
           invoice_no?: string
           issue_date?: string
+          item_years?: Json
           items?: Json
           notes?: string | null
           period_label?: string | null

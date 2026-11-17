@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { OFFICE, priorBalance } from "@/lib/billing";
 import { customersQuery, invoiceQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { formatDate, formatTWD, itemEntries, vatDue, type FeeItems, todayISO , periodText } from "@/lib/receivables";
+import { formatDate, formatTWD, itemEntries, vatDue, type FeeItems, todayISO , periodText, statementItemPrefix } from "@/lib/receivables";
 
 export const Route = createFileRoute("/_authenticated/statement/$id")({
   head: () => ({
@@ -70,7 +70,7 @@ function StatementPage() {
         <table className="mt-3 w-full">
           <tbody>
             {items.map((i) => (
-              <tr key={i.name}><td className="py-1 pl-6">{period ? `${period}` : ""}{feeLabel(i.name)}：</td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
+              <tr key={i.name}><td className="py-1 pl-6"><input aria-label={`${feeLabel(i.name)}項目名稱`} className="w-full bg-transparent outline-none" defaultValue={`${statementItemPrefix(inv, i.name)}${feeLabel(i.name)}：`} /></td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
             ))}
             {prior > 0 && <tr><td className="py-1 pl-6">前期未收餘額：</td><td className="text-right font-mono">{formatTWD(prior)}</td></tr>}
             {credit > 0 && <tr><td className="py-1 pl-6">前期溢繳折抵：</td><td className="text-right font-mono">−{formatTWD(credit)}</td></tr>}

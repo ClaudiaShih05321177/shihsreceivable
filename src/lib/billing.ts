@@ -1,4 +1,4 @@
-import { comparePeriod, itemsTotal, scheduledCustomerFees, suggestPeriod, type FeeItems } from "./receivables";
+import { comparePeriod, itemsTotal, scheduledCustomerFees, suggestPeriod, isAnnualFee, defaultFeeYear, type FeeItems } from "./receivables";
 
 /** 事務所資料（請款單抬頭與匯款帳號），取自使用者提供的請款單樣本。 */
 export const OFFICE = {
@@ -22,7 +22,7 @@ export function batchInvoiceDrafts(customers: CustomerLike[], invoices: InvoiceL
     .filter((c) => !taken.has(c.id))
     .map((c) => {
       const items = Object.fromEntries(Object.entries(scheduledCustomerFees(c, month)).filter(([, v]) => Number(v) > 0)) as FeeItems;
-      return { customer_id: c.id, period_year: year, period_month: month, period_label: suggestPeriod(month) || null, items, amount: itemsTotal(items) };
+      return { customer_id: c.id, period_year: year, period_month: month, period_label: suggestPeriod(month) || null, items, item_years: Object.fromEntries(Object.keys(items).filter(isAnnualFee).map((k) => [k, defaultFeeYear(k, year)])), amount: itemsTotal(items) };
     })
     .filter((d) => d.amount > 0);
 }

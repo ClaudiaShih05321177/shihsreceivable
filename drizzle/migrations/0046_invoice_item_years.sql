@@ -1,0 +1,2 @@
+ALTER TABLE public.invoices ADD COLUMN IF NOT EXISTS item_years jsonb NOT NULL DEFAULT '{}'::jsonb;
+COMMENT ON COLUMN public.invoices.item_years IS 'ROC year per annual fee key, e.g. {"文具":116,"結算":114}';

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { CalendarPlus } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -27,10 +27,15 @@ export function BatchInvoiceDialog() {
   const drafts = batchInvoiceDrafts(customers, invoices, year, Number(month));
   const total = drafts.reduce((s, d) => s + d.amount, 0);
 
+  const busy = useRef(false);
   const run = useMutation({
     mutationFn: async () => {
       if (!me.canCreate) throw new Error("沒有立帳權限");
-      const rows = drafts.map((d) => ({ ...d, issue_date: todayISO() }));
+      // 送出前重新讀取該期已有帳款，避免重複按或別人剛立過帳造成重複。
+      const { data: existing, error: e1 } = await supabase.from("invoices").select("customer_id").eq("period_year", year).eq("period_month", Number(month));
+      if (e1) throw e1;
+      const taken = new Set((existing ?? []).map((r) => r.customer_id));
+      const rows = drafts.filter((d) => !taken.has(d.customer_id)).map((d) => ({ ...d, issue_date: todayISO() }));
       for (let i = 0; i < rows.length; i += 200) {
         const { error } = await supabase.from("invoices").insert(rows.slice(i, i + 200));
         if (error) throw error;
@@ -38,16 +43,17 @@ export function BatchInvoiceDialog() {
       return rows.length;
     },
     onSuccess: (n) => {
-      toast.success(`已建立 ${n} 筆應收帳款`);
+      toast.success(n ? `已建立 ${n} 筆應收帳款` : "本期已立帳，沒有新增帳款");
       qc.invalidateQueries({ queryKey: ["invoices"] });
       setOpen(false);
     },
+    onSettled: () => { busy.current = false; },
     onError: (e) => toast.error(e instanceof Error ? e.message : "建立失敗"),
   });
 
   if (!me.canCreate) return null;
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { if (!run.isPending) setOpen(o); }}>
       <DialogTrigger asChild><Button variant="outline"><CalendarPlus /> 一鍵立帳</Button></DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -69,9 +75,10 @@ export function BatchInvoiceDialog() {
             </Select>
           </div>
         </div>
+        {drafts.length === 0 && <p className="rounded-md bg-muted p-3 text-sm">本期已立帳完成，無須重複建立。</p>}
         <p className="rounded-md bg-muted p-3 text-sm">將建立 <b>{drafts.length}</b> 筆，合計 <b>{formatTWD(total)}</b></p>
         <DialogFooter>
-          <Button disabled={!drafts.length || run.isPending} onClick={() => run.mutate()}>{run.isPending ? "建立中…" : "確認建立"}</Button>
+          <Button disabled={!drafts.length || run.isPending} onClick={() => { if (busy.current) return; busy.current = true; run.mutate(); }}>{run.isPending ? "建立中…" : "確認建立"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
