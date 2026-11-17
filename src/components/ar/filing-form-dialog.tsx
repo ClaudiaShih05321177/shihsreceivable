@@ -197,6 +197,12 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           <DialogTitle>{filing ? "編輯工商案件" : "新增工商案件"}</DialogTitle>
         </DialogHeader>
         <div className="grid gap-4 py-2">
+          {me.isAdmin && (
+            <div className="grid gap-2 rounded-md border-2 border-primary bg-primary/5 p-3">
+              <Label htmlFor="f-service" className="text-base font-semibold">工商代辦費（僅管理員）</Label>
+              <Input id="f-service" type="number" min={0} value={form.service_fee} onChange={(e) => set({ service_fee: e.target.value })} placeholder="0" className="text-lg" />
+            </div>
+          )}
           <div className="grid gap-2">
             <Label htmlFor="f-taxid">統編查詢客戶</Label>
             <div className="flex gap-2">
@@ -323,12 +329,6 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
               <Label htmlFor="f-stamp">代刻印章</Label>
               <Input id="f-stamp" type="number" min={0} value={form.stamp_fee} onChange={(e) => set({ stamp_fee: e.target.value })} placeholder="0" />
             </div>
-            {me.isAdmin && (
-              <div className="grid gap-2">
-                <Label htmlFor="f-service">工商代辦費（僅管理員）</Label>
-                <Input id="f-service" type="number" min={0} value={form.service_fee} onChange={(e) => set({ service_fee: e.target.value })} placeholder="0" />
-              </div>
-            )}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="f-notes">備註</Label>

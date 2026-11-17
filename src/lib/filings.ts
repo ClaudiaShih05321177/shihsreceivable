@@ -101,7 +101,7 @@ export function billingTypeOnClose(caseType: string | null | undefined): "停業
 }
 
 /** 可以按「結案」的會計專員代號（管理員也可以）。 */
-export const CLOSER_STAFF_CODES = ["CA", "MN"] as const;
+export const CLOSER_STAFF_CODES = ["CA", "MN", "CL"] as const;
 export function canCloseFiling(isAdmin: boolean, staffCode: string | null | undefined): boolean {
   return isAdmin || (CLOSER_STAFF_CODES as readonly string[]).includes((staffCode ?? "").trim().toUpperCase());
 }

@@ -365,6 +365,13 @@
       "when": 1794891130195,
       "tag": "0051_filing_customer_directory",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1794891389368,
+      "tag": "0052_filings_cl_closer",
+      "breakpoints": true
     }
   ]
 }

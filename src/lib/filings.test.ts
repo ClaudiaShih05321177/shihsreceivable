@@ -98,6 +98,7 @@ describe("結案權限", () => {
   it("只有 CA、MN 與管理員可以結案", () => {
     expect(canCloseFiling(false, "CA")).toBe(true);
     expect(canCloseFiling(false, "MN")).toBe(true);
+    expect(canCloseFiling(false, "CL")).toBe(true);
     expect(canCloseFiling(false, "AD")).toBe(false);
     expect(canCloseFiling(false, null)).toBe(false);
     expect(canCloseFiling(true, null)).toBe(true);
