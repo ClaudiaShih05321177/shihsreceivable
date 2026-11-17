@@ -138,7 +138,7 @@ function FactoryDocPage() {
           </thead>
           <tbody>
             <tr>
-              <td className={`${cell} text-center`}>1</td><td className={cell}>{item}顧問費{!isQuote && stage === "訂金" ? "（預付）" : ""}</td>
+              <td className={`${cell} text-center`}>1</td><td className={cell}>顧問費{!isQuote && stage === "訂金" ? "（預付）" : ""}</td>
               <td className={`${cell} text-center`}>1</td><td className={`${cell} text-center`}>式</td>
               <td className={`${cell} text-right font-mono`}>{formatTWD(s.consulting)}</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.consulting)}</td>
             </tr>
@@ -162,8 +162,8 @@ function FactoryDocPage() {
             <ol className="mt-4 list-decimal pl-6 text-base">{terms.map((t) => <li key={t}><Area v={t} /></li>)}</ol>
             <p className="mt-2 text-base">聯絡人：{KINFENG.contact}{termsCfg.payment === "預付50%＋尾款" ? "　　報價單回傳後本司會開立預付金額之發票及請款單" : ""}</p>
             <div className="mt-8 grid grid-cols-2 gap-6 text-base">
-              <div className="h-28 border border-foreground p-2">訂購廠商簽章確認</div>
-              <div className="flex h-28 flex-col border border-foreground p-2"><span>承辦公司簽章</span><img src={kinfengSeal.url} alt="勤豐工商大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" /></div>
+              <div className="h-44 border border-foreground p-2">訂購廠商簽章確認</div>
+              <div className="flex h-44 flex-col border border-foreground p-2"><span>承辦公司簽章</span><img src={kinfengSeal.url} alt="勤豐工商大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" /></div>
             </div>
           </>
         ) : (
@@ -177,7 +177,7 @@ function FactoryDocPage() {
               <p>支票抬頭請開：{KINFENG.accountName}</p>
               <p>付款條件：發票開立後30日內。</p>
             </div>
-            <div className="flex h-32 flex-col border border-foreground p-2"><span>承辦公司簽章</span><img src={kinfengSeal.url} alt="勤豐工商大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" /></div>
+            <div className="flex h-44 flex-col border border-foreground p-2"><span>承辦公司簽章</span><img src={kinfengSeal.url} alt="勤豐工商大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" /></div>
           </div>
         )}
       </article>

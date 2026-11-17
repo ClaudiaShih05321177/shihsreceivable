@@ -21,6 +21,13 @@ describe("請款單", () => {
   it("尾款＝含稅 68,250 − 含稅簽約金 35,831 ＋ 規費 5,000 = 37,419", () => {
     expect(invoiceSummary(base, "尾款").total).toBe(37419);
   });
+  it("尾款顧問費＝發票未稅 65,000 − 訂金 34,125 = 30,875，稅 1,544", () => {
+    const s = invoiceSummary(base, "尾款");
+    expect(s.consulting).toBe(30875);
+    expect(s.subtotal).toBe(30875);
+    expect(s.lines[0]!.amount).toBe(1544);
+    expect(s.lines.some((l) => l.label === "簽約金")).toBe(false);
+  });
   it("全額＝73,250", () => {
     expect(invoiceSummary(base, "全額").total).toBe(73250);
   });

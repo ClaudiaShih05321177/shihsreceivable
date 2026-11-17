@@ -40,7 +40,7 @@ export function quoteSummary(r: ProjectArLike): DocSummary {
 }
 
 /**
- * 請款單：訂金＝訂金發票金額；尾款＝含稅總額−簽約金＋規費＋其他費用；全額＝不扣簽約金。
+ * 請款單：訂金＝訂金發票金額；尾款＝尾款發票（折扣後報價−訂金發票未稅，另計稅）＋規費＋其他費用；全額＝不扣簽約金。
  * 不開發票時不加營業稅，簽約金以訂金收款扣除。
  */
 export function invoiceSummary(r: ProjectArLike, stage: InvoiceStage): DocSummary {
@@ -52,12 +52,18 @@ export function invoiceSummary(r: ProjectArLike, stage: InvoiceStage): DocSummar
     return { consulting: base, discount: 0, subtotal: base, lines, total: base + tax };
   }
   const q = netQuote(r);
+  if (stage === "尾款") {
+    // 訂金與尾款分開開發票：顧問費直接列尾款發票未稅金額＝折扣後報價−訂金發票未稅。
+    const base = Math.max(0, q - (inv ? n(r.deposit_invoice_amount) : n(r.deposit_received_amount)));
+    const incl = inv ? Math.max(0, contractTotal(q, r.invoice_type) - depositDue(r.deposit_invoice_amount, r.invoice_type)) : base;
+    const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: incl - base }];
+    lines.push({ label: "規費(收據)", amount: n(r.government_fee) });
+    if (n(r.other_fee)) lines.push({ label: "其他費用", amount: n(r.other_fee) });
+    for (const x of extraFees(r.extra_fees)) lines.push(x);
+    return { consulting: base, discount: 0, subtotal: base, lines, total: lines.reduce((s, l) => s + l.amount, base) };
+  }
   const tax = inv ? contractTotal(q, r.invoice_type) - q : 0;
   const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: tax }];
-  if (stage === "尾款") {
-    const deposit = inv ? depositDue(r.deposit_invoice_amount, r.invoice_type) : n(r.deposit_received_amount);
-    lines.push({ label: "簽約金", amount: -deposit });
-  }
   lines.push({ label: "規費(收據)", amount: n(r.government_fee) });
   if (n(r.other_fee)) lines.push({ label: "其他費用", amount: n(r.other_fee) });
   for (const x of extraFees(r.extra_fees)) lines.push(x);
