@@ -1,12 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { CheckCircle2, Pencil, Plus, Printer, Receipt, Trash2 } from "lucide-react";
+import { CheckCircle2, Pencil, Plus, Printer, Receipt, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { FilingFormDialog } from "@/components/ar/filing-form-dialog";
 import { PageHeader, Money } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, billingTypeOnClose, canCloseFiling } from "@/lib/filings";
@@ -38,10 +39,14 @@ function FilingsPage() {
   const { data: fees } = useQuery({ ...filingServiceFeesQuery, enabled: me.isAdmin });
   const qc = useQueryClient();
   const [stage, setStage] = useState<string>("open");
+  const [q, setQ] = useState("");
+  const key = q.trim().toLowerCase();
+  const custById = new Map(customers.map((c) => [c.id, c]));
+  const matches = (f: Filing) => !key || `${f.customer?.customer_code ?? f.customer_code ?? ""} ${filingName(f)} ${f.customer_id ? custById.get(f.customer_id)?.tax_id ?? "" : ""} ${f.case_type} ${f.notes ?? ""}`.toLowerCase().includes(key);
 
   const counts = Object.fromEntries(FILING_STAGES.map((s) => [s, filings.filter((f) => f.stage === s).length]));
   const openCount = filings.filter((f) => f.stage !== "結案").length;
-  const rows = filings.filter((f) => (stage === "all" ? true : stage === "open" ? f.stage !== "結案" : stage === "pending" ? pendingBill(f) : f.stage === stage))
+  const rows = filings.filter((f) => (stage === "all" ? true : stage === "open" ? f.stage !== "結案" : stage === "pending" ? pendingBill(f) : f.stage === stage) && matches(f))
     .sort((a, b) => compareCustomerCode(a.customer?.customer_code ?? a.customer_code, b.customer?.customer_code ?? b.customer_code, filingName(a), filingName(b)));
 
   const canClose = canCloseFiling(me.isAdmin, me.staffCode);
@@ -135,6 +140,10 @@ function FilingsPage() {
         description={`進行中 ${openCount} 件；CA／MN 結案後，管理員立帳把工商費用併入該客戶當期（雙月）記帳費帳款一起收。`}
         actions={canClose && <FilingFormDialog trigger={<Button><Plus /> 新增案件</Button>} />}
       />
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder="搜尋統編、客戶代碼、公司名稱、案件類型…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
+      </div>
       <div className="mb-5 flex flex-wrap gap-2">
         {filterBtn("open", "進行中", openCount)}
         {me.isAdmin && filterBtn("pending", "待立帳", pendingCount)}

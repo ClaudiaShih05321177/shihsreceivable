@@ -73,6 +73,8 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
   const [form, setForm] = useState<Form>(EMPTY);
   const [taxId, setTaxId] = useState("");
   const [looking, setLooking] = useState(false);
+  // 同仁新建的客戶尚未派專員代碼，RLS 看不到，先記在本地供選單顯示。
+  const [created, setCreated] = useState<{ id: string; name: string } | null>(null);
 
   useEffect(() => {
     if (open) { setForm(filing ? toForm(filing, fees?.[filing.id]) : EMPTY); setTaxId(""); }
@@ -89,12 +91,12 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
     try {
       const r = await lookupCompany({ data: { taxId: id } });
       if (!r?.name) { toast.error("經濟部查無此統一編號"); return; }
-      const { data, error } = await supabase
+      const data = { id: crypto.randomUUID() };
+      const { error } = await supabase
         .from("customers")
-        .insert({ name: r.name, tax_id: id, contact_person: r.responsible || null, address: r.address || null, bookkeeping_fee: 0 })
-        .select("id")
-        .single();
+        .insert({ id: data.id, name: r.name, tax_id: id, contact_person: r.responsible || null, address: r.address || null, bookkeeping_fee: 0 });
       if (error) throw error;
+      setCreated({ id: data.id, name: r.name });
       // 管理員已填客戶代碼時，一併寫入新客戶（前兩碼為會計專員代號）。
       const code = form.customer_code.trim().toUpperCase();
       if (me.isAdmin && code) {
@@ -190,6 +192,7 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
               <SelectTrigger id="f-customer" aria-label="客戶"><SelectValue placeholder="選擇客戶" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value={NEW}>＋ 新設立（尚無統編／客戶資料）</SelectItem>
+                {created && !customers.some((c) => c.id === created.id) && <SelectItem value={created.id}>{created.name}（新建）</SelectItem>}
                 {customers.map((c) => (
                   <SelectItem key={c.id} value={c.id}>{c.customer_code ? `${c.customer_code} · ` : ""}{c.name}</SelectItem>
                 ))}

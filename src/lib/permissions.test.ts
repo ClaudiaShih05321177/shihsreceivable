@@ -52,6 +52,8 @@ describe("一般使用者可見頁面", () => {
   it("其他同仁不可變更工廠進度，MN 不可看勤豐帳款或文件", () => {
     expect(canManageFactoryProgress({ isAdmin: false, staffCode: "CA" })).toBe(false);
     expect(canSeePage(false, "/factory", "CA")).toBe(false);
+    expect(canSeePage(false, "/factory-customers", "CA")).toBe(true);
+    expect(canSeePage(false, "/factory-customers", "AD")).toBe(false);
     expect(canSeePage(false, "/factory-receivables", "MN")).toBe(false);
     expect(canSeePage(false, "/factory-doc/abc", "MN")).toBe(false);
   });

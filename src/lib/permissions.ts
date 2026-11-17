@@ -15,6 +15,10 @@ export const MEMBER_PAGES = ["/invoices", "/filings", "/customers"] as const;
 export function canManageFactoryProgress(me: { isAdmin: boolean; staffCode?: string | null }) {
   return me.isAdmin || me.staffCode?.trim().toUpperCase() === "MN";
 }
+/** 勤豐客戶名冊：管理員、MN、CA 可用。 */
+export function canUseFactoryCustomers(me: { isAdmin: boolean; staffCode?: string | null }) {
+  return canManageFactoryProgress(me) || me.staffCode?.trim().toUpperCase() === "CA";
+}
 export function canSeePage(isAdmin: boolean, pathname: string, staffCode?: string | null) {
-  return isAdmin || ((pathname === "/factory" || pathname === "/factory-customers") && canManageFactoryProgress({ isAdmin, staffCode: staffCode ?? null })) || MEMBER_PAGES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  return isAdmin || (pathname === "/factory" && canManageFactoryProgress({ isAdmin, staffCode: staffCode ?? null })) || (pathname === "/factory-customers" && canUseFactoryCustomers({ isAdmin, staffCode: staffCode ?? null })) || MEMBER_PAGES.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }

@@ -330,6 +330,13 @@
       "when": 1794880930957,
       "tag": "0046_invoice_item_years",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1794884565577,
+      "tag": "0047_ca_factory_customers",
+      "breakpoints": true
     }
   ]
 }
