@@ -414,6 +414,13 @@
       "when": 1794900952145,
       "tag": "0058_ca_factory_customers_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1794902738953,
+      "tag": "0059_auto_stage_from_dates",
+      "breakpoints": true
     }
   ]
 }
