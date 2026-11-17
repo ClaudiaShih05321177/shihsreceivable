@@ -49,7 +49,7 @@ function FactoryDocPage() {
   const isQuote = type === "quote";
   const s = isQuote ? quoteSummary(r) : invoiceSummary(r, stage);
   const item = r.application_item || "工廠設立登記";
-  const owner = r.factory_name || r.company_name;
+  const owner = r.company_name;
   const cell = "border border-foreground px-2 py-1";
 
   return (
@@ -78,6 +78,7 @@ function FactoryDocPage() {
           <colgroup><col style={{ width: "14%" }} /><col style={{ width: "48%" }} /><col style={{ width: "16%" }} /><col style={{ width: "22%" }} /></colgroup>
           <tbody>
             <tr><td className={cell}>業主</td><td className={cell}>{owner}</td><td className={`${cell} whitespace-nowrap`}>統一編號</td><td className={cell}><Blank v={r.tax_id} /></td></tr>
+            <tr><td className={`${cell} whitespace-nowrap`}>工廠名稱</td><td className={cell} colSpan={3}><Blank v={r.factory_name} /></td></tr>
             <tr><td className={cell}>地址</td><td className={cell} colSpan={3}>{r.factory_address ?? <Blank />}</td></tr>
             <tr><td className={`${cell} whitespace-nowrap`}>{isQuote ? "估價內容" : "請款內容"}</td><td className={cell}>{item}{isQuote ? "案件" : `申請案${stage !== "全額" ? `（${stage}）` : ""}`}</td><td className={`${cell} whitespace-nowrap`}>{isQuote ? "業主接洽人" : "接洽人"}</td><td className={cell}>{r.contact ?? ""}</td></tr>
             {r.po_number ? <tr><td className={`${cell} whitespace-nowrap`}>PO 號碼</td><td className={cell} colSpan={3}>{r.po_number}</td></tr> : null}
