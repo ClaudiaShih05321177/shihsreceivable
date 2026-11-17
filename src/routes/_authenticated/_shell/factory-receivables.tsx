@@ -7,7 +7,7 @@ import { FactoryFormDialog } from "@/components/ar/factory-form-dialog";
 import { Money, PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { depositDue, finalDue, issuesInvoice, projectArStatus, projectOutstanding } from "@/lib/factory";
+import { isFactoryClosed, depositDue, finalDue, issuesInvoice, projectArStatus, projectOutstanding } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery } from "@/lib/queries";
 import { formatDate } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -33,14 +33,17 @@ function FactoryReceivablesPage() {
   const { data: rows } = useSuspenseQuery(factoryRegistrationsQuery);
   const { data: me } = useSuspenseQuery(meQuery);
   const [q, setQ] = useState("");
+  const [showOpen, setShowOpen] = useState(false);
+  const closedCount = rows.filter((r) => r.stage === "核准結案").length;
+  const base = rows.filter((r) => (showOpen ? !isFactoryClosed(r.stage) : r.stage === "核准結案"));
   const kw = q.trim().toLowerCase();
   const filtered = kw
-    ? rows.filter((r) =>
+    ? base.filter((r) =>
         [r.factory_name, r.company_name, r.tax_id, r.application_item, r.po_number, r.ar_notes]
           .filter(Boolean)
           .some((v) => String(v).toLowerCase().includes(kw)),
       )
-    : rows;
+    : base;
   const total = filtered.reduce((s, r) => s + projectOutstanding(r), 0);
   return (
     <>
@@ -54,9 +57,14 @@ function FactoryReceivablesPage() {
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="搜尋廠名、公司名稱、統編、申辦項目、PO…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
       </div>
+      <div className="mb-4 flex gap-2">
+        <Button size="sm" variant={showOpen ? "outline" : "default"} onClick={() => setShowOpen(false)}>已結案 {closedCount}</Button>
+        <Button size="sm" variant={showOpen ? "default" : "outline"} onClick={() => setShowOpen(true)}>進行中 {rows.filter((r) => !isFactoryClosed(r.stage)).length}</Button>
+      </div>
       <div className="grid gap-3">
-        {rows.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">尚無案件，請先到工廠登記進度新增</div>}
-        {rows.length > 0 && filtered.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">找不到符合「{q}」的案件</div>}
+        {base.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">{showOpen ? "沒有進行中的案件" : "尚無核准結案的案件"}</div>}
+        {false && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">尚無案件，請先到工廠登記進度新增</div>}
+        {base.length > 0 && filtered.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">找不到符合「{q}」的案件</div>}
         {filtered.map((r) => {
           const status = projectArStatus(r);
           const left = projectOutstanding(r);
