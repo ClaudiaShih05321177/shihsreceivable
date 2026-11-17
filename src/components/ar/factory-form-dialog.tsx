@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { RocDateInput } from "@/components/ar/roc-date-input";
 import { CustomerPicker } from "@/components/ar/customer-picker";
 import { factoryCustomersQuery } from "@/lib/factory-customer-queries";
-import { matchCustomer } from "@/lib/customer-match";
+import { matchFactoryByName } from "@/lib/customer-match";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -137,7 +137,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   );
   const due = finalDue({ ...Object.fromEntries(MONEY.map((k) => [k, form[k]])), invoice_type: form.invoice_type, extra_fees: extras } as never);
   const inv = issuesInvoice(form.invoice_type);
-  const matched = matchCustomer(customers, form.company_name, form.tax_id);
+  const matched = matchFactoryByName(customers, form.factory_name);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -149,8 +149,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             <div className="grid gap-2 sm:col-span-2"><Label>勤豐客戶</Label><CustomerPicker customers={customers} value={matched?.id ?? ""} onSelect={(id) => {
               const c = customers.find((customer) => customer.id === id);
               if (!c) return;
-              set("company_name", c.name);
-              set("tax_id", c.tax_id ?? "");
+              setForm((f) => ({ ...f, factory_name: c.name, factory_address: c.address ?? f.factory_address, tax_id: c.tax_id ?? f.tax_id }));
             }} /></div>
             <div className="grid gap-2"><Label htmlFor="fr-customer-code">客戶代碼</Label><Input id="fr-customer-code" readOnly value={matched?.customer_code ?? ""} /></div>
             <div className="grid gap-2 sm:col-span-2">
@@ -162,7 +161,13 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             </div>
             {text("company_name", "公司名稱")}
             {text("branch_name", "廠別（選填）", "例：新竹廠；沒有可留空")}
-            {text("factory_name", "廠名（公司名稱＋廠別，可修改）")}
+            <div className="grid gap-2">
+              <Label htmlFor="fr-factory_name">廠名（依廠名帶入客戶代碼與地址）</Label>
+              <Input id="fr-factory_name" value={form.factory_name} onChange={(e) => set("factory_name", e.target.value)} onBlur={() => {
+                const c = matchFactoryByName(customers, form.factory_name);
+                if (c?.address && !form.factory_address.trim()) setForm((f) => ({ ...f, factory_address: c.address ?? "" }));
+              }} />
+            </div>
             {text("application_item", "申辦項目", "例：工廠登記、變更登記")}
             <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-factory_address">工廠地址</Label><Input id="fr-factory_address" value={form.factory_address} onChange={(e) => set("factory_address", e.target.value)} placeholder="例：新竹市東區…" /></div>
             <div className="grid gap-2 sm:col-span-2"><Label htmlFor="fr-status_note">Status</Label><Textarea id="fr-status_note" rows={4} value={form.status_note} onChange={(e) => set("status_note", e.target.value)} placeholder="自由輸入目前狀況，例：等補件" /></div>
