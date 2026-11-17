@@ -212,10 +212,10 @@ function FilingsPage() {
                         <Receipt className="size-3.5" /> 立帳
                       </Button>
                     )}
-                    {me.isAdmin && (
+                    {canClose && (
                       <FilingFormDialog
                         filing={f}
-                        trigger={<Button variant="ghost" size="icon" aria-label={`編輯 ${filingName(f)}`}><Pencil className="size-3.5" /></Button>}
+                        trigger={<Button variant="ghost" size="sm" aria-label={`變更進度 ${filingName(f)}`}><Pencil className="size-3.5" /> 變更進度</Button>}
                       />
                     )}
                     {me.isAdmin && (
