@@ -337,6 +337,13 @@
       "when": 1794884565577,
       "tag": "0047_ca_factory_customers",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1794884768877,
+      "tag": "0048_revert_ca_factory_customers",
+      "breakpoints": true
     }
   ]
 }
