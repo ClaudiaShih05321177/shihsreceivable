@@ -49,7 +49,7 @@ function FactoryDocPage() {
   const isQuote = type === "quote";
   const s = isQuote ? quoteSummary(r) : invoiceSummary(r, stage);
   const item = r.application_item || "工廠設立登記";
-  const owner = r.company_name || r.factory_name;
+  const owner = r.factory_name || r.company_name;
   const cell = "border border-foreground px-2 py-1";
 
   return (
