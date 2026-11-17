@@ -1,5 +1,5 @@
 import kinfengSeal from "@/assets/kinfeng-seal.png.asset.json";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus, Printer, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -32,7 +32,8 @@ export const Route = createFileRoute("/_authenticated/factory-doc/$id")({
     ],
   }),
   loader: async ({ context, params }) => {
-    const [rows] = await Promise.all([context.queryClient.ensureQueryData(factoryRegistrationsQuery), context.queryClient.ensureQueryData(meQuery)]);
+    const [rows, me] = await Promise.all([context.queryClient.ensureQueryData(factoryRegistrationsQuery), context.queryClient.ensureQueryData(meQuery)]);
+    if (!me.isAdmin) throw redirect({ to: "/factory" });
     if (!rows.find((r) => r.id === params.id)) throw notFound();
   },
   component: FactoryDocPage,
