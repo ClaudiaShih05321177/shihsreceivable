@@ -73,7 +73,10 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
   });
 
-  const { data: allInvoices } = useQuery({ ...invoicesQuery, enabled: open && picking });
+  const { data: allInvoices } = useQuery({ ...invoicesQuery, enabled: open });
+  const current = allInvoices?.find((i) => i.id === invoiceId);
+  const periodOf = (i: { period_year: number | null; period_month: number | null; period_label: string | null }) =>
+    `${i.period_year ? `${rocYear(i.period_year)}年 ` : ""}${periodMonthLabel(i.period_month)}${i.period_label ? `・期別 ${i.period_label}` : ""}`;
   const candidates = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (allInvoices ?? [])
@@ -122,7 +125,13 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
           {picking ? (
             <p className="text-sm text-muted-foreground">本次已沖 {savedCount} 筆，請選下一位客戶</p>
           ) : payment ? null : (
-            <p className="text-sm text-muted-foreground">{target ? `${target.label}・` : ""}目前應收餘額 {formatTWD(balance)}{savedCount > 0 ? `（本次已沖 ${savedCount} 筆）` : ""}</p>
+            <p className="text-sm text-muted-foreground">目前應收餘額 {formatTWD(balance)}{savedCount > 0 ? `（本次已沖 ${savedCount} 筆）` : ""}</p>
+          )}
+          {!picking && current && (
+            <div className="rounded-md border bg-muted/40 px-3 py-2 text-sm">
+              <span className="mr-2 font-mono text-muted-foreground">{current.customer?.customer_code}</span>{current.customer?.name}
+              <span className="mt-1 block font-semibold text-primary">沖帳期別：{periodOf(current)}</span>
+            </div>
           )}
         </DialogHeader>
         {picking ? (
@@ -135,7 +144,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
                 : candidates.map((i) => (
                   <button key={i.id} type="button" onClick={() => pick(i)} className="flex w-full items-center justify-between gap-2 border-b px-3 py-2 text-left text-sm last:border-b-0 hover:bg-accent">
                     <span><span className="mr-2 font-mono text-muted-foreground">{i.customer?.customer_code}</span>{i.customer?.name}
-                      <span className="ml-2 text-xs text-muted-foreground">{i.period_year ? `${rocYear(i.period_year)}年 ` : ""}{periodMonthLabel(i.period_month)}</span></span>
+                      <span className="ml-2 rounded bg-muted px-1.5 py-0.5 text-xs font-medium text-foreground">{periodOf(i)}</span></span>
                     <span className="tabular font-semibold">{formatTWD(outstanding(i))}</span>
                   </button>
                 ))}
