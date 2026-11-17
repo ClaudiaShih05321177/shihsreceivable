@@ -407,6 +407,13 @@
       "when": 1794899672089,
       "tag": "0057_filings_extra_fees",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1794900952145,
+      "tag": "0058_ca_factory_customers_sync",
+      "breakpoints": true
     }
   ]
 }

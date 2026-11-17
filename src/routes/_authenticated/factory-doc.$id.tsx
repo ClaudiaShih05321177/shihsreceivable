@@ -92,7 +92,7 @@ function FactoryDocPage() {
   const s = isQuote ? quoteSummary(r) : invoiceSummary(r, stage);
   const item = r.application_item || "工廠設立登記";
   const owner = r.company_name;
-  const cell = "border border-foreground px-2 py-1";
+  const cell = "border border-foreground px-2 py-2";
   const termsCfg = readQuoteTerms(r.quote_terms, r.env_mode);
   const terms = buildQuoteTerms(termsCfg);
 
@@ -110,16 +110,16 @@ function FactoryDocPage() {
         <Button onClick={() => window.print()}><Printer /> 列印 / 存成 PDF</Button>
       </div>
       {isQuote && <TermsToolbar id={r.id} cfg={termsCfg} canEdit={canManageFactoryProgress(me)} />}
-      <article className="mx-auto max-w-[760px] bg-card p-10 text-[15px] leading-7 shadow print:max-w-none print:p-0 print:shadow-none">
+      <article className="mx-auto max-w-[760px] bg-card p-10 text-base leading-8 shadow print:max-w-none print:p-0 print:shadow-none">
         <header className="text-center">
           <h1 className="font-serif text-3xl font-bold tracking-[0.5em]">{isQuote ? "報價單" : "請款單"}</h1>
           <p className="tracking-widest">{isQuote ? "Quotation" : "INVOICE"}</p>
-          <p className="font-medium">{KINFENG.name}</p>
-          <p className="text-sm">統一編號：{KINFENG.taxId}　地址：{KINFENG.address}</p>
-          <p className="text-sm">電話：{KINFENG.phone}　傳真：{KINFENG.fax}</p>
+          <p className="text-lg font-medium">{KINFENG.name}</p>
+          <p className="text-base">統一編號：{KINFENG.taxId}　地址：{KINFENG.address}</p>
+          <p className="text-base">電話：{KINFENG.phone}　傳真：{KINFENG.fax}</p>
         </header>
         <p className="mt-2 text-right">日期：<input className="w-28 bg-transparent text-right outline-none" aria-label="單據日期" defaultValue={formatDate(todayISO())} suppressHydrationWarning /></p>
-        <table className="mt-2 w-full table-fixed border-collapse text-sm">
+        <table className="mt-2 w-full table-fixed border-collapse text-base">
           <colgroup><col style={{ width: "14%" }} /><col style={{ width: "48%" }} /><col style={{ width: "16%" }} /><col style={{ width: "22%" }} /></colgroup>
           <tbody>
             <tr><td className={cell}>業主</td><td className={cell}><Blank v={owner} /></td><td className={`${cell} whitespace-nowrap`}>統一編號</td><td className={cell}><Blank v={r.tax_id} /></td></tr>
@@ -129,7 +129,7 @@ function FactoryDocPage() {
             {r.po_number ? <tr><td className={`${cell} whitespace-nowrap`}>PO 號碼</td><td className={cell} colSpan={3}><Blank v={r.po_number} /></td></tr> : null}
           </tbody>
         </table>
-        <table className="mt-4 w-full border-collapse text-sm">
+        <table className="mt-4 w-full border-collapse text-base">
           <thead>
             <tr className="bg-muted/60">{["項次", "品名規格", "數量", "單位", "單價", "總價"].map((h) => <th key={h} className={cell}>{h}</th>)}</tr>
           </thead>
@@ -151,20 +151,20 @@ function FactoryDocPage() {
                 <td className={`${cell} text-right font-mono`}>{formatTWD(l.amount)}</td><td className={`${cell} text-right font-mono`}>{formatTWD(l.amount)}</td>
               </tr>
             ))}
-            <tr className="font-bold"><td className={cell} colSpan={5}>總計新台幣：</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.total)}</td></tr>
+            <tr className="font-bold"><td className={cell} colSpan={5}><span className="text-lg">總計新台幣：</span></td><td className={`${cell} text-right font-mono`}>{formatTWD(s.total)}</td></tr>
           </tbody>
         </table>
         {isQuote ? (
           <>
-            <ol className="mt-4 list-decimal pl-6 text-sm">{terms.map((t) => <li key={t}><Area v={t} /></li>)}</ol>
-            <p className="mt-2 text-sm">聯絡人：{KINFENG.contact}{termsCfg.payment === "預付50%＋尾款" ? "　　報價單回傳後本司會開立預付金額之發票及請款單" : ""}</p>
-            <div className="mt-8 grid grid-cols-2 gap-6 text-sm">
+            <ol className="mt-4 list-decimal pl-6 text-base">{terms.map((t) => <li key={t}><Area v={t} /></li>)}</ol>
+            <p className="mt-2 text-base">聯絡人：{KINFENG.contact}{termsCfg.payment === "預付50%＋尾款" ? "　　報價單回傳後本司會開立預付金額之發票及請款單" : ""}</p>
+            <div className="mt-8 grid grid-cols-2 gap-6 text-base">
               <div className="h-28 border border-foreground p-2">訂購廠商簽章確認</div>
               <div className="flex h-28 flex-col border border-foreground p-2"><span>承辦公司簽章</span><img src={kinfengSeal.url} alt="勤豐工商大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" /></div>
             </div>
           </>
         ) : (
-          <div className="mt-4 grid grid-cols-2 gap-6 text-sm">
+          <div className="mt-4 grid grid-cols-2 gap-6 text-base">
             <div>
               <p className="font-medium">匯款資料：</p>
               <p>{KINFENG.bank}</p>

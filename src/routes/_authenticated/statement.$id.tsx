@@ -53,10 +53,10 @@ function StatementPage() {
         <Button variant="outline" size="sm" onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = "/dashboard"))}><ArrowLeft className="h-4 w-4" />返回</Button>
         <Button onClick={() => window.print()}><Printer /> 列印 / 存成 PDF</Button>
       </div>
-      <article className="mx-auto max-w-[720px] bg-card p-10 text-[15px] leading-7 shadow print:max-w-none print:p-0 print:shadow-none">
+      <article className="mx-auto max-w-[720px] bg-card p-10 text-base leading-8 shadow print:max-w-none print:p-0 print:shadow-none">
         <header className="text-center">
-          <h1 className="font-serif text-2xl font-bold tracking-wider">{OFFICE.name}</h1>
-          <p className="mt-2">{OFFICE.address}</p>
+          <h1 className="font-serif text-3xl font-bold tracking-wider">{OFFICE.name}</h1>
+          <p className="mt-2">統一編號：{OFFICE.taxId}　地址：{OFFICE.address}</p>
           <p>{OFFICE.phone}</p>
         </header>
         <div className="mt-6 flex justify-between border-b border-foreground pb-2">
@@ -70,10 +70,10 @@ function StatementPage() {
         <table className="mt-3 w-full">
           <tbody>
             {items.map((i) => (
-              <tr key={i.name}><td className="py-1 pl-6"><input aria-label={`${feeLabel(i.name)}項目名稱`} className="w-full bg-transparent outline-none" defaultValue={`${statementItemPrefix(inv, i.name)}${feeLabel(i.name)}：`} /></td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
+              <tr key={i.name}><td className="py-1.5 pl-6"><input aria-label={`${feeLabel(i.name)}項目名稱`} className="w-full bg-transparent outline-none" defaultValue={`${statementItemPrefix(inv, i.name)}${feeLabel(i.name)}：`} /></td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
             ))}
-            {prior > 0 && <tr><td className="py-1 pl-6">前期未收餘額：</td><td className="text-right font-mono">{formatTWD(prior)}</td></tr>}
-            {credit > 0 && <tr><td className="py-1 pl-6">前期溢繳折抵：</td><td className="text-right font-mono">−{formatTWD(credit)}</td></tr>}
+            {prior > 0 && <tr><td className="py-1.5 pl-6">前期未收餘額：</td><td className="text-right font-mono">{formatTWD(prior)}</td></tr>}
+            {credit > 0 && <tr><td className="py-1.5 pl-6">前期溢繳折抵：</td><td className="text-right font-mono">−{formatTWD(credit)}</td></tr>}
             <tr className="border-t border-foreground font-bold"><td className="py-2">總計本期應收款項：</td><td className="text-right font-mono">{formatTWD(total)}</td></tr>
           </tbody>
         </table>
@@ -94,7 +94,7 @@ function StatementPage() {
         })()}
         {inv.notes && <p className="mt-4 whitespace-pre-line">備註：{inv.notes}</p>}
         {inv.due_date && <p className="mt-2 text-right">※請於 {formatDate(inv.due_date)} 以前繳納，謝謝！</p>}
-        <p className="mt-10 text-sm">{OFFICE.note}</p>
+        <p className="mt-10 text-base">{OFFICE.note}</p>
         <section className="mt-6 grid grid-cols-2 gap-6 break-inside-avoid">
           <div>
           <p className="font-medium">匯款明細如下：</p>
@@ -105,7 +105,7 @@ function StatementPage() {
             <p>帳　　號：{OFFICE.account}</p>
           </div>
           </div>
-          <div className="flex h-32 flex-col border border-foreground p-2 text-sm">
+          <div className="flex h-32 flex-col border border-foreground p-2 text-base">
             <span>事務所簽章：</span>
             <img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" />
           </div>

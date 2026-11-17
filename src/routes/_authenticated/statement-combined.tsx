@@ -42,10 +42,10 @@ function CombinedStatement() {
         <Button variant="outline" size="sm" onClick={() => (window.history.length > 1 ? window.history.back() : (window.location.href = "/invoices"))}><ArrowLeft className="h-4 w-4" />返回</Button>
         <Button onClick={() => window.print()}><Printer /> 列印 / 存成 PDF</Button>
       </div>
-      <article className="mx-auto max-w-[720px] bg-card p-10 text-[15px] leading-7 shadow print:max-w-none print:p-0 print:shadow-none">
+      <article className="mx-auto max-w-[720px] bg-card p-10 text-base leading-8 shadow print:max-w-none print:p-0 print:shadow-none">
         <header className="text-center">
-          <h1 className="font-serif text-2xl font-bold tracking-wider">{OFFICE.name}</h1>
-          <p className="mt-2">{OFFICE.address}</p>
+          <h1 className="font-serif text-3xl font-bold tracking-wider">{OFFICE.name}</h1>
+          <p className="mt-2">統一編號：{OFFICE.taxId}　地址：{OFFICE.address}</p>
           <p>{OFFICE.phone}</p>
         </header>
         <div className="mt-6 flex justify-between border-b border-foreground pb-2">
@@ -71,15 +71,15 @@ function CombinedStatement() {
                   ))}
                   {paid > 0 && <tr><td className="py-0.5 pl-6">已收：</td><td className="text-right font-mono">−{formatTWD(paid)}</td></tr>}
                   {credit > 0 && <tr><td className="py-0.5 pl-6">前期溢繳折抵：</td><td className="text-right font-mono">−{formatTWD(credit)}</td></tr>}
-                  <tr className="border-t"><td className="py-1 pl-6 font-medium">小計：</td><td className="text-right font-mono font-medium">{formatTWD(outstanding(inv))}</td></tr>
+                  <tr className="border-t"><td className="py-1.5 pl-6 font-medium">小計：</td><td className="text-right font-mono font-medium">{formatTWD(outstanding(inv))}</td></tr>
                 </tbody>
               </table>
-              {inv.notes && <p className="pl-6 text-sm whitespace-pre-line">備註：{inv.notes}</p>}
+              {inv.notes && <p className="pl-6 text-base whitespace-pre-line">備註：{inv.notes}</p>}
             </section>
           );
         })}
         <div className="mt-4 flex justify-between border-t-2 border-foreground py-2 font-bold"><span>應繳總金額：</span><span className="font-mono">{formatTWD(total)}</span></div>
-        <p className="mt-8 text-sm">{OFFICE.note}</p>
+        <p className="mt-8 text-base">{OFFICE.note}</p>
         <section className="mt-6 grid grid-cols-2 gap-6 break-inside-avoid">
           <div>
             <p className="font-medium">匯款明細如下：</p>
@@ -90,7 +90,7 @@ function CombinedStatement() {
               <p>帳　　號：{OFFICE.account}</p>
             </div>
           </div>
-          <div className="flex h-32 flex-col border border-foreground p-2 text-sm">
+          <div className="flex h-32 flex-col border border-foreground p-2 text-base">
             <span>事務所簽章：</span>
             <img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" />
           </div>

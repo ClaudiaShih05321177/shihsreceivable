@@ -3,6 +3,7 @@ import { comparePeriod, itemsTotal, scheduledCustomerFees, suggestPeriod, isAnnu
 /** 事務所資料（請款單抬頭與匯款帳號），取自使用者提供的請款單樣本。 */
 export const OFFICE = {
   name: "施慶豐記帳及報稅代理人事務所",
+  taxId: "02860666",
   address: "新竹市民生路193號6樓之2",
   phone: "TEL：(03)5321177-9 、 FAX：(03)5325488",
   bank: "新竹市第一信用合作社三民分社",
