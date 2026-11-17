@@ -202,8 +202,22 @@ export function FilingFormDialog({ trigger, filing }: { trigger: ReactNode; fili
           {form.customer_id === NEW && (
             <div className="grid gap-2">
               <Label htmlFor="f-company">新設立公司名稱</Label>
-              <Input id="f-company" value={form.company_name} onChange={(e) => set({ company_name: e.target.value })} placeholder="預查名稱" />
-              <p className="text-xs text-muted-foreground">取得統編後，用上方「用統編新增客戶」建立客戶並選擇，才能結案立帳。</p>
+              <Input
+                id="f-company"
+                value={form.company_name}
+                onChange={(e) => set({ company_name: e.target.value })}
+                onBlur={() => {
+                  const name = form.company_name.trim();
+                  if (!name) return;
+                  const match = customers.find((c) => c.name.trim() === name);
+                  if (match) {
+                    set({ customer_id: match.id, company_name: "", customer_code: form.customer_code || match.customer_code || "" });
+                    toast.success(`已帶入既有客戶：${match.customer_code ? `${match.customer_code} · ` : ""}${match.name}`);
+                  }
+                }}
+                placeholder="預查名稱"
+              />
+              <p className="text-xs text-muted-foreground">輸入的名稱若與既有客戶相同，會自動帶入該客戶與客戶代碼；取得統編後，也可用上方「用統編新增客戶」建立客戶並選擇，才能結案立帳。</p>
             </div>
           )}
           {me.isAdmin && form.customer_id && (
