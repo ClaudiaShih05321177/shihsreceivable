@@ -70,6 +70,7 @@ export const PAYMENT_TERM_OPTIONS = ["預付50%＋尾款", "全額結案付清",
 export type QuoteTermsConfig = {
   env: (typeof ENV_TERM_OPTIONS)[number];
   park: boolean;
+  sciencePark: boolean;
   payment: (typeof PAYMENT_TERM_OPTIONS)[number];
   customPayment: string;
   extra: string[];
@@ -81,6 +82,7 @@ export function readQuoteTerms(v: unknown, envMode?: string | null): QuoteTermsC
   return {
     env: pick(o["env"], ENV_TERM_OPTIONS, envDefault),
     park: o["park"] === true,
+    sciencePark: o["sciencePark"] === true,
     payment: pick(o["payment"], PAYMENT_TERM_OPTIONS, "預付50%＋尾款"),
     customPayment: typeof o["customPayment"] === "string" ? o["customPayment"] : "",
     extra: Array.isArray(o["extra"]) ? o["extra"].map(String).filter((x) => x.trim()) : [],
@@ -91,6 +93,7 @@ export function buildQuoteTerms(c: QuoteTermsConfig): string[] {
   if (c.env === "包含環判") t.push("以上報價包含環保判定申請，若所有項目為非公告事業即可申請工廠登記。", "若環保局環判函認定貴廠為公告事業，需做相關其他環保設置，再依相關內容另行報價。");
   else if (c.env === "客戶自辦環保") t.push("本案環保手續由貴廠自行辦理，本報價不含環保送件及相關規費。");
   if (c.park) t.push("若貴廠位於產業園區內，本報價不含污水納管或聯接證明申請。");
+  if (c.sciencePark) t.push("若貴廠位於科學園區內，本報價不含污水納管、用水計畫書、用電計畫書及污染總量預估。");
   t.push("上述報價僅包含工商科規費，其他各類主管機關規費或發票將實報實銷(如土地分區、溼地查詢、醫療器材商執照規費或廢清書規費等)。");
   if (c.payment === "預付50%＋尾款") t.push("付款條件:訂單確認後預付顧問費之50%，結案後付尾款及規費。請於發票開立後30日內付款。");
   else if (c.payment === "全額結案付清") t.push("付款條件:結案後一次付清顧問費及規費。請於發票開立後30日內付款。");

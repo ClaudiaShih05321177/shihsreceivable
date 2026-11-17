@@ -50,6 +50,10 @@ describe("報價條款", () => {
     expect(t.some((x) => x.includes("環保判定"))).toBe(false);
     expect(t.some((x) => x.includes("產業園區"))).toBe(true);
   });
+  it("科學園區勾選時帶入不含納管、用水、用電及污染總量預估", () => {
+    expect(buildQuoteTerms(readQuoteTerms({})).some((x) => x.includes("科學園區"))).toBe(false);
+    expect(buildQuoteTerms(readQuoteTerms({ sciencePark: true }))).toContain("若貴廠位於科學園區內，本報價不含污水納管、用水計畫書、用電計畫書及污染總量預估。");
+  });
   it("案件為客戶自辦環保時預設帶自辦條款", () => {
     expect(readQuoteTerms({}, "客戶自辦環保").env).toBe("客戶自辦環保");
   });
