@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { ExternalLink, FileText, Receipt } from "lucide-react";
+import { ExternalLink, FileText, Receipt, Search } from "lucide-react";
+import { useState } from "react";
 
 import { FactoryFormDialog } from "@/components/ar/factory-form-dialog";
 import { Money, PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { depositDue, finalDue, issuesInvoice, projectArStatus, projectOutstanding } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery } from "@/lib/queries";
 import { formatDate } from "@/lib/receivables";
@@ -30,7 +32,16 @@ const EINVOICE_URL = "https://www.einvoice.nat.gov.tw/";
 function FactoryReceivablesPage() {
   const { data: rows } = useSuspenseQuery(factoryRegistrationsQuery);
   const { data: me } = useSuspenseQuery(meQuery);
-  const total = rows.reduce((s, r) => s + projectOutstanding(r), 0);
+  const [q, setQ] = useState("");
+  const kw = q.trim().toLowerCase();
+  const filtered = kw
+    ? rows.filter((r) =>
+        [r.factory_name, r.company_name, r.tax_id, r.application_item, r.po_number, r.ar_notes]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(kw)),
+      )
+    : rows;
+  const total = filtered.reduce((s, r) => s + projectOutstanding(r), 0);
   return (
     <>
       <PageHeader
@@ -39,9 +50,14 @@ function FactoryReceivablesPage() {
         description={`未收餘額合計 ${total.toLocaleString("zh-TW")} 元`}
         actions={<Button variant="outline" asChild><a href={EINVOICE_URL} target="_blank" rel="noopener noreferrer"><ExternalLink /> 財政部電子發票平台</a></Button>}
       />
+      <div className="relative mb-3">
+        <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+        <Input placeholder="搜尋廠名、公司名稱、統編、申辦項目、PO…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
+      </div>
       <div className="grid gap-3">
         {rows.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">尚無案件，請先到工廠登記進度新增</div>}
-        {rows.map((r) => {
+        {rows.length > 0 && filtered.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">找不到符合「{q}」的案件</div>}
+        {filtered.map((r) => {
           const status = projectArStatus(r);
           const left = projectOutstanding(r);
           const name = <span className="font-medium">{r.factory_name}</span>;
