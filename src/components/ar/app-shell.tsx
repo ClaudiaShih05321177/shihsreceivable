@@ -28,8 +28,8 @@ const nav = [
 ] as const;
 
 const factoryNav = [
-  { to: "/factory", label: "工廠登記進度", icon: Factory },
   { to: "/factory-receivables", label: "勤豐應收帳款", icon: Wallet },
+  { to: "/factory", label: "工廠登記進度", icon: Factory },
   { to: "/factory-customers", label: "勤豐客戶資料", icon: Users },
   { to: "/team", label: "團隊成員", icon: UserCog },
 ] as const;
@@ -40,7 +40,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: invoices } = useQuery(invoicesQuery);
   const [company, setCompany] = useCompany();
-  const items = me.isAdmin ? (company === FACTORY_COMPANY ? factoryNav : nav) : canManageFactoryProgress(me) ? [...nav, factoryNav[0], factoryNav[2]] : canUseFactoryCustomers(me) ? [...nav, factoryNav[2]] : nav;
+  const items = me.isAdmin ? (company === FACTORY_COMPANY ? factoryNav : nav) : canManageFactoryProgress(me) ? [...nav, factoryNav[1], factoryNav[2]] : canUseFactoryCustomers(me) ? [...nav, factoryNav[2]] : nav;
   const overdue = (invoices ?? []).filter((i) => invoiceStatus(i) === "overdue").length;
 
   async function signOut() {
@@ -66,7 +66,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
             onChange={(e) => {
               const c = e.target.value as (typeof COMPANIES)[number];
               setCompany(c);
-              navigate({ to: c === FACTORY_COMPANY ? "/factory" : "/dashboard" });
+              navigate({ to: c === FACTORY_COMPANY ? "/factory-receivables" : "/dashboard" });
             }}
             className="w-full rounded-md border border-sidebar-border bg-sidebar-accent px-2 py-1.5 text-sm text-sidebar-accent-foreground"
           >
