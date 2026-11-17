@@ -309,6 +309,13 @@
       "when": 1794846177260,
       "tag": "0043_factory_read_admin_mn",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794878689954,
+      "tag": "0044_factory_customers",
+      "breakpoints": true
     }
   ]
 }

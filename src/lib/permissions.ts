@@ -16,5 +16,5 @@ export function canManageFactoryProgress(me: { isAdmin: boolean; staffCode?: str
   return me.isAdmin || me.staffCode?.trim().toUpperCase() === "MN";
 }
 export function canSeePage(isAdmin: boolean, pathname: string, staffCode?: string | null) {
-  return isAdmin || (pathname === "/factory" && canManageFactoryProgress({ isAdmin, staffCode: staffCode ?? null })) || MEMBER_PAGES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+  return isAdmin || ((pathname === "/factory" || pathname === "/factory-customers") && canManageFactoryProgress({ isAdmin, staffCode: staffCode ?? null })) || MEMBER_PAGES.some((p) => pathname === p || pathname.startsWith(p + "/"));
 }

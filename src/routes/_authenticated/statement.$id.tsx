@@ -92,6 +92,7 @@ function StatementPage() {
             </section>
           );
         })()}
+        {inv.notes && <p className="mt-4 whitespace-pre-line">備註：{inv.notes}</p>}
         {inv.due_date && <p className="mt-2 text-right">※請於 {formatDate(inv.due_date)} 以前繳納，謝謝！</p>}
         <p className="mt-10 text-sm">{OFFICE.note}</p>
         <section className="mt-6 grid grid-cols-2 gap-6 break-inside-avoid">

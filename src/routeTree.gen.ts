@@ -18,6 +18,7 @@ import { Route as AuthenticatedShellAuditsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedShellBonusesRouteImport } from './routes/_authenticated/_shell/bonuses'
 import { Route as AuthenticatedShellDashboardRouteImport } from './routes/_authenticated/_shell/dashboard'
 import { Route as AuthenticatedShellFactoryRouteImport } from './routes/_authenticated/_shell/factory'
+import { Route as AuthenticatedShellFactoryCustomersRouteImport } from './routes/_authenticated/_shell/factory-customers'
 import { Route as AuthenticatedShellFactoryReceivablesRouteImport } from './routes/_authenticated/_shell/factory-receivables'
 import { Route as AuthenticatedShellFilingsRouteImport } from './routes/_authenticated/_shell/filings'
 import { Route as AuthenticatedShellReconcileRouteImport } from './routes/_authenticated/_shell/reconcile'
@@ -78,6 +79,12 @@ const AuthenticatedShellFactoryRoute =
   AuthenticatedShellFactoryRouteImport.update({
     id: '/factory',
     path: '/factory',
+    getParentRoute: () => AuthenticatedShellRoute,
+  } as any)
+const AuthenticatedShellFactoryCustomersRoute =
+  AuthenticatedShellFactoryCustomersRouteImport.update({
+    id: '/factory-customers',
+    path: '/factory-customers',
     getParentRoute: () => AuthenticatedShellRoute,
   } as any)
 const AuthenticatedShellFactoryReceivablesRoute =
@@ -165,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/factory': typeof AuthenticatedShellFactoryRoute
+  '/factory-customers': typeof AuthenticatedShellFactoryCustomersRoute
   '/factory-receivables': typeof AuthenticatedShellFactoryReceivablesRoute
   '/filings': typeof AuthenticatedShellFilingsRoute
   '/reconcile': typeof AuthenticatedShellReconcileRoute
@@ -187,6 +195,7 @@ export interface FileRoutesByTo {
   '/bonuses': typeof AuthenticatedShellBonusesRoute
   '/dashboard': typeof AuthenticatedShellDashboardRoute
   '/factory': typeof AuthenticatedShellFactoryRoute
+  '/factory-customers': typeof AuthenticatedShellFactoryCustomersRoute
   '/factory-receivables': typeof AuthenticatedShellFactoryReceivablesRoute
   '/filings': typeof AuthenticatedShellFilingsRoute
   '/reconcile': typeof AuthenticatedShellReconcileRoute
@@ -212,6 +221,7 @@ export interface FileRoutesById {
   '/_authenticated/_shell/bonuses': typeof AuthenticatedShellBonusesRoute
   '/_authenticated/_shell/dashboard': typeof AuthenticatedShellDashboardRoute
   '/_authenticated/_shell/factory': typeof AuthenticatedShellFactoryRoute
+  '/_authenticated/_shell/factory-customers': typeof AuthenticatedShellFactoryCustomersRoute
   '/_authenticated/_shell/factory-receivables': typeof AuthenticatedShellFactoryReceivablesRoute
   '/_authenticated/_shell/filings': typeof AuthenticatedShellFilingsRoute
   '/_authenticated/_shell/reconcile': typeof AuthenticatedShellReconcileRoute
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/bonuses'
     | '/dashboard'
     | '/factory'
+    | '/factory-customers'
     | '/factory-receivables'
     | '/filings'
     | '/reconcile'
@@ -258,6 +269,7 @@ export interface FileRouteTypes {
     | '/bonuses'
     | '/dashboard'
     | '/factory'
+    | '/factory-customers'
     | '/factory-receivables'
     | '/filings'
     | '/reconcile'
@@ -282,6 +294,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_shell/bonuses'
     | '/_authenticated/_shell/dashboard'
     | '/_authenticated/_shell/factory'
+    | '/_authenticated/_shell/factory-customers'
     | '/_authenticated/_shell/factory-receivables'
     | '/_authenticated/_shell/filings'
     | '/_authenticated/_shell/reconcile'
@@ -366,6 +379,13 @@ declare module '@tanstack/react-router' {
       path: '/factory'
       fullPath: '/factory'
       preLoaderRoute: typeof AuthenticatedShellFactoryRouteImport
+      parentRoute: typeof AuthenticatedShellRoute
+    }
+    '/_authenticated/_shell/factory-customers': {
+      id: '/_authenticated/_shell/factory-customers'
+      path: '/factory-customers'
+      fullPath: '/factory-customers'
+      preLoaderRoute: typeof AuthenticatedShellFactoryCustomersRouteImport
       parentRoute: typeof AuthenticatedShellRoute
     }
     '/_authenticated/_shell/factory-receivables': {
@@ -467,6 +487,7 @@ interface AuthenticatedShellRouteChildren {
   AuthenticatedShellBonusesRoute: typeof AuthenticatedShellBonusesRoute
   AuthenticatedShellDashboardRoute: typeof AuthenticatedShellDashboardRoute
   AuthenticatedShellFactoryRoute: typeof AuthenticatedShellFactoryRoute
+  AuthenticatedShellFactoryCustomersRoute: typeof AuthenticatedShellFactoryCustomersRoute
   AuthenticatedShellFactoryReceivablesRoute: typeof AuthenticatedShellFactoryReceivablesRoute
   AuthenticatedShellFilingsRoute: typeof AuthenticatedShellFilingsRoute
   AuthenticatedShellReconcileRoute: typeof AuthenticatedShellReconcileRoute
@@ -483,6 +504,8 @@ const AuthenticatedShellRouteChildren: AuthenticatedShellRouteChildren = {
   AuthenticatedShellBonusesRoute: AuthenticatedShellBonusesRoute,
   AuthenticatedShellDashboardRoute: AuthenticatedShellDashboardRoute,
   AuthenticatedShellFactoryRoute: AuthenticatedShellFactoryRoute,
+  AuthenticatedShellFactoryCustomersRoute:
+    AuthenticatedShellFactoryCustomersRoute,
   AuthenticatedShellFactoryReceivablesRoute:
     AuthenticatedShellFactoryReceivablesRoute,
   AuthenticatedShellFilingsRoute: AuthenticatedShellFilingsRoute,

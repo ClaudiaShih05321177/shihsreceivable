@@ -113,6 +113,51 @@ export type Database = {
         }
         Relationships: []
       }
+      factory_customers: {
+        Row: {
+          address: string | null
+          contact_person: string | null
+          created_at: string
+          created_by: string | null
+          customer_code: string | null
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          tax_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_code?: string | null
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          contact_person?: string | null
+          created_at?: string
+          created_by?: string | null
+          customer_code?: string | null
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          tax_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       factory_registrations: {
         Row: {
           application_item: string | null
@@ -591,6 +636,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_admin_or_mn: { Args: { _uid: string }; Returns: boolean }
       is_member: { Args: { _user_id: string }; Returns: boolean }
       set_filing_service_fee: {
         Args: { _fee: number; _filing_id: string }

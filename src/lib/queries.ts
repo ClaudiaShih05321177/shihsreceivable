@@ -1,3 +1,4 @@
+import { compareCustomerCode } from "@/lib/customer-sort";
 import { queryOptions } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
@@ -50,6 +51,7 @@ export const customersQuery = queryOptions({
   queryFn: async () => {
     const { data, error } = await supabase.from("customers").select(CUSTOMER_SELECT).is("archived_at", null).order("name");
     if (error) throw error;
+    data.sort((a, b) => compareCustomerCode(a.customer_code, b.customer_code, a.name, b.name));
     const rates = await customerRates();
     return data.map((c): Customer => rates ? { ...c, annual_extra_rate: rates.get(c.id) ?? null } : c);
   },

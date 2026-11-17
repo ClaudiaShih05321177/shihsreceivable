@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { customersQuery, invoicesQuery } from "@/lib/queries";
+import { customersQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { formatTWD, invoiceStatus, outstanding, STATUS_LABEL, type InvoiceStatus } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +37,7 @@ const FILTER_LABEL = { open: "未收清", all: "全部", ...STATUS_LABEL } as co
 function InvoicesPage() {
   const { data: invoices } = useSuspenseQuery(invoicesQuery);
   const { data: customers } = useSuspenseQuery(customersQuery);
+  const { data: me } = useSuspenseQuery(meQuery);
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("open");
   const [staff, setStaff] = useState("all");
   const [q, setQ] = useState("");
@@ -112,8 +113,8 @@ function InvoicesPage() {
           <div className="sticky top-2 z-10 mb-3 flex flex-wrap items-center gap-2 rounded-md border border-primary bg-card px-4 py-2 shadow">
             <span className="text-sm">已選 {picked.length} 筆・未收合計 <span className="font-semibold">{formatTWD(picked.reduce((s, i) => s + outstanding(i), 0))}</span></span>
             <div className="ml-auto flex gap-2">
-              <Button asChild size="sm" variant="outline"><Link to="/statement-combined" search={{ ids: picked.map((i) => i.id).join(",") }}><Printer /> 合併請款單</Link></Button>
-              <CombinedPaymentDialog invoices={picked} onDone={() => setSel(new Set())} trigger={<Button size="sm"><HandCoins /> 合併收款</Button>} />
+              <Button asChild size="sm" variant="outline"><Link to="/statement-combined" search={{ ids: picked.map((i) => i.id).join(",") }} target="_blank"><Printer /> 合併請款單</Link></Button>
+              {me.isAdmin && <CombinedPaymentDialog invoices={picked} onDone={() => setSel(new Set())} trigger={<Button size="sm"><HandCoins /> 合併收款</Button>} />}
               <Button size="sm" variant="ghost" onClick={() => setSel(new Set())} aria-label="取消選取"><X /></Button>
             </div>
           </div>

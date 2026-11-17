@@ -53,3 +53,4 @@ use the editor.
 
 - Members open /invoices, /filings, /customers; MN also opens /factory, inserts nonfinancial cases via RLS and changes progress via an MN/admin-checked RPC. Why: case access must not permit financial edits.
 - Combined billing/payment: selected invoices print via `/statement-combined?ids=`; combined payments split by tested `allocateCombined` in `src/lib/combined.ts` (one payment row per invoice, fee on first, excess on last). Why: keeps per-invoice ledgers intact.
+- 勤豐 customers live in `public.factory_customers` (separate from bookkeeping `customers`), readable/editable by admin or MN via `is_admin_or_mn()`, delete admin-only. Why: 勤豐 client list must not mix with bookkeeping fees or staff scoping.

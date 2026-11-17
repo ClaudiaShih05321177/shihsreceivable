@@ -74,6 +74,7 @@ function CombinedStatement() {
                   <tr className="border-t"><td className="py-1 pl-6 font-medium">小計：</td><td className="text-right font-mono font-medium">{formatTWD(outstanding(inv))}</td></tr>
                 </tbody>
               </table>
+              {inv.notes && <p className="pl-6 text-sm whitespace-pre-line">備註：{inv.notes}</p>}
             </section>
           );
         })}
