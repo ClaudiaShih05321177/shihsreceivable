@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { FileText, Pencil, Plus, Receipt, Search, Trash2 } from "lucide-react";
+import { Ban, FileText, Pencil, Plus, Receipt, RotateCcw, Search, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { FACTORY_STAGES, needsEnv } from "@/lib/factory";
+import { FACTORY_LOST_STAGE, FACTORY_STAGES, isFactoryClosed, needsEnv } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery, type FactoryRegistration } from "@/lib/queries";
 import { formatDate } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,7 @@ function FactoryPage() {
     );
   }, [rows, q]);
 
-  const shown = searched.filter((r) => (stage === "all" ? true : stage === "open" ? r.stage !== "核准結案" : r.stage === stage));
+  const shown = searched.filter((r) => (stage === "all" ? true : stage === "open" ? !isFactoryClosed(r.stage) : r.stage === stage));
 
   const remove = useMutation({
     mutationFn: async (id: string) => {
@@ -59,6 +59,14 @@ function FactoryPage() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["factory_registrations"] }),
     onError: (e) => toast.error(e instanceof Error ? e.message : "刪除失敗"),
+  });
+  const setLost = useMutation({
+    mutationFn: async ({ id, lost }: { id: string; lost: boolean }) => {
+      const { error } = await supabase.from("factory_registrations").update({ stage: lost ? FACTORY_LOST_STAGE : "送件環保" }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: (_, v) => { toast.success(v.lost ? "已設為未成交結案" : "已恢復為進行中"); qc.invalidateQueries({ queryKey: ["factory_registrations"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "更新失敗"),
   });
 
   const btn = (key: string, label: string, count: number) => (
@@ -72,8 +80,9 @@ function FactoryPage() {
     <>
       <PageHeader eyebrow="勤豐工商顧問有限公司" title="工廠登記進度表" description="環保與現場會勘為選辦；免跑環保或客戶自辦環保的案件從送件工商科開始。" actions={canProgress ? <FactoryFormDialog trigger={<Button><Plus /> 新增案件</Button>} /> : undefined} />
       <div className="mb-3 flex flex-wrap gap-2">
-        {btn("open", "進行中", searched.filter((r) => r.stage !== "核准結案").length)}
+        {btn("open", "進行中", searched.filter((r) => !isFactoryClosed(r.stage)).length)}
         {FACTORY_STAGES.map((s) => btn(s, s, searched.filter((r) => r.stage === s).length))}
+        {btn(FACTORY_LOST_STAGE, FACTORY_LOST_STAGE, searched.filter((r) => r.stage === FACTORY_LOST_STAGE).length)}
         {btn("all", "全部", searched.length)}
       </div>
       <div className="relative mb-5">
@@ -109,7 +118,7 @@ function FactoryPage() {
                   {r.factory_address && <div className="text-xs text-muted-foreground">地址：{r.factory_address}</div>}
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap", r.stage === "核准結案" ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>{r.stage}</span>
+                  <span className={cn("rounded-full px-2 py-0.5 text-xs font-medium whitespace-nowrap", r.stage === "核准結案" ? "bg-primary/10 text-primary" : r.stage === FACTORY_LOST_STAGE ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground")}>{r.stage}</span>
                 </div>
               </div>
               {r.status_note && <p className="text-sm whitespace-pre-wrap">{r.status_note}</p>}
@@ -117,7 +126,10 @@ function FactoryPage() {
               <div className="flex flex-wrap items-center gap-1 border-t pt-2">
                 {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "quote", stage: "尾款" }}><FileText className="size-3.5" /> 報價單</Link></Button>}
                 {me.isAdmin && <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: "尾款" }}><Receipt className="size-3.5" /> 請款單</Link></Button>}
-                  {canProgress && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="sm" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /> 變更進度</Button>} />}
+                {me.isAdmin && r.stage !== "核准結案" && (r.stage === FACTORY_LOST_STAGE
+                  ? <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`將「${r.factory_name}」恢復為進行中？`)) setLost.mutate({ id: r.id, lost: false }); }}><RotateCcw className="size-3.5" /> 恢復案件</Button>
+                  : <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`「${r.factory_name}」報價未成交，確定結案？`)) setLost.mutate({ id: r.id, lost: true }); }}><Ban className="size-3.5" /> 沒接案結案</Button>)}
+                  {canProgress && r.stage !== FACTORY_LOST_STAGE && <FactoryProgressDialog record={r} trigger={<Button variant="ghost" size="sm" aria-label={`變更 ${r.factory_name} 進度`}><Pencil className="size-3.5" /> 變更進度</Button>} />}
                 {me.isAdmin && <Button variant="ghost" size="sm" className="ml-auto" aria-label={`刪除 ${r.factory_name}`} onClick={() => { if (window.confirm(`確定刪除「${r.factory_name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-3.5 text-destructive" /></Button>}
               </div>
             </div>

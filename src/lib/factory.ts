@@ -5,6 +5,10 @@ export const FACTORY_COMPANY: Company = "勤豐工商顧問有限公司";
 
 export const FACTORY_STAGES = ["送件環保", "環保核准", "送件工商科", "現場會勘", "核准結案"] as const;
 export type FactoryStage = (typeof FACTORY_STAGES)[number];
+/** 報價後未成交、不接案的結案狀態（不在一般進度流程內）。 */
+export const FACTORY_LOST_STAGE = "未成交結案";
+/** 已結束的案件：核准結案或未成交結案。 */
+export const isFactoryClosed = (stage: string) => stage === "核准結案" || stage === FACTORY_LOST_STAGE;
 
 /** 環保：委託代辦、免跑環保、客戶自行跑環保；後兩者直接從送件工商科開始。 */
 export const ENV_MODES = ["需跑環保", "免跑環保", "客戶自辦環保"] as const;
