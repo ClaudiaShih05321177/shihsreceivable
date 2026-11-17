@@ -179,6 +179,7 @@ export type Database = {
           deposit_invoice_amount: number
           deposit_received_amount: number
           deposit_received_date: string | null
+          discount: number
           env_approved_date: string | null
           env_filed_date: string | null
           env_mode: string
@@ -196,6 +197,7 @@ export type Database = {
           other_fee: number
           po_number: string | null
           quote_amount: number
+          quote_terms: Json
           stage: string
           status_note: string | null
           tax_id: string | null
@@ -215,6 +217,7 @@ export type Database = {
           deposit_invoice_amount?: number
           deposit_received_amount?: number
           deposit_received_date?: string | null
+          discount?: number
           env_approved_date?: string | null
           env_filed_date?: string | null
           env_mode?: string
@@ -232,6 +235,7 @@ export type Database = {
           other_fee?: number
           po_number?: string | null
           quote_amount?: number
+          quote_terms?: Json
           stage?: string
           status_note?: string | null
           tax_id?: string | null
@@ -251,6 +255,7 @@ export type Database = {
           deposit_invoice_amount?: number
           deposit_received_amount?: number
           deposit_received_date?: string | null
+          discount?: number
           env_approved_date?: string | null
           env_filed_date?: string | null
           env_mode?: string
@@ -268,6 +273,7 @@ export type Database = {
           other_fee?: number
           po_number?: string | null
           quote_amount?: number
+          quote_terms?: Json
           stage?: string
           status_note?: string | null
           tax_id?: string | null
@@ -667,6 +673,10 @@ export type Database = {
       is_admin_or_mn: { Args: { _uid: string }; Returns: boolean }
       is_filing_closer: { Args: { _uid: string }; Returns: boolean }
       is_member: { Args: { _user_id: string }; Returns: boolean }
+      set_factory_quote_terms: {
+        Args: { _id: string; _terms: Json }
+        Returns: undefined
+      }
       set_filing_customer_code: {
         Args: { _code: string; _customer_id: string }
         Returns: undefined

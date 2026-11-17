@@ -29,6 +29,7 @@ type Num = number | string | null | undefined;
 const n = (v: Num) => Math.round(Number(v) || 0);
 export type ProjectArLike = {
   quote_amount: Num;
+  discount?: Num;
   deposit_invoice_amount: Num;
   deposit_received_amount: Num;
   final_invoice_amount: Num;
@@ -48,6 +49,9 @@ export function extraFees(v: unknown): ExtraFee[] {
     .map((x) => ({ label: String((x as ExtraFee)?.label ?? "").trim(), amount: Math.round(Number((x as ExtraFee)?.amount) || 0) }))
     .filter((x) => x.label && x.amount !== 0);
 }
+
+/** 折扣後報價（未稅）＝報價−折扣，不低於 0。 */
+export const netQuote = (r: { quote_amount: Num; discount?: Num }) => Math.max(0, n(r.quote_amount) - n(r.discount));
 
 export const extraFeesTotal = (v: unknown) => extraFees(v).reduce((s, x) => s + x.amount, 0);
 
@@ -79,7 +83,7 @@ export function autoFinalInvoice(quote: Num, depositInvoice: Num, type: string |
 /** 尾款應收＝尾款發票金額＋規費＋其他費用＋自訂費用項目。 */
 export function finalDue(r: ProjectArLike): number {
   const fees = n(r.government_fee) + n(r.other_fee) + extraFeesTotal(r.extra_fees);
-  if (!issuesInvoice(r.invoice_type)) return n(r.quote_amount) + fees;
+  if (!issuesInvoice(r.invoice_type)) return netQuote(r) + fees;
   return n(r.final_invoice_amount) + fees;
 }
 

@@ -1,5 +1,5 @@
 /** 勤豐工商顧問 報價單／請款單內容（依使用者提供之 Excel 範本）。 */
-import { contractTotal, depositDue, depositTaxSplit, extraFees, issuesInvoice, TAX_RATE, type ProjectArLike } from "./factory";
+import { contractTotal, depositDue, depositTaxSplit, extraFees, issuesInvoice, netQuote, TAX_RATE, type ProjectArLike } from "./factory";
 
 export const KINFENG = {
   name: "勤豐工商顧問有限公司",
@@ -25,18 +25,18 @@ export const INVOICE_STAGES = ["訂金", "尾款", "全額"] as const;
 export type InvoiceStage = (typeof INVOICE_STAGES)[number];
 
 export type DocLine = { label: string; amount: number };
-export type DocSummary = { consulting: number; subtotal: number; lines: DocLine[]; total: number };
+export type DocSummary = { consulting: number; discount: number; subtotal: number; lines: DocLine[]; total: number };
 
 const n = (v: unknown) => Math.round(Number(v) || 0);
 
 /** 報價單：顧問費（未稅）＋營業稅5%（開發票才有）＋規費＋其他費用。 */
 export function quoteSummary(r: ProjectArLike): DocSummary {
-  const q = n(r.quote_amount);
+  const q = netQuote(r);
   const tax = issuesInvoice(r.invoice_type) ? contractTotal(q, r.invoice_type) - q : 0;
   const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: tax }, { label: "規費(收據)", amount: n(r.government_fee) }];
   if (n(r.other_fee)) lines.push({ label: "其他費用", amount: n(r.other_fee) });
   for (const x of extraFees(r.extra_fees)) lines.push(x);
-  return { consulting: q, subtotal: q, lines, total: lines.reduce((s, l) => s + l.amount, q) };
+  return { consulting: n(r.quote_amount), discount: n(r.quote_amount) - q, subtotal: q, lines, total: lines.reduce((s, l) => s + l.amount, q) };
 }
 
 /**
@@ -49,9 +49,9 @@ export function invoiceSummary(r: ProjectArLike, stage: InvoiceStage): DocSummar
     const base = inv ? n(r.deposit_invoice_amount) : n(r.deposit_received_amount);
     const tax = inv ? depositTaxSplit(base).tax : 0;
     const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: tax }];
-    return { consulting: base, subtotal: base, lines, total: base + tax };
+    return { consulting: base, discount: 0, subtotal: base, lines, total: base + tax };
   }
-  const q = n(r.quote_amount);
+  const q = netQuote(r);
   const tax = inv ? contractTotal(q, r.invoice_type) - q : 0;
   const lines: DocLine[] = [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: tax }];
   if (stage === "尾款") {
@@ -61,5 +61,39 @@ export function invoiceSummary(r: ProjectArLike, stage: InvoiceStage): DocSummar
   lines.push({ label: "規費(收據)", amount: n(r.government_fee) });
   if (n(r.other_fee)) lines.push({ label: "其他費用", amount: n(r.other_fee) });
   for (const x of extraFees(r.extra_fees)) lines.push(x);
-  return { consulting: q, subtotal: q, lines, total: lines.reduce((s, l) => s + l.amount, q) };
+  return { consulting: n(r.quote_amount), discount: n(r.quote_amount) - q, subtotal: q, lines, total: lines.reduce((s, l) => s + l.amount, q) };
+}
+
+/** 報價條款切換設定（存於 factory_registrations.quote_terms）。 */
+export const ENV_TERM_OPTIONS = ["包含環判", "免跑環保", "客戶自辦環保"] as const;
+export const PAYMENT_TERM_OPTIONS = ["預付50%＋尾款", "全額結案付清", "自訂"] as const;
+export type QuoteTermsConfig = {
+  env: (typeof ENV_TERM_OPTIONS)[number];
+  park: boolean;
+  payment: (typeof PAYMENT_TERM_OPTIONS)[number];
+  customPayment: string;
+  extra: string[];
+};
+const pick = <T extends string>(v: unknown, opts: readonly T[], d: T): T => (opts.includes(v as T) ? (v as T) : d);
+export function readQuoteTerms(v: unknown, envMode?: string | null): QuoteTermsConfig {
+  const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
+  const envDefault = envMode === "免跑環保" ? "免跑環保" : envMode === "客戶自辦環保" ? "客戶自辦環保" : "包含環判";
+  return {
+    env: pick(o["env"], ENV_TERM_OPTIONS, envDefault),
+    park: o["park"] === true,
+    payment: pick(o["payment"], PAYMENT_TERM_OPTIONS, "預付50%＋尾款"),
+    customPayment: typeof o["customPayment"] === "string" ? o["customPayment"] : "",
+    extra: Array.isArray(o["extra"]) ? o["extra"].map(String).filter((x) => x.trim()) : [],
+  };
+}
+export function buildQuoteTerms(c: QuoteTermsConfig): string[] {
+  const t: string[] = [];
+  if (c.env === "包含環判") t.push("以上報價包含環保判定申請，若所有項目為非公告事業即可申請工廠登記。", "若環保局環判函認定貴廠為公告事業，需做相關其他環保設置，再依相關內容另行報價。");
+  else if (c.env === "客戶自辦環保") t.push("本案環保手續由貴廠自行辦理，本報價不含環保送件及相關規費。");
+  if (c.park) t.push("若貴廠位於產業園區內，本報價不含污水納管或聯接證明申請。");
+  t.push("上述報價僅包含工商科規費，其他各類主管機關規費或發票將實報實銷(如土地分區、溼地查詢、醫療器材商執照規費或廢清書規費等)。");
+  if (c.payment === "預付50%＋尾款") t.push("付款條件:訂單確認後預付顧問費之50%，結案後付尾款及規費。請於發票開立後30日內付款。");
+  else if (c.payment === "全額結案付清") t.push("付款條件:結案後一次付清顧問費及規費。請於發票開立後30日內付款。");
+  else if (c.customPayment.trim()) t.push(`付款條件:${c.customPayment.trim()}`);
+  return [...t, ...c.extra];
 }

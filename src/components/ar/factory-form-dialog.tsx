@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupCompany } from "@/lib/company-lookup.functions";
-import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, depositTaxSplit, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv, stageFromDates } from "@/lib/factory";
+import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, depositTaxSplit, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv, netQuote, stageFromDates } from "@/lib/factory";
 import { meQuery, type FactoryRegistration } from "@/lib/queries";
 import type { Database } from "@/integrations/supabase/types";
 import { canManageFactoryProgress } from "@/lib/permissions";
@@ -24,7 +24,7 @@ type Update = Database["public"]["Tables"]["factory_registrations"]["Update"];
 
 const TEXT = ["factory_name", "factory_address", "application_item", "status_note", "contact", "ar_notes", "tax_id", "company_name", "branch_name", "po_number"] as const;
 const DATES = ["env_filed_date", "env_approved_date", "bureau_filed_date", "inspection_date", "approved_date", "deposit_received_date", "final_received_date"] as const;
-const MONEY = ["quote_amount", "deposit_invoice_amount", "deposit_received_amount", "final_invoice_amount", "government_fee", "other_fee", "final_received_amount"] as const;
+const MONEY = ["quote_amount", "discount", "deposit_invoice_amount", "deposit_received_amount", "final_invoice_amount", "government_fee", "other_fee", "final_received_amount"] as const;
 type Key = (typeof TEXT)[number] | (typeof DATES)[number] | (typeof MONEY)[number] | "env_mode" | "stage" | "invoice_type";
 type Form = Record<Key, string>;
 
@@ -50,9 +50,9 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
     const next = { ...f, [k]: v };
     if (next.stage && (DATES as readonly string[]).includes(k)) next.stage = stageFromDates(next.stage, next);
     if ((k === "company_name" || k === "branch_name") && next.company_name.trim()) next.factory_name = `${next.company_name.trim()}${next.branch_name.trim()}`;
-    if (k === "quote_amount" || k === "deposit_invoice_amount" || k === "invoice_type") {
+    if (k === "quote_amount" || k === "discount" || k === "deposit_invoice_amount" || k === "invoice_type") {
       if (!issuesInvoice(next.invoice_type)) { next.deposit_invoice_amount = ""; next.final_invoice_amount = ""; }
-      else if (Number(next.quote_amount)) next.final_invoice_amount = String(autoFinalInvoice(next.quote_amount, next.deposit_invoice_amount, next.invoice_type));
+      else if (Number(next.quote_amount)) next.final_invoice_amount = String(autoFinalInvoice(netQuote(next), next.deposit_invoice_amount, next.invoice_type));
     }
     return next;
   });
@@ -206,7 +206,8 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
               </Select>
             </div>
             {money("quote_amount", inv ? "報價金額（未稅）" : "報價金額")}
-            {inv && <div className="grid gap-2"><Label>含稅總額（外加 5%）</Label><p className="tabular py-2 text-sm font-semibold">{contractTotal(form.quote_amount, form.invoice_type).toLocaleString("zh-TW")}</p></div>}
+            {money("discount", "折扣金額（殺價）")}
+            {inv && <div className="grid gap-2"><Label>折扣後含稅總額（外加 5%）</Label><p className="tabular py-2 text-sm font-semibold">{contractTotal(netQuote(form), form.invoice_type).toLocaleString("zh-TW")}</p></div>}
             {inv && money("deposit_invoice_amount", "訂金發票金額（未稅）")}
             {inv && Number(form.deposit_invoice_amount) > 0 && (
               <div className="grid gap-2">
