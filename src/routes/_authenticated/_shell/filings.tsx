@@ -152,7 +152,70 @@ function FilingsPage() {
         {FILING_STAGES.map((s) => filterBtn(s, s, counts[s] ?? 0))}
         {filterBtn("all", "全部", filings.length)}
       </div>
-      <div className="ledger-card overflow-x-auto">
+      {/* 窄螢幕：卡片列表，避免左右捲動 */}
+      <div className="space-y-3 lg:hidden">
+        {rows.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">尚無案件</div>}
+        {rows.map((f) => {
+          const code = filingCustomerCode(f.customer?.customer_code, f.customer_code);
+          return (
+            <div key={f.id} className="ledger-card p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 font-medium">
+                  {canClose ? (
+                    <FilingFormDialog filing={f} trigger={<Button type="button" variant="link" className="h-auto justify-start p-0 text-left whitespace-normal text-foreground" aria-label={`點公司名稱變更進度 ${filingName(f)}`}><span>{code && <span className="mr-2 font-mono text-sm text-muted-foreground">{code} ·</span>}{filingName(f)}</span></Button>} />
+                  ) : (
+                    <>{code && <span className="mr-2 font-mono text-sm text-muted-foreground">{code} ·</span>}{filingName(f)}</>
+                  )}
+                </div>
+                <span className={cn(
+                  "shrink-0 rounded-full px-2 py-0.5 text-xs font-medium",
+                  f.stage === "結案" ? "bg-primary/10 text-primary" : f.stage.includes("核准") ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground",
+                )}>
+                  {f.stage}
+                </span>
+              </div>
+              <div className="mt-1 text-sm text-muted-foreground">
+                {f.case_type}{f.change_detail ? `（${f.change_detail}）` : ""}{f.suspended_period ? `（${f.suspended_period}）` : ""} · {f.route}
+              </div>
+              <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                {routeHasAuthority(f.route) && <><dt className="text-muted-foreground">主管機關</dt><dd>{formatDate(f.filed_date)}／{formatDate(f.approved_date)}</dd></>}
+                {f.special_authority && <><dt className="text-muted-foreground">{f.special_authority}</dt><dd>{formatDate(f.special_filed_date)}／{formatDate(f.special_approved_date)}</dd></>}
+                {routeHasTaxBureau(f.route) && <><dt className="text-muted-foreground">國稅局</dt><dd>{formatDate(f.tax_filed_date)}／{formatDate(f.tax_approved_date)}</dd></>}
+                {me.isAdmin && <><dt className="text-muted-foreground">代辦費</dt><dd className="text-right"><FilingFeeDialog id={f.id} name={filingName(f)} fee={fees?.[f.id] ?? 0} /></dd></>}
+                <dt className="text-muted-foreground">代墊規費</dt><dd className="text-right"><Money value={Number(f.advance_fee)} /></dd>
+                <dt className="text-muted-foreground">代刻印章</dt><dd className="text-right"><Money value={Number(f.stamp_fee)} /></dd>
+                {me.isAdmin && f.invoice_id && <><dt className="text-muted-foreground">應收帳款</dt><dd className="text-right"><Link to="/invoices/$id" params={{ id: f.invoice_id }} className="text-primary hover:underline">查看帳款</Link></dd></>}
+              </dl>
+              <div className="mt-3 flex flex-wrap items-center justify-end gap-1 border-t border-border pt-2">
+                {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-receipt/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 收據`}><Printer className="size-3.5" />收據</Link></Button>}
+                {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-quote/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 報價單`}><Printer className="size-3.5" />報價單</Link></Button>}
+                {canClose && f.stage !== "結案" && (
+                  <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`確定將「${filingName(f)}」結案？`)) close.mutate(f); }} disabled={close.isPending} aria-label={`${filingName(f)} 結案`}>
+                    <CheckCircle2 className="size-3.5" /> 結案
+                  </Button>
+                )}
+                {me.isAdmin && pendingBill(f) && (
+                  <Button variant="ghost" size="sm" onClick={() => bill.mutate(f)} disabled={bill.isPending} aria-label={`${filingName(f)} 立帳`}>
+                    <Receipt className="size-3.5" /> 立帳
+                  </Button>
+                )}
+                {me.isAdmin && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`刪除 ${filingName(f)}`}
+                    onClick={() => { if (window.confirm(`確定刪除「${filingName(f)}」的${f.case_type}案件？`)) remove.mutate(f); }}
+                  >
+                    <Trash2 className="size-3.5 text-destructive" />
+                  </Button>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {/* 寬螢幕：表格 */}
+      <div className="ledger-card hidden overflow-x-auto lg:block">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/60 hover:bg-muted/60">
