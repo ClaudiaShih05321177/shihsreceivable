@@ -33,4 +33,15 @@ describe("工商客戶與帳款連結", () => {
   it("換客戶時清除舊代碼，不沿用其他公司代碼", () => {
     expect(filingCustomerLink({ id: "office-5", name: "無碼公司", customer_code: null }).customer_code).toBe("");
   });
+  it("國產電器股份有限公司 對到 AC31 國產電器股份", () => {
+    const list = [{ id: "ac31", name: "國產電器股份", tax_id: "46357354", customer_code: "AC31" }];
+    expect(findFilingCustomer(list, "國產電器股份有限公司", "")?.customer_code).toBe("AC31");
+  });
+  it("同統編多筆時帶入唯一有代碼的客戶", () => {
+    const list = [
+      { id: "ac31", name: "國產電器股份", tax_id: "46357354", customer_code: "AC31" },
+      { id: "blank", name: "國產電器股份有限公司", tax_id: "46357354", customer_code: null },
+    ];
+    expect(findFilingCustomer(list, "", "46357354")?.id).toBe("ac31");
+  });
 });
