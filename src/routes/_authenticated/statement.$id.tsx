@@ -1,5 +1,5 @@
 import officeSealLarge from "@/assets/office-seal-large.png.asset.json";
-import officeSealSmall from "@/assets/office-seal-small-fixed.png.asset.json";
+import officeSealSmall from "@/assets/office-seal-small-v3.png.asset.json";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer } from "lucide-react";
@@ -108,7 +108,7 @@ function StatementPage() {
           </div>
           <div className="flex w-56 shrink-0 flex-col border border-foreground p-2 text-base">
             <span>事務所簽章：</span>
-            <div className="mt-2 flex items-end justify-center gap-2"><img src={officeSealLarge.url} alt="事務所大章" className="block shrink-0 object-contain" style={{ width: "2.62cm", height: "2.62cm", maxWidth: "none" }} /><img src={officeSealSmall.url} alt="事務所小章" className="block shrink-0 object-contain" style={{ width: "1.21cm", height: "1.21cm", maxWidth: "none" }} /></div>
+            <div className="mt-2 flex items-end justify-center gap-2"><img src={officeSealLarge.url} alt="事務所大章" className="block shrink-0 object-contain" style={{ width: "2.62cm", height: "2.62cm", maxWidth: "none" }} /><img src={officeSealSmall.url} alt="事務所小章" className="block shrink-0 object-contain" style={{ width: "1.35cm", height: "1.27cm", maxWidth: "none" }} /></div>
           </div>
         </section>
       </article>

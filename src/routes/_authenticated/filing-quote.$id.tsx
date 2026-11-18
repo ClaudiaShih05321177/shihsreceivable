@@ -1,5 +1,5 @@
 import officeSealLarge from "@/assets/office-seal-large.png.asset.json";
-import officeSealSmall from "@/assets/office-seal-small-fixed.png.asset.json";
+import officeSealSmall from "@/assets/office-seal-small-v3.png.asset.json";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer } from "lucide-react";
@@ -72,7 +72,7 @@ function FilingQuote() {
       </table>
       <div className="mt-10 grid grid-cols-2 gap-6 text-sm break-inside-avoid">
         <div className="h-40 border border-foreground p-2">客戶簽章確認</div>
-        <div className="flex h-40 flex-col border border-foreground p-2"><span>事務所簽章</span><div className="mt-2 flex items-end justify-center gap-2"><img src={officeSealLarge.url} alt="事務所大章" className="block shrink-0 object-contain" style={{ width: "2.62cm", height: "2.62cm", maxWidth: "none" }} /><img src={officeSealSmall.url} alt="事務所小章" className="block shrink-0 object-contain" style={{ width: "1.21cm", height: "1.21cm", maxWidth: "none" }} /></div></div>
+        <div className="flex h-40 flex-col border border-foreground p-2"><span>事務所簽章</span><div className="mt-2 flex items-end justify-center gap-2"><img src={officeSealLarge.url} alt="事務所大章" className="block shrink-0 object-contain" style={{ width: "2.62cm", height: "2.62cm", maxWidth: "none" }} /><img src={officeSealSmall.url} alt="事務所小章" className="block shrink-0 object-contain" style={{ width: "1.35cm", height: "1.27cm", maxWidth: "none" }} /></div></div>
       </div>
     </article>
   </main>;
