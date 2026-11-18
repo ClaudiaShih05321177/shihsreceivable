@@ -1,4 +1,5 @@
 import { scheduledCustomerFees } from "./receivables";
+import { isNonTaxCustomerCode } from "./filings";
 import { describe, expect, it } from "vitest";
 
 import { filingInvoiceItems, filingTotal, nextStage } from "./filings";
@@ -53,7 +54,7 @@ describe("國稅局進度", () => {
   });
 });
 
-import { filingBillingPeriod, mergeFeeItems, staffFromCode } from "./filings";
+import { filingBillingPeriod, mergeFeeItems, staffFromCode, isNonTaxCustomerCode } from "./filings";
 
 describe("工商費用與派案", () => {
   it("代刻印章存入印章欄位並計入合計", () => {
@@ -64,6 +65,8 @@ describe("工商費用與派案", () => {
     expect(staffFromCode("ac15")).toBe("AC");
     expect(staffFromCode("BF09")).toBe("BF");
     expect(staffFromCode("CF571")).toBeNull();
+    expect(isNonTaxCustomerCode("CF706")).toBe(true);
+    expect(isNonTaxCustomerCode("CA01")).toBe(false);
     expect(staffFromCode("1234")).toBeNull();
   });
   it("工商帳款併入雙月記帳期別（單數月）", () => {

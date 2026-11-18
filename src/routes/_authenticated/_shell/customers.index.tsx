@@ -1,3 +1,4 @@
+import { staffFromCode, isNonTaxCustomerCode } from "@/lib/filings";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
@@ -30,12 +31,13 @@ export const Route = createFileRoute("/_authenticated/_shell/customers/")({
 });
 
 function CustomersPage() {
-  const { data: customers } = useSuspenseQuery(customersQuery);
+  const { data: allCustomers } = useSuspenseQuery(customersQuery);
+  const customers = allCustomers.filter((c) => !isNonTaxCustomerCode(c.customer_code));
   const { data: invoices } = useSuspenseQuery(invoicesQuery);
   const [q, setQ] = useState("");
   const [staff, setStaff] = useState("all");
   const staffOf = (c: { staff_code: string | null; customer_code: string | null }) =>
-    (c.staff_code || c.customer_code?.trim().slice(0, 2) || "").toUpperCase();
+    (c.staff_code?.trim().toUpperCase() || staffFromCode(c.customer_code) || "");
   const staffCodes = [...new Set(customers.map(staffOf).filter(Boolean))].sort();
 
   const stats = new Map<string, { balance: number; overdue: number }>();

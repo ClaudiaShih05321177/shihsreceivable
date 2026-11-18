@@ -65,6 +65,10 @@ export function staffFromCode(code: string | null | undefined): string | null {
   return staff && !NON_STAFF_PREFIXES.includes(staff) ? staff : null;
 }
 export const NON_STAFF_PREFIXES: readonly string[] = ["CF"];
+/** CF 開頭為勤豐（非稅務）客戶：只供工商案件連結，不列入事務所客戶資料與獎金。 */
+export function isNonTaxCustomerCode(code: string | null | undefined): boolean {
+  return /^\s*CF/i.test(code ?? "");
+}
 
 /** 工商帳款併入的雙月記帳期別：核准月若為雙月，併入下一個單月（12 月併入隔年 1 月）。 */
 export function filingBillingPeriod(dateISO: string): { year: number; month: number } {

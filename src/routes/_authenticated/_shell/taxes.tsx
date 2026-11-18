@@ -1,3 +1,4 @@
+import { staffFromCode } from "@/lib/filings";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowDown, ArrowUp, ArrowUpDown, Search } from "lucide-react";
@@ -93,7 +94,7 @@ function TaxesPage() {
   const [justPaid, setJustPaid] = useState<Set<string>>(new Set());
   useEffect(() => setJustPaid(new Set()), [period, staff, status, group, payDate]);
   const needle = q.trim().toLowerCase();
-  const staffOf = (l: (typeof lines)[number]) => l.inv.customer?.customer_code?.trim().slice(0, 2).toUpperCase() || "未指定";
+  const staffOf = (l: (typeof lines)[number]) => staffFromCode(l.inv.customer?.customer_code) || "未指定";
   const matched = lines.filter(
     (l) =>
       (group === "all" || l.group === group) &&

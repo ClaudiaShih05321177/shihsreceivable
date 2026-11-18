@@ -1,4 +1,5 @@
 import type { FeeItems } from "./receivables";
+import { isNonTaxCustomerCode } from "./filings";
 
 export type BonusRow = { id: string; customer_id?: string; customer_name: string; customer_code: string | null; staff_code: string | null; period_year: number | null; period_month: number | null; items: FeeItems; amount: number; paid_amount: number };
 export type BonusCustomer = { id: string; name: string; customer_code: string | null; staff_code: string | null; billing_type: string; bookkeeping_fee: number; annual_extra_rate: number | null };
@@ -59,7 +60,7 @@ export function bonusGroups(data: BonusData, year: number, month: number) {
   const fixedSeen = new Set<string>();
   for (const c of [...customers.values()].sort((a, b) => a.name.localeCompare(b.name, "zh-Hant"))) {
     const fixedCode = c.customer_code?.trim() ?? "";
-    if (EXCLUDED_CODES.includes(fixedCode)) continue;
+    if (EXCLUDED_CODES.includes(fixedCode) || isNonTaxCustomerCode(fixedCode)) continue;
     const fixed = FIXED_PERIOD_SHARE[fixedCode];
     const share = fixed != null ? (fixedSeen.has(fixedCode) ? 0 : fixed) : periodShare(c);
     if (fixed != null) fixedSeen.add(fixedCode);
