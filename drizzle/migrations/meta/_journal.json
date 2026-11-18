@@ -428,6 +428,13 @@
       "when": 1794904553666,
       "tag": "0060_close_filing_cancel_customer",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1795011460732,
+      "tag": "0061_sync_last_change_year",
+      "breakpoints": true
     }
   ]
 }

@@ -76,6 +76,7 @@ function CustomerDetail() {
     ["結算費", formatTWD(Number(customer.settlement_fee))],
     ["會計專員工ID", customer.staff_code],
     ["停業期間", customer.suspended_period],
+    ["最後變更年度", customer.last_change_year == null ? null : String(customer.last_change_year)],
     ["聯絡人", customer.contact_person],
     ["電話", customer.phone],
     ["電子郵件", customer.email],
