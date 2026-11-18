@@ -1,0 +1,2 @@
+GRANT SELECT (id, name, tax_id, contact_person, phone, email, address, notes, created_by, created_at, updated_at, customer_code, billing_type, bookkeeping_fee, stationery_fee, settlement_fee, suspended_period, staff_code, archived_at, last_change_year) ON public.customers TO authenticated;
+GRANT ALL ON public.customers TO service_role;
