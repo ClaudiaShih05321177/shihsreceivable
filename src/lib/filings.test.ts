@@ -63,6 +63,7 @@ describe("工商費用與派案", () => {
   it("客戶代碼前兩位英文字母為會計專員代號", () => {
     expect(staffFromCode("ac15")).toBe("AC");
     expect(staffFromCode("BF09")).toBe("BF");
+    expect(staffFromCode("CF571")).toBeNull();
     expect(staffFromCode("1234")).toBeNull();
   });
   it("工商帳款併入雙月記帳期別（單數月）", () => {

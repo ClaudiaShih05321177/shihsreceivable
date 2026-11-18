@@ -60,8 +60,11 @@ export const STAMP_FEE_LABEL = "代刻印章";
 /** 客戶代碼前兩位英文字母即會計專員代號（例 AC15 → AC）；不符合則為 null。 */
 export function staffFromCode(code: string | null | undefined): string | null {
   const m = /^\s*([A-Za-z]{2})/.exec(code ?? "");
-  return m ? m[1]!.toUpperCase() : null;
+  const staff = m ? m[1]!.toUpperCase() : null;
+  // CF 是勤豐客戶編號，不是記帳專員代號。
+  return staff && !NON_STAFF_PREFIXES.includes(staff) ? staff : null;
 }
+export const NON_STAFF_PREFIXES: readonly string[] = ["CF"];
 
 /** 工商帳款併入的雙月記帳期別：核准月若為雙月，併入下一個單月（12 月併入隔年 1 月）。 */
 export function filingBillingPeriod(dateISO: string): { year: number; month: number } {
