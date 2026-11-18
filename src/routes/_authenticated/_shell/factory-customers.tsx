@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Plus, Search, Trash2 } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -68,15 +68,14 @@ function FactoryCustomersPage() {
             {shown.map((r) => (
               <TableRow key={r.id}>
                 <TableCell className="font-mono">{r.customer_code ?? "—"}</TableCell>
-                <TableCell className="font-medium">{r.name}</TableCell>
+                <TableCell className="font-medium"><CustomerDialog record={r} trigger={<Button type="button" variant="link" className="h-auto p-0 text-left whitespace-normal text-foreground" aria-label={`編輯 ${r.name}`}>{r.name}</Button>} /></TableCell>
                 <TableCell className="font-mono">{r.tax_id ?? ""}</TableCell>
                 <TableCell className="max-w-64 truncate">{r.address ?? ""}</TableCell>
                 <TableCell>{r.responsible_person ?? ""}</TableCell>
                 <TableCell className="font-mono">{r.last_change_year ?? ""}</TableCell>
                 <TableCell className="max-w-40 truncate">{r.notes ?? ""}</TableCell>
                 <TableCell className="whitespace-nowrap text-right">
-                  <CustomerDialog record={r} trigger={<Button variant="ghost" size="icon" aria-label="編輯"><Pencil className="size-4" /></Button>} />
-                  {me.isAdmin && <Button variant="ghost" size="icon" aria-label="刪除" onClick={() => { if (confirm(`刪除「${r.name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-4" /></Button>}
+                                    {me.isAdmin && <Button variant="ghost" size="icon" aria-label="刪除" onClick={() => { if (confirm(`刪除「${r.name}」？`)) remove.mutate(r.id); }}><Trash2 className="size-4" /></Button>}
                 </TableCell>
               </TableRow>
             ))}
