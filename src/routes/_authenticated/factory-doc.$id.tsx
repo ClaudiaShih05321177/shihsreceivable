@@ -1,4 +1,5 @@
-import kinfengSeal from "@/assets/kinfeng-seal.png.asset.json";
+import kinfengSealLarge from "@/assets/kinfeng-seal-large.png.asset.json";
+import kinfengSealSmall from "@/assets/kinfeng-seal-small.png.asset.json";
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Plus, Printer, X } from "lucide-react";
@@ -163,7 +164,7 @@ function FactoryDocPage() {
             <p className="mt-2 text-base">聯絡人：{KINFENG.contact}{termsCfg.payment === "預付50%＋尾款" ? "　　報價單回傳後本司會開立預付金額之發票及請款單" : ""}</p>
             <div className="mt-8 grid grid-cols-2 gap-6 text-base">
               <div className="h-44 border border-foreground p-2">訂購廠商簽章確認</div>
-              <div className="flex h-44 flex-col border border-foreground p-2"><span>承辦公司簽章</span><img src={kinfengSeal.url} alt="勤豐工商大小章" className="mx-auto mt-2 max-w-full object-contain" style={{ height: "2.4cm", width: "auto" }} /></div>
+              <div className="flex h-44 flex-col border border-foreground p-2"><span>承辦公司簽章</span><div className="mt-2 flex items-end justify-center gap-3"><img src={kinfengSealLarge.url} alt="勤豐工商大章" className="block shrink-0" style={{ width: "2.73cm", height: "2.73cm", maxWidth: "none" }} /><img src={kinfengSealSmall.url} alt="勤豐工商小章" className="block shrink-0" style={{ width: "1.74cm", height: "1.68cm", maxWidth: "none" }} /></div></div>
             </div>
           </>
         ) : (
@@ -177,7 +178,7 @@ function FactoryDocPage() {
               <p>支票抬頭請開：{KINFENG.accountName}</p>
               <p>付款條件：發票開立後30日內。</p>
             </div>
-            <div className="flex h-44 flex-col border border-foreground p-2"><span>承辦公司簽章</span><img src={kinfengSeal.url} alt="勤豐工商大小章" className="mx-auto mt-2 max-w-full object-contain" style={{ height: "2.4cm", width: "auto" }} /></div>
+            <div className="flex h-44 flex-col border border-foreground p-2"><span>承辦公司簽章</span><div className="mt-2 flex items-end justify-center gap-3"><img src={kinfengSealLarge.url} alt="勤豐工商大章" className="block shrink-0" style={{ width: "2.73cm", height: "2.73cm", maxWidth: "none" }} /><img src={kinfengSealSmall.url} alt="勤豐工商小章" className="block shrink-0" style={{ width: "1.74cm", height: "1.68cm", maxWidth: "none" }} /></div></div>
           </div>
         )}
       </article>
