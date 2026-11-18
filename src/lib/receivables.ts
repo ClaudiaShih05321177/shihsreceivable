@@ -415,5 +415,5 @@ export function latestPeriodProgress<T extends { period_year: number | null; per
   const rows = keyed.filter((i) => key(i) === latest);
   const billed = rows.reduce((s, i) => s + Number(i.amount), 0);
   const collected = rows.reduce((s, i) => s + Math.min(Number(i.amount), i.payments.reduce((a, p) => a + Number(p.amount), 0)), 0);
-  return { label: periodText(rows[0]), count: rows.length, billed, collected, open: billed - collected, percent: billed > 0 ? Math.round((collected / billed) * 100) : 0 };
+  return { label: periodText(rows[0]!), count: rows.length, billed, collected, open: billed - collected, percent: billed > 0 ? Math.round((collected / billed) * 100) : 0 };
 }
