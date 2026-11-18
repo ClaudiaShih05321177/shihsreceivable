@@ -271,3 +271,10 @@ describe("年收／半年收文具與結算", () => {
     for (const t of ["年收", "半年收"]) for (const m of [1, 11]) expect(scheduledCustomerFees({ ...base, billing_type: t }, m)).toEqual({ 記帳費: 0, 文具: 0, 結算: 0 });
   });
 });
+
+describe("不收費客戶不立帳", () => {
+  it("一鍵立帳與逐筆新增都不帶費用", () => {
+    const c = { billing_type: "不收費", bookkeeping_fee: 2500, stationery_fee: 500, settlement_fee: 2000 };
+    for (const m of [1, 11]) for (const mode of ["batch", "individual"] as const) expect(scheduledCustomerFees(c, m, mode)).toEqual({ 記帳費: 0, 文具: 0, 結算: 0 });
+  });
+});

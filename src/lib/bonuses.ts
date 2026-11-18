@@ -31,7 +31,7 @@ const code = (s: string | null | undefined) => s?.trim() || "未指定";
 const before = (r: BonusRow, year: number, month: number) => (r.period_year ?? 0) < year || ((r.period_year ?? 0) === year && (r.period_month ?? 0) <= month);
 
 /** 獎金每期固定計入的客戶（依客戶編號）：不論收費狀態，每期只算這一筆；立帳金額不受影響。 */
-export const FIXED_PERIOD_SHARE: Record<string, number> = { BF09: 50000, BI06: 5000 };
+export const FIXED_PERIOD_SHARE: Record<string, number> = { BF09: 50000 };
 
 /** 完全不計入獎金的客戶編號：常態攤分與實際立帳都不列入。 */
 export const EXCLUDED_CODES: readonly string[] = ["CL09"];
@@ -41,7 +41,8 @@ export function periodShare(c?: Pick<BonusCustomer, "billing_type" | "bookkeepin
   if (!c) return null;
   if (c.billing_type === "期收") return num(c.bookkeeping_fee) * 2;
   if (c.billing_type === "年收") return num(c.bookkeeping_fee) / 6;
-  if (c.billing_type === "半年收") return num(c.bookkeeping_fee) / 3;
+  // 半年收、不收費：客戶資料填月記帳費，每期（兩個月）計入月費 × 2。
+  if (c.billing_type === "半年收" || c.billing_type === "不收費") return num(c.bookkeeping_fee) * 2;
   return null;
 }
 
@@ -63,7 +64,7 @@ export function bonusGroups(data: BonusData, year: number, month: number) {
     const share = fixed != null ? (fixedSeen.has(fixedCode) ? 0 : fixed) : periodShare(c);
     if (fixed != null) fixedSeen.add(fixedCode);
     if (share == null) continue;
-    const label = fixed != null ? (share ? "每期固定" : "併入同編號") : c.billing_type === "年收" ? "年收 1/6" : c.billing_type === "半年收" ? "半年收 1/3" : "期收 ×2";
+    const label = fixed != null ? (share ? "每期固定" : "併入同編號") : c.billing_type === "年收" ? "年收 1/6" : c.billing_type === "半年收" ? "半年收 月費×2" : c.billing_type === "不收費" ? "不收費 月費×2" : "期收 ×2";
     lineFor(c.id, { staff: code(c.staff_code), customer_code: c.customer_code, customer_name: c.name, annual: true, rate: c.annual_extra_rate, shareLabel: label }).bookkeeping = share;
   }
   for (const r of data.rows) {

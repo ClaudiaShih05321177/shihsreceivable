@@ -189,7 +189,7 @@ export function isSuspended(billingType?: string | null): boolean {
 }
 
 export function scheduledCustomerFees(customer: { billing_type?: string | null; bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string }, month: number, mode: "batch" | "individual" = "batch"): FeeItems {
-  if (isSuspended(customer.billing_type)) return { 記帳費: 0, 文具: 0, 結算: 0 };
+  if (isSuspended(customer.billing_type) || customer.billing_type?.trim() === "不收費") return { 記帳費: 0, 文具: 0, 結算: 0 };
   // 年收／半年收：逐筆新增時記帳費與文具、結算一起帶入（不限月份）；一鍵立帳完全排除。
   if (customer.billing_type === "年收" || customer.billing_type === "半年收") {
     if (mode === "batch") return { 記帳費: 0, 文具: 0, 結算: 0 };
@@ -251,7 +251,7 @@ export type FeeItem = (typeof FEE_ITEMS)[number];
 export type FeeItems = Partial<Record<string, number>>;
 
 export const PAYMENT_METHODS = ["匯款", "現金", "支票", "代墊"] as const;
-export const BILLING_TYPES = ["期收", "半年收", "年收", "停業", "註銷"] as const;
+export const BILLING_TYPES = ["期收", "半年收", "年收", "不收費", "停業", "註銷"] as const;
 
 /** 應收帳款 for a billing row = sum of its fee items. */
 export function itemsTotal(items: FeeItems | null | undefined): number {

@@ -28,8 +28,8 @@ describe("bookkeeper bonuses", () => {
     expect(g?.total).toBe(250000);
     expect(g?.bonus).toBe(15000);
   });
-  it("AE25 half-year total 12000 is shared as 4000 per period without double counting invoices", () => {
-    const d = { staff: ["AE"], customers: [cust({ customer_code: "AE25", staff_code: "AE", name: "華珍製材工廠", billing_type: "半年收", bookkeeping_fee: 12000 })], rows: [row({ items: { 記帳費: 12000 } })] };
+  it("AE25 half-year monthly fee 2000 counts 4000 per period without double counting invoices", () => {
+    const d = { staff: ["AE"], customers: [cust({ customer_code: "AE25", staff_code: "AE", name: "華珍製材工廠", billing_type: "半年收", bookkeeping_fee: 2000 })], rows: [row({ items: { 記帳費: 12000 } })] };
     expect(bonusGroups(d, 2026, 9).find((g) => g.code === "AE")?.total).toBe(4000);
     expect(bonusGroups(d, 2026, 11).find((g) => g.code === "AE")?.total).toBe(4000);
   });
@@ -41,9 +41,9 @@ describe("bookkeeper bonuses", () => {
     const d = { staff: ["AC"], customers: [cust({ bookkeeping_fee: 3000 })], rows: [row({ items: { 記帳費: 6000 } })] };
     expect(bonusGroups(d, 2026, 9)[0]?.total).toBe(6000);
   });
-  it("half-year customers count their three-period share without invoices", () => {
+  it("half-year customers count monthly fee × 2 per period without invoices", () => {
     const d = { staff: ["AC"], customers: [cust({ billing_type: "半年收", bookkeeping_fee: 3000 })], rows: [] };
-    expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(1000);
+    expect(bonusGroups(d, 2026, 11)[0]?.total).toBe(6000);
   });
   it("BF09 counts one fixed 50000 per period even with two same-code customers, invoices not double counted", () => {
     const a = cust({ id: "c1", customer_code: "BF09", staff_code: "BF", name: "誠鍚科技企業(報表)-勤豐", billing_type: "期收", bookkeeping_fee: 30000 });
@@ -55,7 +55,9 @@ describe("bookkeeper bonuses", () => {
       expect(g?.rows.filter((r) => r.bookkeeping === 50000)).toHaveLength(1);
     }
   });
-  it("BI06 不收費仍每期固定計入 5000，立帳不重複計算", () => {
+  it("不收費客戶依月費 × 2 連動計入（BI06 2500 → 5000，改 3000 → 6000）", () => {
+    const changed = cust({ id: "c1", customer_code: "BI06", staff_code: "BI", billing_type: "不收費", bookkeeping_fee: 3000 });
+    expect(bonusGroups({ staff: ["BI"], customers: [changed], rows: [] }, 2026, 9).find((g) => g.code === "BI")?.total).toBe(6000);
     const c = cust({ id: "c1", customer_code: "BI06", staff_code: "BI", name: "施慶豐事務所 (不收費)", billing_type: "不收費", bookkeeping_fee: 2500 });
     const d = { staff: ["BI"], customers: [c], rows: [] };
     expect(bonusGroups(d, 2026, 9).find((g) => g.code === "BI")?.total).toBe(5000);
@@ -72,8 +74,8 @@ describe("bookkeeper bonuses", () => {
   it("combines period, half-year and annual customers in the staff total", () => {
     const d = { staff: ["AC"], customers: [cust({ bookkeeping_fee: 100000 }), cust({ id: "c2", billing_type: "半年收", bookkeeping_fee: 3000 }), cust({ id: "c3", billing_type: "年收", bookkeeping_fee: 6000 })], rows: [] };
     const g = bonusGroups(d, 2026, 11)[0];
-    expect(g?.total).toBe(202000);
-    expect(g?.bookkeepingBonus).toBe(600);
+    expect(g?.total).toBe(207000);
+    expect(g?.bookkeepingBonus).toBe(2100);
     expect(g?.rows).toHaveLength(3);
   });
 });
