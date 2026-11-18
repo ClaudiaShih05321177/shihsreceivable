@@ -7,6 +7,7 @@ import { CustomerFormDialog } from "@/components/ar/customer-form-dialog";
 import { Money, PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { customersQuery, invoicesQuery } from "@/lib/queries";
 import { compareCustomerCode } from "@/lib/customer-sort";
@@ -32,6 +33,10 @@ function CustomersPage() {
   const { data: customers } = useSuspenseQuery(customersQuery);
   const { data: invoices } = useSuspenseQuery(invoicesQuery);
   const [q, setQ] = useState("");
+  const [staff, setStaff] = useState("all");
+  const staffOf = (c: { staff_code: string | null; customer_code: string | null }) =>
+    (c.staff_code || c.customer_code?.trim().slice(0, 2) || "").toUpperCase();
+  const staffCodes = [...new Set(customers.map(staffOf).filter(Boolean))].sort();
 
   const stats = new Map<string, { balance: number; overdue: number }>();
   for (const inv of invoices) {
@@ -42,7 +47,7 @@ function CustomersPage() {
   }
 
   const rows = (
-    customers.filter((c) =>
+    customers.filter((c) => (staff === "all" || staffOf(c) === staff) &&
       `${c.name} ${c.customer_code ?? ""} ${c.tax_id ?? ""} ${c.staff_code ?? ""}`.toLowerCase().includes(q.toLowerCase()),
     )
   ).sort((a, b) => compareCustomerCode(a.customer_code, b.customer_code, a.name, b.name));
@@ -55,9 +60,18 @@ function CustomersPage() {
         description={`共 ${customers.length} 位客戶 · 依客戶代號排序`}
         actions={<CustomerFormDialog trigger={<Button><Plus /> 新增客戶</Button>} />}
       />
-      <div className="relative mb-5">
+      <div className="mb-5 flex flex-wrap gap-2">
+      <Select value={staff} onValueChange={setStaff}>
+        <SelectTrigger className="w-40 bg-card" aria-label="會計專員"><SelectValue /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">全部專員</SelectItem>
+          {staffCodes.map((s) => <SelectItem key={s} value={s}>會計專員 {s}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <div className="relative min-w-48 flex-1">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="搜尋客戶名稱、客戶ID、統一編號、會計專員…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
+      </div>
       </div>
       {rows.length === 0 ? (
         <div className="ledger-card ledger-lines px-6 py-16 text-center text-sm text-muted-foreground">
