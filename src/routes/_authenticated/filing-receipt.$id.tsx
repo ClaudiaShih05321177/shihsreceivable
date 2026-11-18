@@ -1,4 +1,4 @@
-import receiptSeal from "@/assets/receipt-seal.png.asset.json";
+import receiptSeal from "@/assets/receipt-seal-cropped.png.asset.json";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer } from "lucide-react";
@@ -71,7 +71,7 @@ function FilingReceipt() {
         <tbody><tr><td className="py-4">工商代辦費</td><td className="py-4 text-right font-mono">{formatTWD(amount)}</td></tr></tbody>
         <tfoot><tr className="border-t border-foreground text-lg font-bold"><td className="py-3">合計</td><td className="py-3 text-right font-mono">{formatTWD(amount)}</td></tr></tfoot>
       </table>
-      <div className="mt-10 flex justify-end"><div className="flex flex-col items-center"><span className="self-start">收款章：</span><img src={receiptSeal.url} alt="事務所收據章" style={{ width: "4.5cm", height: "3cm", filter: "saturate(1.8) brightness(0.7) contrast(1.3)", printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }} className="mt-1 object-contain" /></div></div>
+      <div className="mt-10 flex justify-end"><div className="flex flex-col items-center"><span className="self-start">收款章：</span><img src={receiptSeal.url} alt="事務所收據章" style={{ width: "4.5cm", height: "auto", filter: "saturate(1.8) brightness(0.7) contrast(1.3)", printColorAdjust: "exact", WebkitPrintColorAdjust: "exact" }} className="mt-1 object-contain" /></div></div>
     </article>
   </main>;
 }

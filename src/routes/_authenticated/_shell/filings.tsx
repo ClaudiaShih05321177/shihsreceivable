@@ -12,7 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, billingTypeOnClose, canCloseFiling, filingExtraFees } from "@/lib/filings";
-import { customersQuery, filingServiceFeesQuery, filingsQuery, meQuery, type Filing } from "@/lib/queries";
+import { customersQuery, filingServiceFeesQuery, filingsQuery, invoicesQuery, meQuery, type Filing } from "@/lib/queries";
+import { filingYearStats } from "@/lib/filing-stats";
 import { formatDate, scheduledCustomerFees, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 import { compareCustomerCode } from "@/lib/customer-sort";
@@ -39,6 +40,9 @@ function FilingsPage() {
   const { data: me } = useSuspenseQuery(meQuery);
   const { data: customers } = useSuspenseQuery(customersQuery);
   const { data: fees } = useQuery({ ...filingServiceFeesQuery, enabled: me.isAdmin });
+  const { data: invoices } = useQuery({ ...invoicesQuery, enabled: me.isAdmin });
+  const [statYear, setStatYear] = useState(() => new Date().getFullYear());
+  const stats = me.isAdmin && fees && invoices ? filingYearStats(filings, invoices, fees, statYear) : null;
   const qc = useQueryClient();
   const [stage, setStage] = useState<string>("open");
   const [q, setQ] = useState("");
@@ -142,6 +146,21 @@ function FilingsPage() {
         description={`進行中 ${openCount} 件；CA／MN 結案後，管理員立帳把工商費用併入該客戶當期（雙月）記帳費帳款一起收。`}
         actions={canClose && <FilingFormDialog trigger={<Button><Plus /> 新增案件</Button>} />}
       />
+      {stats && (
+        <section aria-label="年度工商代辦費統計" className="mb-4 rounded-lg border bg-card p-4">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <h2 className="font-semibold">年度代辦費統計</h2>
+            <select aria-label="統計年度" value={statYear} onChange={(e) => setStatYear(Number(e.target.value))} className="rounded-md border bg-background px-2 py-1 text-sm">
+              {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i).map((y) => <option key={y} value={y}>{y - 1911} 年（1/1–12/31）</option>)}
+            </select>
+          </div>
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div><dt className="text-muted-foreground">已收代辦費（{stats.receivedCount} 件）</dt><dd className="text-xl font-semibold"><Money value={stats.received} /></dd></div>
+            <div><dt className="text-muted-foreground">已立帳待收（{stats.pendingCount} 件）</dt><dd className="text-xl font-semibold"><Money value={stats.pending} /></dd></div>
+          </dl>
+          <p className="mt-2 text-xs text-muted-foreground">以帳款收清日所在的年度認列；只算工商代辦費，不含規費與印章。</p>
+        </section>
+      )}
       <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="搜尋統編、客戶代碼、公司名稱、案件類型…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
