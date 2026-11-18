@@ -5,11 +5,10 @@ const c = (id: string, fee: number) => ({ id, bookkeeping_fee: fee, stationery_f
 const inv = (id: string, customer_id: string, m: number, amount: number, paid = 0) => ({ id, customer_id, period_year: 2026, period_month: m, period_label: null, amount, payments: paid ? [{ amount: paid }] : [] });
 
 describe("batchInvoiceDrafts", () => {
-  it("does not bill annual bookkeeping but retains scheduled stationery and settlement", () => {
+  it("一鍵立帳完全排除年收與半年收客戶（含 11 月文具、1 月結算）", () => {
     const annual = { ...c("annual", 30000), billing_type: "年收" };
-    expect(batchInvoiceDrafts([annual], [], 2026, 3)).toEqual([]);
-    expect(batchInvoiceDrafts([annual], [], 2026, 11)[0]?.items).toEqual({ 文具: 2500 });
-    expect(batchInvoiceDrafts([annual], [], 2026, 1)[0]?.items).toEqual({ 結算: 6000 });
+    const half = { ...c("half", 30000), billing_type: "半年收" };
+    for (const m of [1, 3, 11]) expect(batchInvoiceDrafts([annual, half], [], 2026, m)).toEqual([]);
   });
   it("creates 記帳費×2 + 文具 in November and skips customers already billed or with no fee", () => {
     const d = batchInvoiceDrafts([c("a", 2500), c("b", 3000), { id: "z", bookkeeping_fee: 0, stationery_fee: 0, settlement_fee: 0 }], [inv("x", "b", 11, 1)], 2026, 11);

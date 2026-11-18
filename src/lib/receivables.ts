@@ -190,6 +190,16 @@ export function isSuspended(billingType?: string | null): boolean {
 
 export function scheduledCustomerFees(customer: { billing_type?: string | null; bookkeeping_fee: number | string; stationery_fee: number | string; settlement_fee: number | string }, month: number, mode: "batch" | "individual" = "batch"): FeeItems {
   if (isSuspended(customer.billing_type)) return { 記帳費: 0, 文具: 0, 結算: 0 };
+  // 年收／半年收：逐筆新增時記帳費與文具、結算一起帶入（不限月份）；一鍵立帳完全排除。
+  if (customer.billing_type === "年收" || customer.billing_type === "半年收") {
+    if (mode === "batch") return { 記帳費: 0, 文具: 0, 結算: 0 };
+    const fee = Number(customer.bookkeeping_fee) || 0;
+    return {
+      記帳費: Math.round(customer.billing_type === "半年收" ? fee * 6 : fee),
+      文具: Number(customer.stationery_fee) || 0,
+      結算: Number(customer.settlement_fee) || 0,
+    };
+  }
   return {
     記帳費: customer.billing_type === "年收" ? (mode === "individual" ? Math.round(Number(customer.bookkeeping_fee)) || 0 : 0)
       : customer.billing_type === "半年收" ? (mode === "individual" ? Math.round((Number(customer.bookkeeping_fee) || 0) * 6) : 0)

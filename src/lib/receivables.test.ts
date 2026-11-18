@@ -260,3 +260,14 @@ describe("latestPeriodProgress", () => {
     expect(r).toMatchObject({ billed: 4000, collected: 3000, open: 1000, percent: 75, count: 2 });
   });
 });
+
+describe("年收／半年收文具與結算", () => {
+  const base = { bookkeeping_fee: 3000, stationery_fee: 500, settlement_fee: 2000 };
+  it("逐筆新增不限月份一起帶入文具與結算", () => {
+    expect(scheduledCustomerFees({ ...base, billing_type: "年收" }, 5, "individual")).toEqual({ 記帳費: 3000, 文具: 500, 結算: 2000 });
+    expect(scheduledCustomerFees({ ...base, billing_type: "半年收" }, 7, "individual")).toEqual({ 記帳費: 18000, 文具: 500, 結算: 2000 });
+  });
+  it("一鍵立帳 11 月與 1 月也排除", () => {
+    for (const t of ["年收", "半年收"]) for (const m of [1, 11]) expect(scheduledCustomerFees({ ...base, billing_type: t }, m)).toEqual({ 記帳費: 0, 文具: 0, 結算: 0 });
+  });
+});
