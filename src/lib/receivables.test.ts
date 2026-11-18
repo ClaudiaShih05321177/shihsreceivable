@@ -248,3 +248,15 @@ describe("年度費用請款單標示", () => {
   it("記帳費維持雙月期別", () => expect(statementItemPrefix(nov, "記帳費")).toBe("115年9-10月"));
   it("其他費用不加期別", () => expect(statementItemPrefix(nov, "印章")).toBe(""));
 });
+
+import { latestPeriodProgress } from "./receivables";
+describe("latestPeriodProgress", () => {
+  it("uses only the latest period and caps overpayment", () => {
+    const r = latestPeriodProgress([
+      { period_year: 2026, period_month: 9, period_label: "7-8", amount: 1000, payments: [{ amount: 1000 }] },
+      { period_year: 2026, period_month: 11, period_label: "9-10", amount: 3000, payments: [{ amount: 4000 }] },
+      { period_year: 2026, period_month: 11, period_label: "9-10", amount: 1000, payments: [] },
+    ]);
+    expect(r).toMatchObject({ billed: 4000, collected: 3000, open: 1000, percent: 75, count: 2 });
+  });
+});

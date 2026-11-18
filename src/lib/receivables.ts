@@ -405,3 +405,15 @@ export function paymentOffset(received: number, bankFee: number): number {
 export function receivedAmount(p: { amount: number | string; bank_fee?: number | string | null }): number {
   return Number(p.amount) - Number(p.bank_fee ?? 0);
 }
+
+/** 最新一期（期別年＋月）的開立總額、已收金額與收款比例。 */
+export function latestPeriodProgress<T extends { period_year: number | null; period_month: number | null; period_label: string | null; amount: number | string; payments: { amount: number | string }[] }>(invoices: T[]) {
+  const keyed = invoices.filter((i) => i.period_year && i.period_month);
+  if (keyed.length === 0) return null;
+  const key = (i: T) => i.period_year! * 100 + i.period_month!;
+  const latest = Math.max(...keyed.map(key));
+  const rows = keyed.filter((i) => key(i) === latest);
+  const billed = rows.reduce((s, i) => s + Number(i.amount), 0);
+  const collected = rows.reduce((s, i) => s + Math.min(Number(i.amount), i.payments.reduce((a, p) => a + Number(p.amount), 0)), 0);
+  return { label: periodText(rows[0]), count: rows.length, billed, collected, open: billed - collected, percent: billed > 0 ? Math.round((collected / billed) * 100) : 0 };
+}
