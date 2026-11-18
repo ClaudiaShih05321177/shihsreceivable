@@ -40,7 +40,7 @@ function FactoryCustomersPage() {
   const qc = useQueryClient();
   const [q, setQ] = useState("");
   const key = q.trim().toLowerCase();
-  const shown = rows.filter((r) => `${r.customer_code ?? ""} ${r.name} ${r.tax_id ?? ""} ${r.responsible_person ?? ""} ${r.address ?? ""} ${r.last_change_year ?? ""} ${r.notes ?? ""}`.toLowerCase().includes(key));
+  const shown = [...rows.filter((r) => r.customer_code?.trim()).reverse(), ...rows.filter((r) => !r.customer_code?.trim())].filter((r) => `${r.customer_code ?? ""} ${r.name} ${r.tax_id ?? ""} ${r.responsible_person ?? ""} ${r.address ?? ""} ${r.last_change_year ?? ""} ${r.notes ?? ""}`.toLowerCase().includes(key));
   const remove = useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("factory_customers").delete().eq("id", id);
@@ -51,7 +51,7 @@ function FactoryCustomersPage() {
   });
   return (
     <>
-      <PageHeader eyebrow="勤豐工商顧問有限公司" title="客戶資料" description={`共 ${rows.length} 位客戶 · 依客戶代碼排序`} actions={<CustomerDialog trigger={<Button><Plus /> 新增客戶</Button>} />} />
+      <PageHeader eyebrow="勤豐工商顧問有限公司" title="客戶資料" description={`共 ${rows.length} 位客戶 · 依客戶代碼由新到舊排序`} actions={<CustomerDialog trigger={<Button><Plus /> 新增客戶</Button>} />} />
       <div className="relative mb-5">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="搜尋客戶代碼、名稱、統編、負責人、地址…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
