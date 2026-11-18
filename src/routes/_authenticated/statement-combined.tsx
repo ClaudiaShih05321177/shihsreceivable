@@ -92,7 +92,7 @@ function CombinedStatement() {
           </div>
           <div className="flex w-48 shrink-0 flex-col border border-foreground p-2 text-base">
             <span>事務所簽章：</span>
-            <img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" />
+            <img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-2 max-w-full object-contain" style={{ height: "2.4cm", width: "auto" }} />
           </div>
         </section>
       </article>

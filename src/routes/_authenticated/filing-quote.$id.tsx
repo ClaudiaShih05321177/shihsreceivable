@@ -70,8 +70,8 @@ function FilingQuote() {
         <tfoot><tr className="border-t border-foreground font-bold"><td className="py-3">合計</td><td className="py-3 text-right font-mono">{formatTWD(amount)}</td></tr></tfoot>
       </table>
       <div className="mt-10 grid grid-cols-2 gap-6 text-sm break-inside-avoid">
-        <div className="h-32 border border-foreground p-2">客戶簽章確認</div>
-        <div className="flex h-32 flex-col border border-foreground p-2"><span>事務所簽章</span><img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" /></div>
+        <div className="h-40 border border-foreground p-2">客戶簽章確認</div>
+        <div className="flex h-40 flex-col border border-foreground p-2"><span>事務所簽章</span><img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-2 max-w-full object-contain" style={{ height: "2.4cm", width: "auto" }} /></div>
       </div>
     </article>
   </main>;

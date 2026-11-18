@@ -77,7 +77,7 @@ function FilingInvoice() {
       </table>
       <div className="mt-10 flex flex-wrap items-start justify-between gap-6 text-sm break-inside-avoid">
         <div className="space-y-1"><p>匯款銀行：{OFFICE.bank}（{OFFICE.bankCode}）</p><p className="whitespace-nowrap">戶　　名：{OFFICE.accountName}</p><p>帳　　號：{OFFICE.account}</p></div>
-        <div className="flex h-32 w-52 flex-col border border-foreground p-2"><span>事務所簽章</span><img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-1 min-h-0 w-auto max-w-full flex-1 object-contain" /></div>
+        <div className="flex h-40 w-52 flex-col border border-foreground p-2"><span>事務所簽章</span><img src={officeSeal.url} alt="事務所大小章" className="mx-auto mt-2 max-w-full object-contain" style={{ height: "2.4cm", width: "auto" }} /></div>
       </div>
     </article>
   </main>;
