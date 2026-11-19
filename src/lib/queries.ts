@@ -12,14 +12,14 @@ export type Customer = Omit<Database["public"]["Tables"]["customers"]["Row"], "a
 export type Payment = Database["public"]["Tables"]["payments"]["Row"];
 export type InvoiceRow = Database["public"]["Tables"]["invoices"]["Row"];
 export type Invoice = InvoiceRow & {
-  customer: Pick<Customer, "id" | "name" | "customer_code"> | null;
+  customer: (Pick<Customer, "id" | "name" | "customer_code"> & Partial<Pick<Customer, "contact_person" | "remitter_aliases">>) | null;
   payments: Payment[];
   credit_applied?: number;
   credit_used?: number;
 };
 export type AppRole = Database["public"]["Enums"]["app_role"];
 
-const INVOICE_SELECT = "*, customer:customers(id, name, customer_code), payments(*)";
+const INVOICE_SELECT = "*, customer:customers(id, name, customer_code, contact_person, remitter_aliases), payments(*)";
 
 export const meQuery = queryOptions({
   queryKey: ["me"],

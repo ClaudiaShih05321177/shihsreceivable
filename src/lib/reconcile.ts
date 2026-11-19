@@ -6,6 +6,8 @@ export type OpenInvoice = PeriodSortable & {
   id: string;
   customerId: string;
   customerName: string;
+  /** 已記住的匯款人姓名、帳號後五碼、負責人／聯絡人。 */
+  aliases?: string[];
   outstanding: number;
   created_at: string;
 };
@@ -29,6 +31,31 @@ export function nameMatches(memo: string, customerName: string): boolean {
   return m.includes(c) || c.includes(m);
 }
 
+/** 把「陳志明、12345」之類文字拆成不重複清單。 */
+export function parseAliases(text: string): string[] {
+  return [...new Set(text.split(/[、,，;；\s\/]+/).map((t) => t.trim()).filter(Boolean))].slice(0, 20);
+}
+
+/** 摘要裡的 5 碼帳號（連續 5 位數字，或較長帳號的末 5 碼）。 */
+export function memoDigits5(memo: string): string[] {
+  return [...new Set((memo.match(/\d{5,}/g) ?? []).map((d) => d.slice(-5)))];
+}
+
+/** 摘要是否命中客戶記住的匯款辨識資料：後五碼完全相符，或人名（≥2 字）互相包含。 */
+export function aliasMatches(memo: string, aliases: readonly string[] | undefined): boolean {
+  if (!aliases?.length) return false;
+  const digits = memoDigits5(memo);
+  return aliases.some((a) => (/^\d{5}$/.test(a) ? digits.includes(a) : nameMatches(memo, a)));
+}
+
+/** 從摘要取出可記住的辨識資料（後五碼優先，否則整段人名）。 */
+export function learnableAlias(memo: string): string | null {
+  const d = memoDigits5(memo);
+  if (d.length === 1) return d[0]!;
+  const name = memo.replace(/\d+/g, "").trim();
+  return name.length >= 2 && name.length <= 30 ? name : null;
+}
+
 /** 同一客戶的未收帳款，由舊到新排列。 */
 export function openInvoicesOf(open: readonly OpenInvoice[], customerId: string): OpenInvoice[] {
   return open
@@ -38,17 +65,20 @@ export function openInvoicesOf(open: readonly OpenInvoice[], customerId: string)
 
 /** 依匯款人與金額，為一筆銀行交易建議配對的帳款。 */
 export function suggestMatch(txn: { amount: number; memo: string }, open: readonly OpenInvoice[]): Suggestion {
-  const nameHitIds = [...new Set(open.filter((i) => nameMatches(txn.memo, i.customerName)).map((i) => i.customerId))];
+  const aliasHitIds = [...new Set(open.filter((i) => aliasMatches(txn.memo, i.aliases)).map((i) => i.customerId))];
+  const companyHitIds = [...new Set(open.filter((i) => nameMatches(txn.memo, i.customerName)).map((i) => i.customerId))];
+  const nameHitIds = aliasHitIds.length > 0 ? aliasHitIds : companyHitIds;
+  const via = aliasHitIds.length > 0 ? "匯款辨識" : "匯款人";
 
   if (nameHitIds.length === 1) {
     const customerId = nameHitIds[0]!;
     const invs = openInvoicesOf(open, customerId);
     const exact = invs.find((i) => i.outstanding === txn.amount);
-    if (exact) return { kind: "single", customerId, invoiceIds: [exact.id], reason: "匯款人與金額相符" };
+    if (exact) return { kind: "single", customerId, invoiceIds: [exact.id], reason: `${via}與金額相符` };
     const total = invs.reduce((sum, i) => sum + i.outstanding, 0);
     if (txn.amount === total) return { kind: "combined", customerId, invoiceIds: invs.map((i) => i.id), reason: "同一客戶多筆合併付款" };
     if (txn.amount > total) return { kind: "overpay", customerId, invoiceIds: invs.map((i) => i.id), reason: "金額超過未收總額（溢收）" };
-    return { kind: "partial", customerId, invoiceIds: invs.map((i) => i.id), reason: "匯款人相符，金額為部分收款" };
+    return { kind: "partial", customerId, invoiceIds: invs.map((i) => i.id), reason: `${via}相符，金額為部分收款` };
   }
 
   if (nameHitIds.length > 1) {

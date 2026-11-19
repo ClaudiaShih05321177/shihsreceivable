@@ -61,6 +61,7 @@ export type Database = {
           name: string
           notes: string | null
           phone: string | null
+          remitter_aliases: string[]
           settlement_fee: number
           staff_code: string | null
           stationery_fee: number
@@ -84,6 +85,7 @@ export type Database = {
           name: string
           notes?: string | null
           phone?: string | null
+          remitter_aliases?: string[]
           settlement_fee?: number
           staff_code?: string | null
           stationery_fee?: number
@@ -107,6 +109,7 @@ export type Database = {
           name?: string
           notes?: string | null
           phone?: string | null
+          remitter_aliases?: string[]
           settlement_fee?: number
           staff_code?: string | null
           stationery_fee?: number

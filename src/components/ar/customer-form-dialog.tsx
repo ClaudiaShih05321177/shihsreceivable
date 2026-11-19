@@ -13,6 +13,7 @@ import { meQuery, type Customer } from "@/lib/queries";
 import { BILLING_TYPES, isSuspended } from "@/lib/receivables";
 import { lookupCompany } from "@/lib/company-lookup.functions";
 import { staffFromCode } from "@/lib/filings";
+import { parseAliases } from "@/lib/reconcile";
 
 type Form = {
   name: string;
@@ -30,6 +31,7 @@ type Form = {
   email: string;
   address: string;
   notes: string;
+  remitter_aliases: string;
 };
 
 function toForm(c?: Customer | null): Form {
@@ -49,6 +51,7 @@ function toForm(c?: Customer | null): Form {
     email: c?.email ?? "",
     address: c?.address ?? "",
     notes: c?.notes ?? "",
+    remitter_aliases: (c?.remitter_aliases ?? []).join("、"),
   };
 }
 
@@ -98,6 +101,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
         email: form.email.trim() || null,
         address: form.address.trim() || null,
         notes: form.notes.trim() || null,
+        remitter_aliases: parseAliases(form.remitter_aliases),
       };
       const { error } = customer
         ? await supabase.from("customers").update(payload).eq("id", customer.id)
@@ -180,6 +184,7 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
             {field("email", "電子郵件", { type: "email", maxLength: 120 })}
             {field("address", "地址", { maxLength: 200 })}
           </div>
+          {field("remitter_aliases", "匯款辨識（匯款人姓名／帳號後五碼，用「、」分隔）", { placeholder: "例：陳志明、12345", maxLength: 300 })}
           <div className="space-y-1.5">
             <Label htmlFor="c-notes">備註</Label>
             <Textarea id="c-notes" value={form.notes} onChange={(e) => set("notes")(e.target.value)} maxLength={1000} />

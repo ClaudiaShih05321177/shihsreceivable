@@ -13,7 +13,7 @@ const statementSchema = z.object({
     z.object({
       date: z.string().nullable().describe("交易日期，照截圖上的格式（可能是民國年）"),
       amount: z.number().describe("存入金額，新台幣整數，去掉逗號"),
-      memo: z.string().describe("匯款人姓名或摘要"),
+      memo: z.string().describe("匯款人姓名、摘要；若有轉出帳號（或後五碼）也一併照抄，例如「陳志明 12345」"),
     }),
   ),
 });
@@ -33,7 +33,7 @@ export async function parseStatementImages(images: string[]): Promise<ParsedBank
   const result = streamText({
     model: provider.responses("openai/gpt-6-astra"),
     system:
-      "你是銀行交易明細辨識助手。從網路銀行截圖讀取每一筆「存入／匯入」交易（不要支出、扣款、手續費或餘額），回傳交易日期（照截圖格式，可能是民國年）、存入金額（整數，去掉逗號）與匯款人／摘要。看不清楚的欄位填 null 或空字串，不要猜測。",
+      "你是銀行交易明細辨識助手。從網路銀行截圖讀取每一筆「存入／匯入」交易（不要支出、扣款、手續費或餘額），回傳交易日期（照截圖格式，可能是民國年）、存入金額（整數，去掉逗號）與匯款人／摘要（含明細上顯示的轉出帳號或後五碼，照抄數字）。看不清楚的欄位填 null 或空字串，不要猜測。",
     messages: [
       {
         role: "user",

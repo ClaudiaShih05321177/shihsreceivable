@@ -80,3 +80,25 @@ describe("allocatePayment", () => {
     ]);
   });
 });
+
+import { aliasMatches as _am, learnableAlias as _la, suggestMatch as _sm } from "./reconcile";
+describe("匯款辨識（後五碼／匯款人姓名）", () => {
+  const base = { period_year: 2026, period_month: 9, period_label: null, created_at: "2026-09-01" };
+  const open = [
+    { ...base, id: "i1", customerId: "c1", customerName: "宏達實業有限公司", aliases: ["陳志明", "12345"], outstanding: 5000 },
+    { ...base, id: "i2", customerId: "c2", customerName: "大明公司", outstanding: 5000 },
+  ];
+  it("後五碼相符時配對客戶", () => {
+    expect(_sm({ amount: 5000, memo: "跨行轉入 0001212345" }, open)).toMatchObject({ kind: "single", customerId: "c1" });
+  });
+  it("個人匯款人名相符時配對客戶", () => {
+    expect(_sm({ amount: 5000, memo: "陳志明" }, open).customerId).toBe("c1");
+  });
+  it("後五碼不同不算相符", () => {
+    expect(_am("54321", ["12345"])).toBe(false);
+  });
+  it("記住後五碼或人名", () => {
+    expect(_la("轉入 98765")).toBe("98765");
+    expect(_la("王小美")).toBe("王小美");
+  });
+});

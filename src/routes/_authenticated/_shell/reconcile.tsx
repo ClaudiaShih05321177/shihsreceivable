@@ -10,8 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { normalizeBankDate, txnFingerprint } from "@/lib/bank-parse";
 import { bankTransactionsQuery, invoicesQuery, meQuery } from "@/lib/queries";
-import { allocatePayment, openInvoicesOf, suggestMatch, type OpenInvoice, type Suggestion } from "@/lib/reconcile";
+import { nameMatches as nameMatchesCompany, aliasMatches, allocatePayment, learnableAlias, openInvoicesOf, suggestMatch, type OpenInvoice, type Suggestion } from "@/lib/reconcile";
 import { parseBankStatement, recordBankPayments } from "@/lib/reconcile.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { formatTWD, outstanding, todayISO } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
@@ -72,6 +73,7 @@ function ReconcilePage() {
           id: i.id,
           customerId: i.customer_id,
           customerName: i.customer?.name ?? "",
+          aliases: [...(i.customer?.remitter_aliases ?? []), ...(i.customer?.contact_person ? [i.customer.contact_person] : [])],
           outstanding: outstanding(i),
           period_year: i.period_year,
           period_month: i.period_month,
@@ -169,6 +171,24 @@ function ReconcilePage() {
       const done = results.filter((r) => !r.skipped).length;
       const skipped = results.filter((r) => r.skipped).length;
       toast.success(`已入帳 ${done} 筆${skipped > 0 ? `，跳過重複 ${skipped} 筆` : ""}`);
+      // 自動記憶：這次人工指定、尚未被辨識的匯款人名／後五碼，記到客戶資料。
+      const recorded = new Set(results.filter((r) => !r.skipped).map((r) => r.fingerprint));
+      const learn = new Map<string, Set<string>>();
+      for (const r of rows) {
+        if (r.skip || !r.customerId || !recorded.has(txnFingerprint(r.date, r.amount, r.memo))) continue;
+        const known = openInvoices.find((i) => i.customerId === r.customerId);
+        if (known && (aliasMatches(r.memo, known.aliases) || nameMatchesCompany(r.memo, known.customerName))) continue;
+        const alias = learnableAlias(r.memo);
+        if (alias) (learn.get(r.customerId) ?? learn.set(r.customerId, new Set()).get(r.customerId)!).add(alias);
+      }
+      let learned = 0;
+      for (const [customerId, add] of learn) {
+        const inv = invoices.find((i) => i.customer_id === customerId);
+        const merged = [...new Set([...(inv?.customer?.remitter_aliases ?? []), ...add])].slice(0, 20);
+        const { error } = await supabase.from("customers").update({ remitter_aliases: merged }).eq("id", customerId);
+        if (!error) learned += add.size;
+      }
+      if (learned > 0) toast.success(`已記住 ${learned} 筆匯款辨識，下次自動配對`);
       const doneFingerprints = new Set(results.map((r) => r.fingerprint));
       setRows((prev) => prev.filter((r) => !doneFingerprints.has(txnFingerprint(r.date, r.amount, r.memo))));
       await Promise.all([qc.invalidateQueries({ queryKey: ["invoices"] }), qc.invalidateQueries({ queryKey: ["bank_transactions"] })]);
@@ -249,7 +269,7 @@ function ReconcilePage() {
                 <tr className="border-b border-border text-left text-xs text-muted-foreground">
                   <th className="py-2 pr-3 font-medium">交易日期</th>
                   <th className="py-2 pr-3 font-medium">金額</th>
-                  <th className="py-2 pr-3 font-medium">匯款人／摘要</th>
+                  <th className="py-2 pr-3 font-medium">匯款人／後五碼</th>
                   <th className="py-2 pr-3 font-medium">配對客戶</th>
                   <th className="py-2 font-medium">狀態</th>
                 </tr>

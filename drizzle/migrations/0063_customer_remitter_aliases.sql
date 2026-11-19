@@ -1,0 +1,2 @@
+ALTER TABLE public.customers ADD COLUMN IF NOT EXISTS remitter_aliases text[] NOT NULL DEFAULT '{}';
+GRANT SELECT (remitter_aliases), INSERT (remitter_aliases), UPDATE (remitter_aliases) ON public.customers TO authenticated;
