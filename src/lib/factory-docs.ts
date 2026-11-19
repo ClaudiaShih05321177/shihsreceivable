@@ -106,6 +106,12 @@ export function buildQuoteTerms(c: QuoteTermsConfig): string[] {
   else if (c.env === "客戶自辦環保") t.push("本案環保手續由貴廠自行辦理，本報價不含環保送件及相關規費。");
   if (c.park) t.push("若貴廠位於產業園區內，本報價不含污水納管或聯接證明申請。");
   if (c.sciencePark) t.push("若貴廠位於科學園區內，本報價不含污水納管、用水計畫書、用電計畫書及污染總量預估。");
+  if (c.env === "只跑環保") {
+    t.push("上述報價不包含各項規費，如產生其他規費將實報實銷。");
+    if (c.payment === "自訂" && c.customPayment.trim()) t.push(`付款條件:${c.customPayment.trim()}`);
+    else t.push("付款條件:結案後付款。請於發票開立後30日內付款。");
+    return [...t, ...c.extra];
+  }
   t.push("上述報價僅包含工商科規費，其他各類主管機關規費或發票將實報實銷(如土地分區、溼地查詢、醫療器材商執照規費或廢清書規費等)。");
   if (c.payment === "預付50%＋尾款") t.push("付款條件:訂單確認後預付顧問費之50%，結案後付尾款及規費。請於發票開立後30日內付款。");
   else if (c.payment === "全額結案付清") t.push("付款條件:結案後一次付清顧問費及規費。請於發票開立後30日內付款。");
