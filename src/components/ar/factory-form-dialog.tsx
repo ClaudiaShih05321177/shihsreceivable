@@ -208,15 +208,15 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
             {money("quote_amount", inv ? "報價金額（未稅）" : "報價金額")}
             {money("discount", "折扣金額（殺價）")}
             {inv && <div className="grid gap-2"><Label>折扣後含稅總額（外加 5%）</Label><p className="tabular py-2 text-sm font-semibold">{contractTotal(netQuote(form), form.invoice_type).toLocaleString("zh-TW")}</p></div>}
-            {inv && money("deposit_invoice_amount", "訂金發票金額（未稅）")}
+            {inv && money("deposit_invoice_amount", "簽約金發票金額（未稅）")}
             {inv && Number(form.deposit_invoice_amount) > 0 && (
               <div className="grid gap-2">
-                <Label>訂金含稅（自動外加 5%）</Label>
+                <Label>簽約金含稅（自動外加 5%）</Label>
                 <p className="tabular py-2 text-sm">稅 {depositTaxSplit(form.deposit_invoice_amount).tax.toLocaleString("zh-TW")} ＝ 含稅 {depositTaxSplit(form.deposit_invoice_amount).total.toLocaleString("zh-TW")}</p>
               </div>
             )}
-            {money("deposit_received_amount", "訂金收款金額")}
-            {date("deposit_received_date", "訂金收款日期")}
+            {money("deposit_received_amount", "簽約金收款金額")}
+            {date("deposit_received_date", "簽約金收款日期")}
             {inv && money("final_invoice_amount", "尾款發票金額（自動補齊，可修改）")}
             {money("government_fee", "規費")}
             {Number(form.other_fee) ? money("other_fee", "其他費用") : null}

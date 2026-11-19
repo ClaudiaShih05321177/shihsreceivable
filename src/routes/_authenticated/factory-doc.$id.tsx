@@ -105,7 +105,7 @@ function FactoryDocPage() {
           <Button variant={isQuote ? "default" : "outline"} size="sm" onClick={() => navigate({ search: { type: "quote", stage } })}>報價單</Button>
           <Button variant={!isQuote ? "default" : "outline"} size="sm" onClick={() => navigate({ search: { type: "invoice", stage } })}>請款單</Button>
           {!isQuote && INVOICE_STAGES.map((st) => (
-            <Button key={st} variant={stage === st ? "secondary" : "ghost"} size="sm" onClick={() => navigate({ search: { type, stage: st } })}>{st}請款</Button>
+            <Button key={st} variant={stage === st ? "secondary" : "ghost"} size="sm" onClick={() => navigate({ search: { type, stage: st } })}>{st === "訂金" ? "簽約金" : st}請款</Button>
           ))}
         </div>
         <div className="flex gap-1">

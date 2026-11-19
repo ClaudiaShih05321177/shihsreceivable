@@ -31,8 +31,8 @@ describe("專案應收帳款", () => {
   });
   it("未收餘額與狀態（訂金含稅 31,500）", () => {
     expect(projectOutstanding(ar)).toBe(106500);
-    expect(projectArStatus(ar)).toBe("訂金待收");
-    expect(projectArStatus({ ...ar, deposit_received_amount: 30000 })).toBe("訂金待收");
+    expect(projectArStatus(ar)).toBe("簽約金待收");
+    expect(projectArStatus({ ...ar, deposit_received_amount: 30000 })).toBe("簽約金待收");
     expect(projectArStatus({ ...ar, deposit_received_amount: 31500 })).toBe("尾款待收");
     expect(projectArStatus({ ...ar, deposit_received_amount: 31500, final_received_amount: 75000 })).toBe("已收清");
   });

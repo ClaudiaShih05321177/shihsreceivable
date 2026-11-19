@@ -17,9 +17,9 @@ export const Route = createFileRoute("/_authenticated/_shell/factory-receivables
   head: () => ({
     meta: [
       { title: "勤豐應收帳款 · 勤豐工商顧問" },
-      { name: "description", content: "勤豐工商顧問專案應收帳款：報價、訂金、尾款、規費與其他費用的請款與收款。" },
+      { name: "description", content: "勤豐工商顧問專案應收帳款：報價、簽約金、尾款、規費與其他費用的請款與收款。" },
       { property: "og:title", content: "勤豐應收帳款 · 勤豐工商顧問" },
-      { property: "og:description", content: "專案訂金與尾款收款追蹤。" },
+      { property: "og:description", content: "專案簽約金與尾款收款追蹤。" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -86,8 +86,8 @@ function FactoryReceivablesPage() {
                 </div>
               </div>
               <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm sm:grid-cols-4">
-                <dt className="text-muted-foreground">訂金應收</dt><dd className="text-right"><Money value={depositDue(r.deposit_invoice_amount, r.invoice_type)} /></dd>
-                <dt className="text-muted-foreground">訂金已收</dt><dd className="text-right"><Money value={Number(r.deposit_received_amount)} />{r.deposit_received_date && <span className="block text-xs text-muted-foreground">{formatDate(r.deposit_received_date)}</span>}</dd>
+                <dt className="text-muted-foreground">簽約金應收</dt><dd className="text-right"><Money value={depositDue(r.deposit_invoice_amount, r.invoice_type)} /></dd>
+                <dt className="text-muted-foreground">簽約金已收</dt><dd className="text-right"><Money value={Number(r.deposit_received_amount)} />{r.deposit_received_date && <span className="block text-xs text-muted-foreground">{formatDate(r.deposit_received_date)}</span>}</dd>
                 <dt className="text-muted-foreground">尾款應收</dt><dd className="text-right"><Money value={finalDue(r)} /></dd>
                 <dt className="text-muted-foreground">尾款已收</dt><dd className="text-right"><Money value={Number(r.final_received_amount)} />{r.final_received_date && <span className="block text-xs text-muted-foreground">{formatDate(r.final_received_date)}</span>}</dd>
               </dl>
@@ -96,7 +96,7 @@ function FactoryReceivablesPage() {
                 <div className="flex flex-wrap gap-1 border-t pt-2">
                   {left > 0 ? <FactoryPaymentDialog record={r} trigger={<Button size="sm" variant="outline"><HandCoins className="size-3.5" /> 登帳</Button>} /> : <span className="self-center px-2 text-xs text-muted-foreground">已收訖</span>}
                   <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "quote", stage: "尾款" }}><FileText className="size-3.5" /> 報價單</Link></Button>
-                  <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: status === "訂金待收" ? "訂金" : "尾款" }}><Receipt className="size-3.5" /> 請款單</Link></Button>
+                  <Button asChild variant="ghost" size="sm"><Link to="/factory-doc/$id" params={{ id: r.id }} search={{ type: "invoice", stage: status === "簽約金待收" ? "訂金" : "尾款" }}><Receipt className="size-3.5" /> 請款單</Link></Button>
                   {issuesInvoice(r.invoice_type) && <Button asChild variant="ghost" size="sm"><a href={EINVOICE_URL} target="_blank" rel="noopener noreferrer"><ExternalLink className="size-3.5" /> 開發票</a></Button>}
                 </div>
               )}

@@ -59,7 +59,7 @@ export function FactoryPaymentDialog({ record: r, trigger }: { record: FactoryRe
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>登帳 · {r.factory_name}</DialogTitle></DialogHeader>
         <div className="grid gap-3">
-          {dDue > 0 && row("訂金", dDue, "dAmt", "dDate")}
+          {dDue > 0 && row("簽約金", dDue, "dAmt", "dDate")}
           {row("尾款", fDue, "fAmt", "fDate")}
           <div className="grid gap-1"><Label>備註</Label><Textarea rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} /></div>
         </div>

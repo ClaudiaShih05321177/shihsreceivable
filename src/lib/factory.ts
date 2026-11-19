@@ -93,12 +93,12 @@ export function projectOutstanding(r: ProjectArLike): number {
   return depositDue(r.deposit_invoice_amount, r.invoice_type) - n(r.deposit_received_amount) + finalDue(r) - n(r.final_received_amount);
 }
 
-export function projectArStatus(r: ProjectArLike): "未請款" | "訂金待收" | "尾款待收" | "已收清" {
+export function projectArStatus(r: ProjectArLike): "未請款" | "簽約金待收" | "尾款待收" | "已收清" {
   const billed = depositDue(r.deposit_invoice_amount, r.invoice_type) + finalDue(r);
   if (billed === 0) return "未請款";
   if (projectOutstanding(r) <= 0) return "已收清";
-  if (!issuesInvoice(r.invoice_type)) return n(r.deposit_received_amount) > 0 ? "尾款待收" : "訂金待收";
-  if (n(r.deposit_received_amount) < depositDue(r.deposit_invoice_amount, r.invoice_type)) return "訂金待收";
+  if (!issuesInvoice(r.invoice_type)) return n(r.deposit_received_amount) > 0 ? "尾款待收" : "簽約金待收";
+  if (n(r.deposit_received_amount) < depositDue(r.deposit_invoice_amount, r.invoice_type)) return "簽約金待收";
   return "尾款待收";
 }
 
