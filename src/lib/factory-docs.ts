@@ -76,7 +76,7 @@ export function hasDeposit(r: ProjectArLike): boolean {
 }
 
 /** 報價條款切換設定（存於 factory_registrations.quote_terms）。 */
-export const ENV_TERM_OPTIONS = ["包含環判", "免跑環保", "客戶自辦環保"] as const;
+export const ENV_TERM_OPTIONS = ["包含環判", "免跑環保", "客戶自辦環保", "只跑環保"] as const;
 export const PAYMENT_TERM_OPTIONS = ["預付50%＋尾款", "全額結案付清", "自訂"] as const;
 export type QuoteTermsConfig = {
   env: (typeof ENV_TERM_OPTIONS)[number];
@@ -102,6 +102,7 @@ export function readQuoteTerms(v: unknown, envMode?: string | null): QuoteTermsC
 export function buildQuoteTerms(c: QuoteTermsConfig): string[] {
   const t: string[] = [];
   if (c.env === "包含環判") t.push("以上報價包含環保判定申請，若所有項目為非公告事業即可申請工廠登記。", "若環保局環判函認定貴廠為公告事業，需做相關其他環保設置，再依相關內容另行報價。");
+  else if (c.env === "只跑環保") t.push("以上報價僅包含環保判定申請，不含工廠登記送件及其他主管機關審查。", "若環保局環判函認定貴廠為公告事業，需做相關其他環保設置，再依相關內容另行報價。");
   else if (c.env === "客戶自辦環保") t.push("本案環保手續由貴廠自行辦理，本報價不含環保送件及相關規費。");
   if (c.park) t.push("若貴廠位於產業園區內，本報價不含污水納管或聯接證明申請。");
   if (c.sciencePark) t.push("若貴廠位於科學園區內，本報價不含污水納管、用水計畫書、用電計畫書及污染總量預估。");

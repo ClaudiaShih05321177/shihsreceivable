@@ -73,4 +73,9 @@ describe("報價條款", () => {
   it("案件為客戶自辦環保時預設帶自辦條款", () => {
     expect(readQuoteTerms({}, "客戶自辦環保").env).toBe("客戶自辦環保");
   });
+  it("只跑環保：帶僅含環判條款", () => {
+    const t = buildQuoteTerms(readQuoteTerms({ env: "只跑環保" }));
+    expect(t).toContain("以上報價僅包含環保判定申請，不含工廠登記送件及其他主管機關審查。");
+    expect(t.some((x) => x.includes("即可申請工廠登記"))).toBe(false);
+  });
 });
