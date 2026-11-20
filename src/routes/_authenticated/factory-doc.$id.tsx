@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { canManageFactoryProgress } from "@/lib/permissions";
 
 import { Button } from "@/components/ui/button";
-import { buildQuoteTerms, ENV_TERM_OPTIONS, INVOICE_STAGES, invoiceSummary, KINFENG, PAYMENT_TERM_OPTIONS, quoteSummary, readQuoteTerms, type InvoiceStage, type QuoteTermsConfig } from "@/lib/factory-docs";
+import { buildQuoteTerms, ENV_TERM_OPTIONS, INVOICE_STAGES, invoiceSummary, KINFENG, PAYMENT_TERM_OPTIONS, quoteSummary, readQuoteTerms, subtotalLabel, type InvoiceStage, type QuoteTermsConfig } from "@/lib/factory-docs";
 import { factoryRegistrationsQuery, meQuery } from "@/lib/queries";
 import { formatDate, formatTWD, todayISO } from "@/lib/receivables";
 
@@ -144,7 +144,7 @@ function FactoryDocPage() {
               <td className={`${cell} text-right font-mono`}>{formatTWD(s.consulting)}</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.consulting)}</td>
             </tr>
             {s.discount > 0 && <tr><td className={cell} colSpan={5}>專案折扣</td><td className={`${cell} text-right font-mono`}>−{formatTWD(s.discount)}</td></tr>}
-            <tr><td className={cell} colSpan={5}>小計(發票金額)</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.subtotal)}</td></tr>
+            <tr><td className={cell} colSpan={5}>{subtotalLabel(s)}</td><td className={`${cell} text-right font-mono`}>{formatTWD(s.subtotal)}</td></tr>
             {s.lines.filter((l) => isSummary(l.label)).map((l, i) => (
               <tr key={`${l.label}-${i}`}><td className={cell} colSpan={5}>{l.label}</td><td className={`${cell} text-right font-mono`}>{l.amount < 0 ? `−${formatTWD(-l.amount)}` : formatTWD(l.amount)}</td></tr>
             ))}

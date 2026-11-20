@@ -31,6 +31,9 @@ const n = (v: unknown) => Math.round(Number(v) || 0);
 /** 不開發票時稅額為 0，單據上不列營業稅。 */
 const taxLine = (tax: number): DocLine[] => (tax ? [{ label: `營業稅(${TAX_RATE * 100}%)`, amount: tax }] : []);
 
+/** 不開發票的案子沒有發票金額可標，小計就只寫「小計」。 */
+export const subtotalLabel = (s: DocSummary): string => (s.lines.some((l) => l.label.startsWith("營業稅")) ? "小計(發票金額)" : "小計");
+
 /** 報價單：顧問費（未稅）＋營業稅5%（開發票才有）＋規費＋其他費用。 */
 export function quoteSummary(r: ProjectArLike): DocSummary {
   const q = netQuote(r);

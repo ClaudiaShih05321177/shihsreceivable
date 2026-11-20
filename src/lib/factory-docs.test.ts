@@ -1,6 +1,6 @@
 import type { DocSummary } from "./factory-docs";
 import { describe, expect, it } from "vitest";
-import { buildQuoteTerms, hasDeposit, invoiceSummary, quoteSummary, readQuoteTerms } from "./factory-docs";
+import { buildQuoteTerms, hasDeposit, invoiceSummary, quoteSummary, readQuoteTerms, subtotalLabel } from "./factory-docs";
 
 const base = { quote_amount: 65000, deposit_invoice_amount: 34125, deposit_received_amount: 0, final_invoice_amount: 0, government_fee: 5000, other_fee: 0, final_received_amount: 0, invoice_type: "開發票" };
 
@@ -117,5 +117,21 @@ describe("不開發票不秀營業稅", () => {
     expect(hasTax(invoiceSummary(base, "訂金"))).toBe(true);
     expect(hasTax(invoiceSummary(base, "尾款"))).toBe(true);
     expect(hasTax(invoiceSummary(base, "全額"))).toBe(true);
+  });
+});
+
+describe("小計標題", () => {
+  const noInv = { ...base, invoice_type: "不開發票" };
+  it("開發票：報價單與請款單都寫「小計(發票金額)」", () => {
+    expect(subtotalLabel(quoteSummary(base))).toBe("小計(發票金額)");
+    expect(subtotalLabel(invoiceSummary(base, "訂金"))).toBe("小計(發票金額)");
+    expect(subtotalLabel(invoiceSummary(base, "尾款"))).toBe("小計(發票金額)");
+    expect(subtotalLabel(invoiceSummary(base, "全額"))).toBe("小計(發票金額)");
+  });
+  it("不開發票：報價單與請款單只寫「小計」", () => {
+    expect(subtotalLabel(quoteSummary(noInv))).toBe("小計");
+    expect(subtotalLabel(invoiceSummary(noInv, "訂金"))).toBe("小計");
+    expect(subtotalLabel(invoiceSummary(noInv, "尾款"))).toBe("小計");
+    expect(subtotalLabel(invoiceSummary(noInv, "全額"))).toBe("小計");
   });
 });
