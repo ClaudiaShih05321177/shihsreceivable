@@ -1,3 +1,4 @@
+import type { DocSummary } from "./factory-docs";
 import { describe, expect, it } from "vitest";
 import { buildQuoteTerms, hasDeposit, invoiceSummary, quoteSummary, readQuoteTerms } from "./factory-docs";
 
@@ -83,5 +84,38 @@ describe("報價條款", () => {
     expect(t).toContain("上述報價不包含各項規費，如產生其他規費將實報實銷。");
     expect(t).toContain("付款條件:結案後付款。請於發票開立後30日內付款。");
     expect(t.some((x) => x.includes("工商科規費") || x.includes("預付"))).toBe(false);
+  });
+});
+
+const noInv = { ...base, invoice_type: "不開發票", deposit_invoice_amount: 0, deposit_received_amount: 30000 };
+describe("不開發票不秀營業稅", () => {
+  const hasTax = (s: DocSummary) => s.lines.some((l) => l.label.startsWith("營業稅"));
+  it("報價單不列營業稅，總計 70,000", () => {
+    const s = quoteSummary(noInv);
+    expect(hasTax(s)).toBe(false);
+    expect(s.total).toBe(70000);
+  });
+  it("訂金請款不列營業稅，總計 30,000", () => {
+    const s = invoiceSummary(noInv, "訂金");
+    expect(hasTax(s)).toBe(false);
+    expect(s.lines).toEqual([]);
+    expect(s.total).toBe(30000);
+  });
+  it("尾款請款不列營業稅，顧問費 35,000 加規費 5,000 = 40,000", () => {
+    const s = invoiceSummary(noInv, "尾款");
+    expect(hasTax(s)).toBe(false);
+    expect(s.consulting).toBe(35000);
+    expect(s.total).toBe(40000);
+  });
+  it("全額請款不列營業稅，總計 70,000", () => {
+    const s = invoiceSummary(noInv, "全額");
+    expect(hasTax(s)).toBe(false);
+    expect(s.total).toBe(70000);
+  });
+  it("開發票仍列營業稅", () => {
+    expect(hasTax(quoteSummary(base))).toBe(true);
+    expect(hasTax(invoiceSummary(base, "訂金"))).toBe(true);
+    expect(hasTax(invoiceSummary(base, "尾款"))).toBe(true);
+    expect(hasTax(invoiceSummary(base, "全額"))).toBe(true);
   });
 });
