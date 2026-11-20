@@ -176,7 +176,7 @@ function FactoryDocPage() {
               <p>總行代號：{KINFENG.bankCode}</p>
               <p>帳號：{KINFENG.account}</p>
               <p>支票抬頭請開：{KINFENG.accountName}</p>
-              <p>付款條件：發票開立後30日內。</p>
+              <p>付款條件：請款後30日內。</p>
             </div>
             <div className="flex h-44 flex-col border border-foreground p-2"><span>承辦公司簽章</span><div className="mt-2 flex min-w-0 items-end justify-center gap-2 print:gap-3"><img src={kinfengSealLarge.url} alt="勤豐工商大章" className="block h-auto w-[min(2.62cm,55%)] max-w-none shrink print:w-[2.62cm] print:shrink-0" /><img src={kinfengSealSmall.url} alt="勤豐工商小章" className="block h-auto w-[min(1.64cm,34%)] max-w-none shrink print:w-[1.64cm] print:shrink-0" /></div></div>
           </div>

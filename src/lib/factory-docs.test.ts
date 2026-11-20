@@ -82,7 +82,7 @@ describe("報價條款", () => {
   it("只跑環保：規費實報實銷、結案後付款", () => {
     const t = buildQuoteTerms(readQuoteTerms({ env: "只跑環保", payment: "預付50%＋尾款" }));
     expect(t).toContain("上述報價不包含各項規費，如產生其他規費將實報實銷。");
-    expect(t).toContain("付款條件:結案後付款。請於發票開立後30日內付款。");
+    expect(t).toContain("付款條件:結案後付款。請於請款後30日內付款。");
     expect(t.some((x) => x.includes("工商科規費") || x.includes("預付"))).toBe(false);
   });
 });
