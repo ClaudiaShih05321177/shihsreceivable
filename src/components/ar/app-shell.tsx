@@ -27,10 +27,14 @@ const nav = [
   { to: "/bonuses", label: "會計專員獎金", icon: BadgeDollarSign },
 ] as const;
 
+const factoryProgress = { to: "/factory", label: "工廠登記進度", icon: Factory } as const;
+const factoryReceivables = { to: "/factory-receivables", label: "勤豐應收帳款", icon: Wallet } as const;
+const factoryCustomers = { to: "/factory-customers", label: "勤豐客戶資料", icon: Users } as const;
+
 const factoryNav = [
-  { to: "/factory-receivables", label: "勤豐應收帳款", icon: Wallet },
-  { to: "/factory", label: "工廠登記進度", icon: Factory },
-  { to: "/factory-customers", label: "勤豐客戶資料", icon: Users },
+  factoryProgress,
+  factoryReceivables,
+  factoryCustomers,
   { to: "/team", label: "團隊成員", icon: UserCog },
 ] as const;
 
@@ -40,7 +44,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { data: invoices } = useQuery(invoicesQuery);
   const [company, setCompany] = useCompany();
-  const items = me.isAdmin ? (company === FACTORY_COMPANY ? factoryNav : nav) : canManageFactoryProgress(me) ? [...nav, factoryNav[1], factoryNav[2]] : canUseFactoryCustomers(me) ? [...nav, factoryNav[2]] : nav;
+  const items = me.isAdmin ? (company === FACTORY_COMPANY ? factoryNav : nav) : canManageFactoryProgress(me) ? [...nav, factoryProgress, factoryCustomers] : canUseFactoryCustomers(me) ? [...nav, factoryCustomers] : nav;
   const overdue = (invoices ?? []).filter((i) => invoiceStatus(i) === "overdue").length;
 
   async function signOut() {
