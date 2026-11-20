@@ -70,7 +70,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
             onChange={(e) => {
               const c = e.target.value as (typeof COMPANIES)[number];
               setCompany(c);
-              navigate({ to: c === FACTORY_COMPANY ? "/factory-receivables" : "/dashboard" });
+              navigate({ to: c === FACTORY_COMPANY ? "/factory" : "/dashboard" });
             }}
             className="w-full rounded-md border border-sidebar-border bg-sidebar-accent px-2 py-1.5 text-sm text-sidebar-accent-foreground"
           >
