@@ -11,7 +11,7 @@ import { PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
-import { FACTORY_LOST_STAGE, FACTORY_STAGES, isFactoryClosed, needsEnv } from "@/lib/factory";
+import { FACTORY_LOST_STAGE, FACTORY_STAGES, isFactoryClosed, needsEnv, envOnly } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery, type FactoryRegistration } from "@/lib/queries";
 import { formatDate } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -103,10 +103,12 @@ function FactoryPage() {
         )}
         {shown.map((r) => {
           const title = <span className="font-medium">{r.factory_name}</span>;
-          const steps = [
-            needsEnv(r.env_mode) ? `環保：${d(r.env_filed_date, r.env_approved_date)}` : `環保：${r.env_mode}`,
-            `工商科送件：${d(r.bureau_filed_date)}`, `會勘：${d(r.inspection_date)}`, `核准結案：${d(r.approved_date)}`,
-          ];
+          const steps = envOnly(r.env_mode)
+            ? [`只跑環保：${d(r.env_filed_date, r.env_approved_date)}`, `核准結案：${d(r.approved_date)}`]
+            : [
+                needsEnv(r.env_mode) ? `環保：${d(r.env_filed_date, r.env_approved_date)}` : `環保：${r.env_mode}`,
+                `工商科送件：${d(r.bureau_filed_date)}`, `會勘：${d(r.inspection_date)}`, `核准結案：${d(r.approved_date)}`,
+              ];
           return (
             <div key={r.id} className="ledger-card grid gap-3 p-4">
               <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">

@@ -80,3 +80,12 @@ describe("stageFromDates", () => {
   it("不倒退", () => expect(stageFromDates("送件工商科", { env_approved_date: "2026-11-01" })).toBe("送件工商科"));
   it("核准結案日期優先", () => expect(stageFromDates("送件環保", { env_filed_date: "x", approved_date: "y" })).toBe("核准結案"));
 });
+
+import { envOnly, needsEnv as ne, factoryInitialStage as fis, nextFactoryStage as nfs } from "./factory";
+describe("只跑環保", () => {
+  it("從送件環保開始", () => expect(fis("只跑環保")).toBe("送件環保"));
+  it("需填環保日期", () => expect(ne("只跑環保")).toBe(true));
+  it("環保核准後直接核准結案", () => expect(nfs("環保核准", false, "只跑環保")).toBe("核准結案"));
+  it("一般需跑環保仍送工商科", () => expect(nfs("環保核准", false, "需跑環保")).toBe("送件工商科"));
+  it("envOnly 判斷", () => expect(envOnly("免跑環保")).toBe(false));
+});

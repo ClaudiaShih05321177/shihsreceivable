@@ -11,15 +11,18 @@ export const FACTORY_LOST_STAGE = "未成交結案";
 export const isFactoryClosed = (stage: string) => stage === "核准結案" || stage === FACTORY_LOST_STAGE;
 
 /** 環保：委託代辦、免跑環保、客戶自行跑環保；後兩者直接從送件工商科開始。 */
-export const ENV_MODES = ["需跑環保", "免跑環保", "客戶自辦環保"] as const;
-export const needsEnv = (mode: string | null | undefined) => mode === "需跑環保";
+export const ENV_MODES = ["需跑環保", "免跑環保", "客戶自辦環保", "只跑環保"] as const;
+export const needsEnv = (mode: string | null | undefined) => mode === "需跑環保" || mode === "只跑環保";
+/** 只跑環保：只辦環保判定，環保核准即結案，不送工商科、不會勘。 */
+export const envOnly = (mode: string | null | undefined) => mode === "只跑環保";
 
 export function factoryInitialStage(envMode: string): FactoryStage {
   return needsEnv(envMode) ? "送件環保" : "送件工商科";
 }
 
 /** 下一階段；現場會勘為選辦，送件工商科之後可選會勘或直接結案（skipInspection）。 */
-export function nextFactoryStage(stage: string, skipInspection = false): FactoryStage {
+export function nextFactoryStage(stage: string, skipInspection = false, envMode?: string | null): FactoryStage {
+  if (envOnly(envMode) && (stage === "送件環保" || stage === "環保核准")) return stage === "送件環保" ? "環保核准" : "核准結案";
   if (stage === "送件工商科" && skipInspection) return "核准結案";
   const i = FACTORY_STAGES.indexOf(stage as FactoryStage);
   return FACTORY_STAGES[Math.min(Math.max(i, 0) + 1, FACTORY_STAGES.length - 1)]!;

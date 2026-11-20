@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { RocDateInput } from "@/components/ar/roc-date-input";
-import { FACTORY_STAGES, needsEnv, stageFromDates } from "@/lib/factory";
+import { FACTORY_STAGES, needsEnv, envOnly, stageFromDates } from "@/lib/factory";
 import type { FactoryRegistration } from "@/lib/queries";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -42,7 +42,7 @@ export function FactoryProgressDialog({ record, trigger }: { record: FactoryRegi
           <SelectContent>{FACTORY_STAGES.map((stage) => <SelectItem key={stage} value={stage}>{stage}</SelectItem>)}</SelectContent>
         </Select></div>
         <div className="grid gap-2"><Label htmlFor="factory-progress-status">Status</Label><Textarea id="factory-progress-status" value={form.status_note ?? ""} onChange={(e) => setForm((f) => ({ ...f, status_note: e.target.value }))} /></div>
-        {dates.filter(([key]) => !key.startsWith("env_") || needsEnv(record.env_mode)).map(([key, label]) => <div key={key} className="grid gap-2">
+        {dates.filter(([key]) => (!key.startsWith("env_") || needsEnv(record.env_mode)) && !(envOnly(record.env_mode) && (key === "bureau_filed_date" || key === "inspection_date"))).map(([key, label]) => <div key={key} className="grid gap-2">
           <Label htmlFor={`progress-${key}`}>{label}</Label><RocDateInput id={`progress-${key}`} value={form[key] ?? ""} onChange={(value) => setForm((f) => { const n = { ...f, [key]: value || null }; return { ...n, stage: stageFromDates(n.stage, n) }; })} />
         </div>)}
       </div>

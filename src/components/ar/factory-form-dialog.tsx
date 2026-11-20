@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { lookupCompany } from "@/lib/company-lookup.functions";
-import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, depositTaxSplit, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv, netQuote, stageFromDates } from "@/lib/factory";
+import { extraFees, type ExtraFee, INVOICE_TYPES, autoFinalInvoice, contractTotal, depositTaxSplit, issuesInvoice, ENV_MODES, FACTORY_STAGES, factoryInitialStage, finalDue, needsEnv, envOnly, netQuote, stageFromDates } from "@/lib/factory";
 import { meQuery, type FactoryRegistration } from "@/lib/queries";
 import type { Database } from "@/integrations/supabase/types";
 import { canManageFactoryProgress } from "@/lib/permissions";
@@ -192,8 +192,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
           </section>
           <section className="grid gap-4 sm:grid-cols-2">
             {needsEnv(form.env_mode) && <>{date("env_filed_date", "環保送件日期")}{date("env_approved_date", "環保核准日期")}</>}
-            {date("bureau_filed_date", "工商科送件日期")}
-            {date("inspection_date", "現場會勘日期（選辦）")}
+            {!envOnly(form.env_mode) && <>{date("bureau_filed_date", "工商科送件日期")}{date("inspection_date", "現場會勘日期（選辦）")}</>}
             {date("approved_date", "核准結案日期")}
           </section>
           {me.isAdmin && <section className={`grid gap-4 rounded-md border border-dashed p-3 sm:grid-cols-2 ${focus === "ar" ? "order-first" : ""}`}>

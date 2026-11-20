@@ -94,7 +94,7 @@ export type QuoteTermsConfig = {
 const pick = <T extends string>(v: unknown, opts: readonly T[], d: T): T => (opts.includes(v as T) ? (v as T) : d);
 export function readQuoteTerms(v: unknown, envMode?: string | null): QuoteTermsConfig {
   const o = (v && typeof v === "object" ? v : {}) as Record<string, unknown>;
-  const envDefault = envMode === "免跑環保" ? "免跑環保" : envMode === "客戶自辦環保" ? "客戶自辦環保" : "包含環判";
+  const envDefault = envMode === "免跑環保" ? "免跑環保" : envMode === "客戶自辦環保" ? "客戶自辦環保" : envMode === "只跑環保" ? "只跑環保" : "包含環判";
   return {
     env: pick(o["env"], ENV_TERM_OPTIONS, envDefault),
     park: o["park"] === true,
