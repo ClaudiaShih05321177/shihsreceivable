@@ -27,6 +27,16 @@ export function initialStage(route: string | null | undefined): FilingStage {
   return stagesFor(route)[0]!;
 }
 
+/** 經過國稅局的流程但國稅局尚未核准（結案前提醒用）。 */
+export function taxBureauPending(f: { route?: string | null; tax_approved_date?: string | null }): boolean {
+  return routeHasTaxBureau(f.route) && !f.tax_approved_date;
+}
+
+/** 誤按結案後恢復進行中：先回到流程起點，資料庫依已填日期自動推進到正確階段。 */
+export function reopenStage(route: string | null | undefined): FilingStage {
+  return initialStage(route);
+}
+
 /** 案件類型。 */
 export const CASE_TYPES = ["設立登記", "變更登記", "法院報備", "註銷登記", "停業登記", "展延停業", "復業登記", "其他"] as const;
 

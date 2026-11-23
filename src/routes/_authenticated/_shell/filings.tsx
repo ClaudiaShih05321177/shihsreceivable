@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
-import { CheckCircle2, Plus, Printer, Receipt, Search, Trash2 } from "lucide-react";
+import { CheckCircle2, Plus, RotateCcw, Printer, Receipt, Search, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, billingTypeOnClose, canCloseFiling, filingExtraFees } from "@/lib/filings";
+import { FILING_STAGES, routeHasAuthority, routeHasTaxBureau, feeItemsTotal, filingBillingPeriod, filingInvoiceItems, filingName, mergeFeeItems, billingTypeOnClose, canCloseFiling, taxBureauPending, reopenStage, filingExtraFees } from "@/lib/filings";
 import { customersQuery, filingServiceFeesQuery, filingsQuery, invoicesQuery, meQuery, type Filing } from "@/lib/queries";
 import { filingYearStats } from "@/lib/filing-stats";
 import { formatDate, scheduledCustomerFees, todayISO } from "@/lib/receivables";
@@ -68,6 +68,15 @@ function FilingsPage() {
     },
     onSuccess: () => { toast.success("已結案"); qc.invalidateQueries({ queryKey: ["filings"] }); qc.invalidateQueries({ queryKey: ["customers"] }); },
     onError: (e) => toast.error(e instanceof Error ? e.message : "結案失敗"),
+  });
+
+  const reopen = useMutation({
+    mutationFn: async (filing: Filing) => {
+      const { error } = await supabase.from("filings").update({ stage: reopenStage(filing.route) }).eq("id", filing.id);
+      if (error) throw error;
+    },
+    onSuccess: () => { toast.success("已恢復為進行中"); qc.invalidateQueries({ queryKey: ["filings"] }); },
+    onError: (e) => toast.error(e instanceof Error ? e.message : "恢復失敗"),
   });
 
   const bill = useMutation({
@@ -212,8 +221,13 @@ function FilingsPage() {
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-receipt/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 收據`}><Printer className="size-3.5" />收據</Link></Button>}
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-quote/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 報價單`}><Printer className="size-3.5" />報價單</Link></Button>}
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-invoice/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 請款單`}><Printer className="size-3.5" />請款單</Link></Button>}
+                {canClose && f.stage === "結案" && !f.invoice_id && (
+                  <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`將「${filingName(f)}」恢復為進行中？`)) reopen.mutate(f); }} disabled={reopen.isPending} aria-label={`${filingName(f)} 恢復進行中`}>
+                    <RotateCcw className="size-3.5" /> 恢復進行中
+                  </Button>
+                )}
                 {canClose && f.stage !== "結案" && (
-                  <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`確定將「${filingName(f)}」結案？`)) close.mutate(f); }} disabled={close.isPending} aria-label={`${filingName(f)} 結案`}>
+                  <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(taxBureauPending(f) ? `「${filingName(f)}」國稅局尚未核准，確定要結案嗎？` : `確定將「${filingName(f)}」結案？`)) close.mutate(f); }} disabled={close.isPending} aria-label={`${filingName(f)} 結案`}>
                     <CheckCircle2 className="size-3.5" /> 結案
                   </Button>
                 )}
@@ -292,8 +306,13 @@ function FilingsPage() {
                     {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-quote/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 報價單`}><Printer className="size-3.5" />報價單</Link></Button>}
                     {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-invoice/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 請款單`}><Printer className="size-3.5" />請款單</Link></Button>}
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-invoice/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 請款單`}><Printer className="size-3.5" />請款單</Link></Button>}
-                    {canClose && f.stage !== "結案" && (
-                      <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`確定將「${filingName(f)}」結案？`)) close.mutate(f); }} disabled={close.isPending} aria-label={`${filingName(f)} 結案`}>
+                        {canClose && f.stage === "結案" && !f.invoice_id && (
+                      <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`將「${filingName(f)}」恢復為進行中？`)) reopen.mutate(f); }} disabled={reopen.isPending} aria-label={`${filingName(f)} 恢復進行中`}>
+                        <RotateCcw className="size-3.5" /> 恢復進行中
+                      </Button>
+                    )}
+                {canClose && f.stage !== "結案" && (
+                      <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(taxBureauPending(f) ? `「${filingName(f)}」國稅局尚未核准，確定要結案嗎？` : `確定將「${filingName(f)}」結案？`)) close.mutate(f); }} disabled={close.isPending} aria-label={`${filingName(f)} 結案`}>
                         <CheckCircle2 className="size-3.5" /> 結案
                       </Button>
                     )}

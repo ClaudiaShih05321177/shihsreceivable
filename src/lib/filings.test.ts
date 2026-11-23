@@ -139,3 +139,16 @@ describe("註銷登記連動收費狀態", () => {
     expect(scheduledCustomerFees({ billing_type: "註銷", bookkeeping_fee: 3000, stationery_fee: 500, settlement_fee: 2000 }, 11, "individual")).toEqual({ 記帳費: 0, 文具: 0, 結算: 0 });
   });
 });
+
+import { taxBureauPending, reopenStage } from "./filings";
+describe("誤按結案", () => {
+  it("國稅局未核准時提醒", () => {
+    expect(taxBureauPending({ route: "主管機關+國稅局", tax_approved_date: null })).toBe(true);
+    expect(taxBureauPending({ route: "主管機關+國稅局", tax_approved_date: "2026-11-20" })).toBe(false);
+    expect(taxBureauPending({ route: "只送主管機關", tax_approved_date: null })).toBe(false);
+  });
+  it("恢復時回到流程起點", () => {
+    expect(reopenStage("只送國稅局")).toBe("國稅局送件");
+    expect(reopenStage("主管機關+國稅局")).toBe("預查");
+  });
+});
