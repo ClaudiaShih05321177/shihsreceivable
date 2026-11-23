@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useCompany } from "@/hooks/use-company";
 import { COMPANIES, FACTORY_COMPANY } from "@/lib/factory";
 import { canManageFactoryProgress, canSeePage, canUseFactoryCustomers } from "@/lib/permissions";
+import { APP_VERSION, buildTimeLabel } from "@/lib/version";
 
 type Me = { displayName: string; email: string; isAdmin: boolean; staffCode?: string | null };
 
@@ -104,7 +105,15 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           <Button variant="ghost" size="sm" onClick={signOut} className="mt-3 text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-primary">
             <LogOut className="size-3.5" /> 登出
           </Button>
+          <p className="mt-3 text-[11px] leading-relaxed text-sidebar-foreground/50">
+            版本 v{APP_VERSION}
+            <br />
+            更新 {buildTimeLabel()}
+          </p>
         </div>
+        <p className="px-5 pb-3 text-[11px] text-sidebar-foreground/50 md:hidden">
+          版本 v{APP_VERSION} · 更新 {buildTimeLabel()}
+        </p>
       </aside>
       <main className="min-w-0 flex-1 px-5 py-8 md:px-10 md:py-10 print:p-0">
         <div className="mx-auto max-w-6xl">{children}</div>
