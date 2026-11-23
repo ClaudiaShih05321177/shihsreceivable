@@ -221,7 +221,7 @@ function FilingsPage() {
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-receipt/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 收據`}><Printer className="size-3.5" />收據</Link></Button>}
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-quote/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 報價單`}><Printer className="size-3.5" />報價單</Link></Button>}
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-invoice/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 請款單`}><Printer className="size-3.5" />請款單</Link></Button>}
-                {canClose && f.stage === "結案" && !f.invoice_id && (
+                {canClose && f.stage === "結案" && (
                   <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`將「${filingName(f)}」恢復為進行中？`)) reopen.mutate(f); }} disabled={reopen.isPending} aria-label={`${filingName(f)} 恢復進行中`}>
                     <RotateCcw className="size-3.5" /> 恢復進行中
                   </Button>
@@ -306,7 +306,7 @@ function FilingsPage() {
                     {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-quote/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 報價單`}><Printer className="size-3.5" />報價單</Link></Button>}
                     {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-invoice/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 請款單`}><Printer className="size-3.5" />請款單</Link></Button>}
                 {me.isAdmin && <Button variant="ghost" size="sm" asChild><Link to="/filing-invoice/$id" params={{ id: f.id }} target="_blank" aria-label={`${filingName(f)} 請款單`}><Printer className="size-3.5" />請款單</Link></Button>}
-                        {canClose && f.stage === "結案" && !f.invoice_id && (
+                        {canClose && f.stage === "結案" && (
                       <Button variant="ghost" size="sm" onClick={() => { if (window.confirm(`將「${filingName(f)}」恢復為進行中？`)) reopen.mutate(f); }} disabled={reopen.isPending} aria-label={`${filingName(f)} 恢復進行中`}>
                         <RotateCcw className="size-3.5" /> 恢復進行中
                       </Button>
