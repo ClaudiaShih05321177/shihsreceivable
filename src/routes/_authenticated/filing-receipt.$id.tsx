@@ -1,4 +1,4 @@
-import receiptSeal from "@/assets/receipt-seal-transparent.png.asset.json";
+const receiptSeal = { url: "/seals/receipt-seal-transparent.png" };
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer } from "lucide-react";

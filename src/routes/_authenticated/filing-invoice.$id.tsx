@@ -1,5 +1,5 @@
-import officeSealLarge from "@/assets/office-seal-large.png.asset.json";
-import officeSealSmall from "@/assets/office-seal-small-v3.png.asset.json";
+const officeSealLarge = { url: "/seals/office-seal-large.png" };
+const officeSealSmall = { url: "/seals/office-seal-small-v3.png" };
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, Printer } from "lucide-react";

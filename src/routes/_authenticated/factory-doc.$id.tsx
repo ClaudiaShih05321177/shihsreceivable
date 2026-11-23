@@ -1,5 +1,5 @@
-import kinfengSealLarge from "@/assets/kinfeng-seal-large-v3.png.asset.json";
-import kinfengSealSmall from "@/assets/kinfeng-seal-small-v3.png.asset.json";
+const kinfengSealLarge = { url: "/seals/kinfeng-seal-large-v3.png" };
+const kinfengSealSmall = { url: "/seals/kinfeng-seal-small-v3.png" };
 import { createFileRoute, notFound, redirect } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowLeft, ExternalLink, Plus, Printer, X } from "lucide-react";
