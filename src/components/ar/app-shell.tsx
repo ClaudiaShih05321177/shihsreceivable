@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 
 import { BrandMark } from "@/components/ar/brand";
 import { ChangePasswordDialog } from "@/components/ar/change-password-dialog";
+import { LocalBackupNavItem } from "@/components/ar/local-backup-button";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { invoicesQuery } from "@/lib/queries";
@@ -25,8 +26,8 @@ const nav = [
   { to: "/audits", label: "財稅簽", icon: Stamp },
   { to: "/filings", label: "工商進度", icon: FileCheck2 },
   { to: "/customers", label: "客戶資料", icon: Users },
-  { to: "/team", label: "團隊成員", icon: UserCog },
   { to: "/bonuses", label: "會計專員獎金", icon: BadgeDollarSign },
+  { to: "/team", label: "團隊成員", icon: UserCog },
 ] as const;
 
 const factoryProgress = { to: "/factory", label: "工廠登記進度", icon: Factory } as const;
@@ -100,6 +101,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
               </Link>
             );
           })}
+          {me.isAdmin && <LocalBackupNavItem />}
         </nav>
         <div className="hidden border-t border-sidebar-border px-5 py-4 md:block">
           <p className="truncate text-sm font-medium">{me.displayName}</p>
