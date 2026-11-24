@@ -11,3 +11,10 @@ export function matchFactoryByName<T extends { name: string }>(customers: T[], f
   const hits = customers.filter((c) => norm(c.name) === key);
   return hits.length === 1 ? hits[0] : undefined;
 }
+
+/** 勤豐下一個客戶代碼：取 CF 後主號最大值 +1（忽略 CF344-1 這類子號）。 */
+export function nextFactoryCode(codes: (string | null | undefined)[]): string {
+  let max = 0;
+  for (const c of codes) { const m = /^CF(\d+)/i.exec((c ?? "").trim()); if (m) max = Math.max(max, Number(m[1])); }
+  return `CF${max + 1}`;
+}

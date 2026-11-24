@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchCustomer, matchFactoryByName } from "./customer-match";
+import { matchCustomer, matchFactoryByName, nextFactoryCode } from "./customer-match";
 
 describe("customer name matching", () => {
   const customers = [
@@ -20,5 +20,12 @@ describe("matchFactoryByName", () => {
   it("同公司多廠時依廠名對到分廠", () => {
     expect(matchFactoryByName(list, "思達科技股份有限公司東廠")?.code).toBe("CF60-2");
     expect(matchFactoryByName(list, "思達科技股份有限公司")?.code).toBe("CF60");
+  });
+});
+
+describe("nextFactoryCode", () => {
+  it("取最大主號加一，忽略子號", () => {
+    expect(nextFactoryCode(["CF712", "CF713", "CF344-1", null])).toBe("CF714");
+    expect(nextFactoryCode([])).toBe("CF1");
   });
 });

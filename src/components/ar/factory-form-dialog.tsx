@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { RocDateInput } from "@/components/ar/roc-date-input";
 import { CustomerPicker } from "@/components/ar/customer-picker";
 import { factoryCustomersQuery } from "@/lib/factory-customer-queries";
-import { matchFactoryByName } from "@/lib/customer-match";
+import { matchFactoryByName, nextFactoryCode } from "@/lib/customer-match";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -41,10 +41,12 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Form>(toForm(record));
+  const [newCode, setNewCode] = useState("");
   const [extras, setExtras] = useState<{ label: string; amount: string }[]>([]);
   useEffect(() => {
+    if (open && !record) setNewCode(nextFactoryCode(customers.map((c) => c.customer_code)));
     if (open) { setForm(toForm(record)); setExtras(extraFees(record?.extra_fees).map((x) => ({ label: x.label, amount: String(x.amount) }))); }
-  }, [open, record]);
+  }, [open, record]); // eslint-disable-line react-hooks/exhaustive-deps
   const extraRows = (): ExtraFee[] => extraFees(extras);
   const set = (k: Key, v: string) => setForm((f) => {
     const next = { ...f, [k]: v };
@@ -77,6 +79,12 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   const save = useMutation({
     mutationFn: async () => {
       if (!form.factory_name.trim()) throw new Error("請輸入廠名");
+      if (!record && !matchFactoryByName(customers, form.factory_name) && newCode.trim()) {
+        const code = newCode.trim().toUpperCase();
+        if (customers.some((c) => (c.customer_code ?? "").toUpperCase() === code)) throw new Error(`客戶代碼 ${code} 已被使用，請改號`);
+        const { error } = await supabase.from("factory_customers").insert({ customer_code: code, name: form.factory_name.trim(), tax_id: form.tax_id.trim() || null, address: form.factory_address.trim() || null });
+        if (error) throw error;
+      }
       if (!me.isAdmin) {
         if (record || !canManageFactoryProgress(me)) throw new Error("無權限新增工廠案件");
         const { error } = await supabase.from("factory_registrations").insert({
@@ -113,6 +121,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
       toast.success(record ? "已更新" : "已新增");
       setOpen(false);
       qc.invalidateQueries({ queryKey: ["factory_registrations"] });
+      qc.invalidateQueries({ queryKey: ["factory_customers"] });
     },
     onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
   });
@@ -151,7 +160,9 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
               if (!c) return;
               setForm((f) => ({ ...f, factory_name: c.name, factory_address: c.address ?? f.factory_address, tax_id: c.tax_id ?? f.tax_id }));
             }} /></div>
-            <div className="grid gap-2"><Label htmlFor="fr-customer-code">客戶代碼</Label><Input id="fr-customer-code" readOnly value={matched?.customer_code ?? ""} /></div>
+            <div className="grid gap-2"><Label htmlFor="fr-customer-code">客戶代碼</Label>{matched || record
+              ? <Input id="fr-customer-code" readOnly value={matched?.customer_code ?? ""} />
+              : <><Input id="fr-customer-code" value={newCode} onChange={(e) => setNewCode(e.target.value)} /><p className="text-xs text-muted-foreground">新客戶：已自動帶入下一號，儲存時一併加入勤豐客戶資料</p></>}</div>
             <div className="grid gap-2 sm:col-span-2">
               <Label htmlFor="fr-tax_id">統一編號</Label>
               <div className="flex gap-2">
