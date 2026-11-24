@@ -17,8 +17,8 @@ export function ChangePasswordDialog({ email, compact = false }: { email: string
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    if (pw.length < 8) return toast.error("新密碼至少 8 個字元");
-    if (pw !== pw2) return toast.error("兩次輸入的新密碼不一致");
+    if (pw.length < 8) { toast.error("新密碼至少 8 個字元"); return; }
+    if (pw !== pw2) { toast.error("兩次輸入的新密碼不一致"); return; }
     setBusy(true);
     try {
       const { error: authErr } = await supabase.auth.signInWithPassword({ email, password: current });
