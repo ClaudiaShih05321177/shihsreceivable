@@ -1,0 +1,1 @@
+ALTER TABLE public.payments ADD COLUMN IF NOT EXISTS check_bank text, ADD COLUMN IF NOT EXISTS check_branch text, ADD COLUMN IF NOT EXISTS check_account text, ADD COLUMN IF NOT EXISTS check_no text, ADD COLUMN IF NOT EXISTS check_due_date date;

@@ -500,6 +500,11 @@ export type Database = {
         Row: {
           amount: number
           bank_fee: number
+          check_account: string | null
+          check_bank: string | null
+          check_branch: string | null
+          check_due_date: string | null
+          check_no: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -512,6 +517,11 @@ export type Database = {
         Insert: {
           amount: number
           bank_fee?: number
+          check_account?: string | null
+          check_bank?: string | null
+          check_branch?: string | null
+          check_due_date?: string | null
+          check_no?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -524,6 +534,11 @@ export type Database = {
         Update: {
           amount?: number
           bank_fee?: number
+          check_account?: string | null
+          check_bank?: string | null
+          check_branch?: string | null
+          check_due_date?: string | null
+          check_no?: string | null
           created_at?: string
           created_by?: string | null
           id?: string

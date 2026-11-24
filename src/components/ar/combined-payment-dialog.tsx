@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
+import { CheckFields, EMPTY_CHECK, checkRow, type CheckInfo } from "@/components/ar/check-fields";
 import { allocateCombined } from "@/lib/combined";
 import { meQuery, type Invoice } from "@/lib/queries";
 import { formatTWD, outstanding, PAYMENT_METHODS } from "@/lib/receivables";
@@ -23,6 +24,7 @@ export function CombinedPaymentDialog({ invoices, trigger, onDone }: { invoices:
   const [fee, setFee] = useState("0");
   const [paidDate, setPaidDate] = useState("");
   const [method, setMethod] = useState("匯款");
+  const [check, setCheck] = useState<CheckInfo>(EMPTY_CHECK);
   const feeNum = Math.max(0, Math.round(Number(fee) || 0));
   const targets = invoices.map((i) => ({ id: i.id, balance: outstanding(i) }));
   const parts = allocateCombined(targets, Number(amount) || 0, feeNum);
@@ -34,7 +36,7 @@ export function CombinedPaymentDialog({ invoices, trigger, onDone }: { invoices:
       if (!(Number(amount) > 0)) throw new Error("請輸入實收金額");
       if (!paidDate) throw new Error("請選擇收款日期");
       const note = `合併收款（${names}，共 ${formatTWD(Math.round(Number(amount)))}）`;
-      const { error } = await supabase.from("payments").insert(parts.map((p) => ({ ...p, paid_date: paidDate, method, notes: note })));
+      const { error } = await supabase.from("payments").insert(parts.map((p) => ({ ...p, paid_date: paidDate, method, notes: note, ...checkRow(method, check) })));
       if (error) throw error;
     },
     onSuccess: async () => {
@@ -48,7 +50,7 @@ export function CombinedPaymentDialog({ invoices, trigger, onDone }: { invoices:
 
   if (!me.canRecordPayment) return null;
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setAmount(String(total)); setFee("0"); setPaidDate(todayISO()); setMethod("匯款"); } }}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) { setAmount(String(total)); setFee("0"); setPaidDate(todayISO()); setMethod("匯款"); setCheck(EMPTY_CHECK); } }}>
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
@@ -76,6 +78,7 @@ export function CombinedPaymentDialog({ invoices, trigger, onDone }: { invoices:
               <Select value={method} onValueChange={setMethod}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{PAYMENT_METHODS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select>
             </div>
           </div>
+          {method === "支票" && <CheckFields value={check} onChange={setCheck} />}
           <div className="rounded-md border text-sm">
             {invoices.map((inv) => {
               const p = parts.find((x) => x.invoice_id === inv.id);

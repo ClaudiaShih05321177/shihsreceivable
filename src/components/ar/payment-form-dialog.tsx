@@ -15,8 +15,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { filingsQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { formatTWD, outstanding, PAYMENT_METHODS, paymentOffset, periodMonthLabel, rocYear } from "@/lib/receivables";
 import { compareCustomerCode } from "@/lib/customer-sort";
+import { CheckFields, EMPTY_CHECK, checkRow, type CheckInfo } from "@/components/ar/check-fields";
 
-type EditPayment = { id: string; amount: number | string; bank_fee: number | string | null; paid_date: string; method: string | null; notes: string | null };
+type EditPayment = { id: string; amount: number | string; bank_fee: number | string | null; paid_date: string; method: string | null; notes: string | null; check_bank?: string | null; check_branch?: string | null; check_account?: string | null; check_no?: string | null; check_due_date?: string | null };
 
 export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalance, trigger, payment }: { invoiceId: string; balance: number; trigger: ReactNode; payment?: EditPayment }) {
   const qc = useQueryClient();
@@ -34,6 +35,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
   const [method, setMethod] = useState<string>("匯款");
   const [notes, setNotes] = useState("");
   const [fee, setFee] = useState("0");
+  const [check, setCheck] = useState<CheckInfo>(EMPTY_CHECK);
   const feeNum = Math.max(0, Math.round(Number(fee) || 0));
   const offset = paymentOffset(Number(amount) || 0, feeNum);
   const pickFee = (f: number) => { setFee(String(f)); setAmount(String(Math.max(0, balance - f))); };
@@ -44,7 +46,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
       const value = Math.round(Number(amount));
       if (!value || value <= 0) throw new Error("請輸入實收金額");
       if (!paidDate) throw new Error("請選擇收款日期");
-      const row = { amount: paymentOffset(value, feeNum), bank_fee: feeNum, paid_date: paidDate, method, notes: notes.trim() || null };
+      const row = { amount: paymentOffset(value, feeNum), bank_fee: feeNum, paid_date: paidDate, method, notes: notes.trim() || null, ...checkRow(method, check) };
       if (payment) {
         const { data, error } = await supabase.from("payments").update(row).eq("id", payment.id).select("id");
         if (error) throw error;
@@ -60,7 +62,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
       if (payment) { setOpen(false); return; }
       if (next) {
         setSavedCount((n) => n + 1);
-        setNotes(""); setFee("0"); setAmount(""); setSearch(""); setPicking(true);
+        setNotes(""); setFee("0"); setCheck(EMPTY_CHECK); setAmount(""); setSearch(""); setPicking(true);
         return;
       }
       setOpen(false);
@@ -107,6 +109,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
             setPaidDate(payment.paid_date);
             setMethod(payment.method ?? "匯款");
             setNotes(payment.notes ?? "");
+            setCheck({ bank: payment.check_bank ?? "", branch: payment.check_branch ?? "", account: payment.check_account ?? "", no: payment.check_no ?? "", due: payment.check_due_date ?? "" });
             setFee(String(bf));
             return;
           }
@@ -115,6 +118,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
           setMethod("匯款");
           setNotes("");
           setFee("0");
+          setCheck(EMPTY_CHECK);
         }
       }}
     >
@@ -186,6 +190,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
               </SelectContent>
             </Select>
           </div>
+          {method === "支票" && <CheckFields value={check} onChange={setCheck} />}
           <div className="space-y-1.5">
             <Label htmlFor="p-notes">備註</Label>
             <Textarea id="p-notes" rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={500} />

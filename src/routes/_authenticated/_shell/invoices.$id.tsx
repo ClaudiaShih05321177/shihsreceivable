@@ -227,6 +227,7 @@ function InvoiceDetail() {
                       <td className="tabular py-2.5">{formatDate(p.paid_date)}</td>
                       <td className="py-2.5">
                         {p.method ?? "—"}
+                        {p.method === "支票" && (p.check_bank || p.check_no || p.check_due_date) && <span className="block text-xs text-muted-foreground">{[`${p.check_bank ?? ""}${p.check_branch ?? ""}`, p.check_account && `帳號 ${p.check_account}`, p.check_no && `票號 ${p.check_no}`, p.check_due_date && `到期 ${formatDate(p.check_due_date)}`].filter(Boolean).join("・")}</span>}
                         {p.notes && <span className="block text-xs text-muted-foreground">{p.notes}</span>}
                       </td>
                       <td className="py-2.5 text-right font-semibold">
