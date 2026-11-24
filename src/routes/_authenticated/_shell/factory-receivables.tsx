@@ -8,7 +8,7 @@ import { FactoryFormDialog } from "@/components/ar/factory-form-dialog";
 import { Money, PageHeader } from "@/components/ar/page-header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isFactoryClosed, depositDue, finalDue, issuesInvoice, projectArStatus, projectOutstanding } from "@/lib/factory";
+import { factoryYearStats, isFactoryClosed, depositDue, finalDue, issuesInvoice, projectArStatus, projectOutstanding } from "@/lib/factory";
 import { factoryRegistrationsQuery, meQuery } from "@/lib/queries";
 import { formatDate } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
@@ -35,6 +35,8 @@ function FactoryReceivablesPage() {
   const { data: me } = useSuspenseQuery(meQuery);
   const [q, setQ] = useState("");
   const [showOpen, setShowOpen] = useState(false);
+  const [statYear, setStatYear] = useState(new Date().getFullYear());
+  const stats = factoryYearStats(rows, statYear);
   const closedCount = rows.filter((r) => r.stage === "核准結案").length;
   const base = rows.filter((r) => (showOpen ? !isFactoryClosed(r.stage) : r.stage === "核准結案"));
   const kw = q.trim().toLowerCase();
@@ -54,6 +56,21 @@ function FactoryReceivablesPage() {
         description={`未收餘額合計 ${total.toLocaleString("zh-TW")} 元`}
         actions={<Button variant="outline" asChild><a href={EINVOICE_URL} target="_blank" rel="noopener noreferrer"><ExternalLink /> 財政部電子發票平台</a></Button>}
       />
+      <section aria-label="年度顧問費統計" className="mb-4 rounded-lg border bg-card p-4">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <h2 className="font-semibold">年度顧問費統計</h2>
+          <select aria-label="統計年度" value={statYear} onChange={(e) => setStatYear(Number(e.target.value))} className="rounded-md border bg-background px-2 py-1 text-sm">
+            {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - i).map((y) => <option key={y} value={y}>{y - 1911} 年度</option>)}
+          </select>
+        </div>
+        <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+          <div><dt className="text-muted-foreground">結案件數</dt><dd className="text-xl font-semibold">{stats.count}</dd></div>
+          <div><dt className="text-muted-foreground">顧問費（未稅）</dt><dd className="text-xl font-semibold"><Money value={stats.fee} /></dd></div>
+          <div><dt className="text-muted-foreground">已收款</dt><dd className="text-xl font-semibold"><Money value={stats.received} /></dd></div>
+          <div><dt className="text-muted-foreground">未收餘額</dt><dd className="text-xl font-semibold"><Money value={stats.outstanding} /></dd></div>
+        </dl>
+        <p className="mt-2 text-xs text-muted-foreground">以核准結案日期所在的年度認列；已收款含簽約金與尾款。</p>
+      </section>
       <div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="搜尋廠名、公司名稱、統編、申辦項目、PO…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />

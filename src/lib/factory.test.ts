@@ -89,3 +89,18 @@ describe("只跑環保", () => {
   it("一般需跑環保仍送工商科", () => expect(nfs("環保核准", false, "需跑環保")).toBe("送件工商科"));
   it("envOnly 判斷", () => expect(envOnly("免跑環保")).toBe(false));
 });
+
+import { factoryYearStats } from "./factory";
+describe("factoryYearStats", () => {
+  const base = { quote_amount: 100000, discount: 0, deposit_invoice_amount: 0, deposit_received_amount: 0, final_invoice_amount: 0, government_fee: 0, other_fee: 0, final_received_amount: 0, invoice_type: "不開發票" };
+  const rows = [
+    { ...base, stage: "核准結案", approved_date: "2026-03-01" },
+    { ...base, stage: "核准結案", approved_date: "2025-12-31" },
+    { ...base, stage: "送件環保", approved_date: null },
+  ];
+  it("只算結案日期在該年度的案件", () => {
+    const s = factoryYearStats(rows, 2026);
+    expect(s.count).toBe(1);
+    expect(s.fee).toBe(100000);
+  });
+});

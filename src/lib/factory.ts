@@ -116,3 +116,14 @@ export function stageFromDates(current: string, dates: Record<string, unknown>):
   const ci = FACTORY_STAGES.indexOf(current as FactoryStage);
   return FACTORY_STAGES.indexOf(hit[1]) > ci ? hit[1] : current;
 }
+
+/** 年度顧問費統計：以核准結案日期的年度認列（西元年）。 */
+export function factoryYearStats<T extends ProjectArLike & { stage: string; approved_date: string | null }>(rows: T[], year: number) {
+  const hit = rows.filter((r) => r.stage === "核准結案" && r.approved_date && Number(r.approved_date.slice(0, 4)) === year);
+  return {
+    count: hit.length,
+    fee: hit.reduce((s, r) => s + netQuote(r), 0),
+    received: hit.reduce((s, r) => s + n(r.deposit_received_amount) + n(r.final_received_amount), 0),
+    outstanding: hit.reduce((s, r) => s + projectOutstanding(r), 0),
+  };
+}
