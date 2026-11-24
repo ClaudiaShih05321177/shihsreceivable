@@ -23,7 +23,7 @@ const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 /** 以統一編號查詢經濟部商工登記公示資料（公司，查無再查商業登記）。 */
 export const lookupCompany = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { taxId: string }) => {
+  .validator((d: { taxId: string }) => {
     if (!/^\d{8}$/.test(d.taxId)) throw new Error("統一編號應為 8 位數字");
     return d;
   })

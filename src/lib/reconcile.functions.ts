@@ -18,7 +18,7 @@ type ConfirmEntry = {
 /** 管理員上傳網銀截圖，AI 辨識存入交易。 */
 export const parseBankStatement = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { images: string[] }) => {
+  .validator((input: { images: string[] }) => {
     if (!Array.isArray(input?.images) || input.images.length === 0) throw new Error("請上傳截圖");
     if (input.images.length > 4) throw new Error("一次最多 4 張截圖");
     for (const img of input.images) {
@@ -36,7 +36,7 @@ export const parseBankStatement = createServerFn({ method: "POST" })
 /** 管理員確認配對結果後登錄收款；以防重複指紋擋下重複入帳。 */
 export const recordBankPayments = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { entries: ConfirmEntry[] }) => {
+  .validator((input: { entries: ConfirmEntry[] }) => {
     if (!Array.isArray(input?.entries) || input.entries.length === 0) throw new Error("沒有要入帳的交易");
     for (const e of input.entries) {
       if (!e.fingerprint || !Array.isArray(e.payments) || e.payments.length === 0) throw new Error("入帳資料不完整");

@@ -15,7 +15,7 @@ function checkPassword(pw: string) {
 /** 管理員建立成員帳號：直接啟用、指派身分，並要求首次登入變更密碼。 */
 export const createMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { name: string; email: string; password: string; role: Role }) => {
+  .validator((d: { name: string; email: string; password: string; role: Role }) => {
     const email = String(d.email ?? "").trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Email 格式不正確");
     checkPassword(d.password);
@@ -49,7 +49,7 @@ export const createMember = createServerFn({ method: "POST" })
 /** 管理員重設成員密碼，並要求下次登入變更。 */
 export const resetMemberPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { userId: string; password: string }) => {
+  .validator((d: { userId: string; password: string }) => {
     checkPassword(d.password);
     return { userId: String(d.userId), password: d.password };
   })
@@ -80,7 +80,7 @@ export const completePasswordChange = createServerFn({ method: "POST" })
 /** 首次登入（必須變更密碼）時由伺服端設定新密碼並清除標記。 */
 export const changeInitialPassword = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { password: string }) => {
+  .validator((d: { password: string }) => {
     if (typeof d?.password !== "string" || d.password.length < 8) throw new Error("新密碼至少 8 個字元");
     return { password: d.password };
   })
