@@ -3,6 +3,7 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/ar/page-header";
+import { LocalBackupButton } from "@/components/ar/local-backup-button";
 import { AddMemberDialog, ResetPasswordDialog } from "@/components/ar/member-dialogs";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -94,7 +95,7 @@ function TeamManagement() {
         title="團隊成員"
         description={me.isAdmin ? "由管理員建立成員帳號，同仁第一次登入時需變更密碼。" : "只有管理員可以新增或移除成員。"}
       />
-      {me.isAdmin && <div className="mb-6 flex justify-end"><AddMemberDialog /></div>}
+      {me.isAdmin && <div className="mb-6 flex justify-end gap-2"><LocalBackupButton /><AddMemberDialog /></div>}
       {pending.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-bold">待核准 <span className="tabular text-sm text-muted-foreground">{pending.length}</span></h2>
