@@ -136,6 +136,9 @@ function TeamManagement() {
                 <span className={`rounded-full px-2.5 py-0.5 text-xs ${isAdmin ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>
                   {isAdmin ? "管理員" : "使用者"}
                 </span>
+                {me.isAdmin && isSelf && (
+                  <ResetPasswordDialog userId={m.id} name={m.display_name ?? m.email ?? ""} />
+                )}
                 {me.isAdmin && !isSelf && (
                   <div className="flex gap-1">
                     <ResetPasswordDialog userId={m.id} name={m.display_name ?? m.email ?? ""} />

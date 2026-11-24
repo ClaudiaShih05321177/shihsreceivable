@@ -55,11 +55,11 @@ export const resetMemberPassword = createServerFn({ method: "POST" })
   })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    if (data.userId === context.userId) throw new Error("無法重設自己的密碼");
+    const isSelf = data.userId === context.userId;
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.auth.admin.updateUserById(data.userId, {
       password: data.password,
-      app_metadata: { must_change_password: true },
+      app_metadata: { must_change_password: !isSelf },
     });
     if (error) throw new Error("重設密碼失敗");
     return { ok: true };
