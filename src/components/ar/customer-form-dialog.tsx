@@ -72,8 +72,8 @@ export function CustomerFormDialog({ customer, trigger }: { customer?: Customer 
       if (!r) { toast.error("經濟部查無此統一編號"); return; }
       setForm((f) => ({ ...f, name: r.name || f.name, contact_person: r.responsible || f.contact_person, address: r.address || f.address }));
       toast.success(`已帶入：${r.name}${r.status ? `（${r.status}）` : ""}`);
-    } catch {
-      toast.error("經濟部公示資料暫時無法查詢，請稍後再試");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "經濟部公示資料暫時無法查詢，請稍後再試");
     } finally {
       setLooking(false);
     }
