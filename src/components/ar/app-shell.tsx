@@ -4,6 +4,7 @@ import { BarChart3, Landmark, Stamp, FileText, FileCheck2, LogOut, Users, UserCo
 import type { ReactNode } from "react";
 
 import { BrandMark } from "@/components/ar/brand";
+import { ChangePasswordDialog } from "@/components/ar/change-password-dialog";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { invoicesQuery } from "@/lib/queries";
@@ -60,9 +61,10 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
       <aside className="print:hidden bg-ink-gradient text-sidebar-foreground md:sticky md:top-0 md:flex md:h-screen md:w-60 md:shrink-0 md:flex-col">
         <div className="flex items-center justify-between px-5 py-4 md:py-6">
           <BrandMark />
+          <div className="flex md:hidden"><ChangePasswordDialog email={me.email} compact />
           <Button variant="ghost" size="icon" onClick={signOut} className="text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground md:hidden" aria-label="登出">
             <LogOut />
-          </Button>
+          </Button></div>
         </div>
         {me.isAdmin && <div className="px-3 pb-3">
           <select
@@ -105,6 +107,7 @@ export function AppShell({ me, children }: { me: Me; children: ReactNode }) {
           <Button variant="ghost" size="sm" onClick={signOut} className="mt-3 text-xs text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-primary">
             <LogOut className="size-3.5" /> 登出
           </Button>
+          <ChangePasswordDialog email={me.email} />
           <p className="mt-3 text-[11px] leading-relaxed text-sidebar-foreground/50">
             版本 v{APP_VERSION}
             <br />
