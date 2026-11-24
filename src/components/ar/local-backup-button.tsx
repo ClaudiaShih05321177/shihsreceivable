@@ -36,12 +36,12 @@ async function buildBackup() {
   const rates = await (supabase.rpc as any)("customer_bonus_rates", {});
   if (!rates.error && Array.isArray(rates.data)) {
     const m = new Map(rates.data.map((r: any) => [r.customer_id, r.annual_extra_rate]));
-    for (const c of tables.customers ?? []) c["annual_extra_rate"] = m.get(c["id"]) ?? null;
+    for (const c of tables["customers"] ?? []) c["annual_extra_rate"] = m.get(c["id"]) ?? null;
   }
   const fees = await (supabase.rpc as any)("filing_service_fees");
   if (!fees.error && Array.isArray(fees.data)) {
     const m = new Map(fees.data.map((r: any) => [r.filing_id, r.service_fee]));
-    for (const f of tables.filings ?? []) f["service_fee"] = m.get(f["id"]) ?? null;
+    for (const f of tables["filings"] ?? []) f["service_fee"] = m.get(f["id"]) ?? null;
   }
   return { exported_at: new Date().toISOString(), tables };
 }
