@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { filingsQuery, invoicesQuery, meQuery } from "@/lib/queries";
 import { formatTWD, outstanding, PAYMENT_METHODS, paymentOffset, periodMonthLabel, rocYear } from "@/lib/receivables";
 import { compareCustomerCode } from "@/lib/customer-sort";
-import { CheckFields, EMPTY_CHECK, checkRow, type CheckInfo } from "@/components/ar/check-fields";
+import { CheckFields, EMPTY_CHECK, checkRow, errorText, type CheckInfo } from "@/components/ar/check-fields";
 
 type EditPayment = { id: string; amount: number | string; bank_fee: number | string | null; paid_date: string; method: string | null; notes: string | null; check_bank?: string | null; check_branch?: string | null; check_account?: string | null; check_no?: string | null; check_due_date?: string | null };
 
@@ -72,7 +72,7 @@ export function PaymentFormDialog({ invoiceId: initialId, balance: initialBalanc
         if (customerId) setRetirementCustomer(customerId);
       } catch { toast.error("收款已登錄，但無法確認註銷客戶狀態，請稍後重試"); }
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
+    onError: (e) => toast.error(errorText(e)),
   });
 
   const { data: allInvoices } = useQuery({ ...invoicesQuery, enabled: open });

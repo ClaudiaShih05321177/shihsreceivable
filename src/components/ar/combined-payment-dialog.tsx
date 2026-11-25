@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { CheckFields, EMPTY_CHECK, checkRow, type CheckInfo } from "@/components/ar/check-fields";
+import { CheckFields, EMPTY_CHECK, checkRow, errorText, type CheckInfo } from "@/components/ar/check-fields";
 import { allocateCombined } from "@/lib/combined";
 import { meQuery, type Invoice } from "@/lib/queries";
 import { formatTWD, outstanding, PAYMENT_METHODS } from "@/lib/receivables";
@@ -45,7 +45,7 @@ export function CombinedPaymentDialog({ invoices, trigger, onDone }: { invoices:
       onDone();
       await qc.invalidateQueries({ queryKey: ["invoices"] });
     },
-    onError: (e) => toast.error(e instanceof Error ? e.message : "儲存失敗"),
+    onError: (e) => toast.error(errorText(e)),
   });
 
   if (!me.canRecordPayment) return null;
