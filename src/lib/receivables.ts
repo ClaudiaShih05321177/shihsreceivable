@@ -352,8 +352,8 @@ export function taxLines(items: FeeItems | null | undefined): TaxLine[] {
   );
 }
 
-/** 每月繳納、一次請兩個月的項目：稅額明細拆成第1個月／第2個月各自勾選。 */
-export const MONTHLY_TAX_ITEMS: readonly string[] = ["租金扣繳", "租金2代", "2代A-B"];
+/** 每月繳納、一次請兩個月的項目：稅額明細拆成第1個月／第2個月各自勾選（公司二代 2代A-B 不拆，整筆一次勾選）。 */
+export const MONTHLY_TAX_ITEMS: readonly string[] = ["租金扣繳", "租金2代"];
 
 /** 期別文字解析為月份：「11-12」→[11,12]，「11」或「11月」→[11]，無法判斷→null。 */
 export function periodMonths(label: string | null | undefined): number[] | null {

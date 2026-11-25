@@ -131,7 +131,7 @@ function TaxesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；租金扣繳、租金二代與公司二代分月各自勾選；依申報繳款月份查看（營業稅於次月、營所稅5月、暫繳9月、扣繳及二代於次月）。" />
+      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；租金扣繳與租金二代分月各自勾選；依申報繳款月份查看（營業稅於次月、營所稅5月、暫繳9月、扣繳及二代於次月）。" />
 
       <div className="flex flex-wrap gap-3">
         <div className="relative w-64">
