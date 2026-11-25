@@ -40,3 +40,18 @@ describe("租金扣繳、租金二代、公司二代拆兩個月勾選", () => {
     expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["租金扣繳", 500, [11]], ["2代A-B", 844, [11]]]);
   });
 });
+
+import { taxDueMonth } from "./receivables";
+describe("taxDueMonth 依申報繳款月", () => {
+  const jan = { period_year: 2026, period_month: 1 };
+  it("前期11-12月營業稅歸1月", () => expect(taxDueMonth(jan, { group: "營業稅", months: [11, 12] })).toEqual({ year: 2026, month: 1 }));
+  it("12月扣繳歸次年1月、11月扣繳歸12月", () => {
+    expect(taxDueMonth(jan, { group: "扣繳稅額", months: [12] })).toEqual({ year: 2026, month: 1 });
+    expect(taxDueMonth(jan, { group: "扣繳稅額", months: [11] })).toEqual({ year: 2025, month: 12 });
+  });
+  it("3-4月營業稅歸5月", () => expect(taxDueMonth({ period_year: 2026, period_month: 5 }, { group: "營業稅", months: [3, 4] })).toEqual({ year: 2026, month: 5 }));
+  it("營所稅5月、暫繳9月", () => {
+    expect(taxDueMonth(jan, { group: "營所稅", months: null }).month).toBe(5);
+    expect(taxDueMonth(jan, { group: "暫繳稅額", months: null }).month).toBe(9);
+  });
+});

@@ -427,3 +427,17 @@ export function latestPeriodProgress<T extends { period_year: number | null; per
   const collected = rows.reduce((s, i) => s + Math.min(Number(i.amount), i.payments.reduce((a, p) => a + Number(p.amount), 0)), 0);
   return { label: periodText(rows[0]!), count: rows.length, billed, collected, open: billed - collected, percent: billed > 0 ? Math.round((collected / billed) * 100) : 0 };
 }
+
+/** 稅額明細「申報繳款月」：營所稅 5月、暫繳 9月；其他依所屬最後月份的次月（1月收的11-12月屬前一年度）。 */
+export function taxDueMonth(
+  inv: { period_year: number | null; period_month: number | null },
+  line: { group: string; months: number[] | null },
+): { year: number; month: number } {
+  const py = inv.period_year ?? 0;
+  if (line.group === "營所稅") return { year: py, month: 5 };
+  if (line.group === "暫繳稅額") return { year: py, month: 9 };
+  const last = line.months?.[line.months.length - 1];
+  if (!last) return { year: py, month: inv.period_month ?? 1 };
+  const y = py - (inv.period_month === 1 && last >= 11 ? 1 : 0);
+  return last === 12 ? { year: y + 1, month: 1 } : { year: y, month: last + 1 };
+}

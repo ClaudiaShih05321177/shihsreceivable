@@ -14,7 +14,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { invoicesQuery, meQuery, taxFilingsQuery } from "@/lib/queries";
 import { feeLabel } from "@/lib/fee-labels";
-import { comparePeriod, periodMonths, formatDate, todayISO, periodMonthLabel, rocYear, splitTaxLines, TAX_GROUPS, taxLines, type FeeItems, type SortDirection } from "@/lib/receivables";
+import { comparePeriod, taxDueMonth, formatDate, todayISO, rocYear, periodMonthLabel, splitTaxLines, TAX_GROUPS, taxLines, type FeeItems, type SortDirection } from "@/lib/receivables";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/_shell/taxes")({
@@ -40,7 +40,6 @@ const codeCollator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: 
 /** 1月收的11-12月屬前一年度。 */
 const lineYear = (inv: { period_year: number | null; period_month: number | null }, mo: number) =>
   (inv.period_year ?? 0) - (inv.period_month === 1 && mo >= 11 ? 1 : 0);
-const periodKey = (y: number | null, m: number | null, p: string | null) => `${y ?? ""}|${m ?? 0}|${p ?? ""}`;
 
 function TaxesPage() {
   const { data: invoices } = useSuspenseQuery(invoicesQuery);
@@ -54,45 +53,35 @@ function TaxesPage() {
   const [sort, setSort] = useState<SortDirection | null>(null);
   const [q, setQ] = useState("");
 
-  const periods = useMemo(() => {
-    const m = new Map<string, { key: string; label: string; sort: number }>();
-    for (const inv of invoices) {
-      if (!taxLines(inv.items as FeeItems).length) continue;
-      const key = periodKey(inv.period_year, inv.period_month, inv.period_label);
-      const label = `${inv.period_year ? `${rocYear(inv.period_year)}年 ` : ""}${periodMonthLabel(inv.period_month)}${inv.period_label ? ` · 期別 ${inv.period_label}` : ""}`;
-      m.set(key, { key, label, sort: (inv.period_year ?? 0) * 100 + (inv.period_month ?? 0) });
-      const ms = periodMonths(inv.period_label);
-      if (ms) for (const mo of ms) {
-        const y = lineYear(inv, mo);
-        m.set(`m|${y}|${mo}`, { key: `m|${y}|${mo}`, label: `單月 ${y ? `${rocYear(y)}年 ` : ""}${mo}月`, sort: y * 100 + mo - 0.5 });
-      }
-    }
-    return [...m.values()].sort((a, b) => b.sort - a.sort);
+  const years = useMemo(() => {
+    const set = new Set<number>();
+    for (const inv of invoices) for (const l of splitTaxLines(inv.items as FeeItems, inv.period_label)) set.add(taxDueMonth(inv, l).year);
+    return [...set].filter(Boolean).sort((x, y) => y - x);
   }, [invoices]);
-  const [period, setPeriod] = useState(periods[0]?.key ?? "all");
+  const [year, setYear] = useState(String(years[0] ?? new Date().getFullYear()));
+  const [month, setMonth] = useState(String(new Date().getMonth() + 1));
 
   const filingMap = useMemo(() => new Map(filings.map((f) => [`${f.invoice_id}|${f.item}`, f])), [filings]);
 
   const lines = useMemo(
     () =>
-      invoices
-        .filter((inv) => period === "all" || period.startsWith("m|") || periodKey(inv.period_year, inv.period_month, inv.period_label) === period)
-        .flatMap((inv) =>
-          splitTaxLines(inv.items as FeeItems, inv.period_label).filter((l) => {
-            if (!period.startsWith("m|")) return true;
-            const [, y, mo] = period.split("|");
-            return !!l.months?.some((x) => x === Number(mo) && lineYear(inv, x) === Number(y));
-          }).map((l) => {
+      invoices.flatMap((inv) =>
+        splitTaxLines(inv.items as FeeItems, inv.period_label)
+          .filter((l) => {
+            const d = taxDueMonth(inv, l);
+            return (year === "all" || d.year === Number(year)) && (month === "all" || d.month === Number(month));
+          })
+          .map((l) => {
             // 拆月前的舊勾選紀錄（只記項目名稱）仍適用於兩個月。
             const f = filingMap.get(`${inv.id}|${l.key}`) ?? (l.half ? filingMap.get(`${inv.id}|${l.item}`) : undefined);
             return { ...l, inv, paid: !!f?.paid, paid_date: f?.paid_date ?? null };
           }),
-        ),
-    [invoices, period, filingMap],
+      ),
+    [invoices, year, month, filingMap],
   );
   // 剛勾選的項目暫留畫面以顯示日期，切換篩選後才隱藏。
   const [justPaid, setJustPaid] = useState<Set<string>>(new Set());
-  useEffect(() => setJustPaid(new Set()), [period, staff, status, group, payDate]);
+  useEffect(() => setJustPaid(new Set()), [year, month, staff, status, group, payDate]);
   const needle = q.trim().toLowerCase();
   const staffOf = (l: (typeof lines)[number]) => staffFromCode(l.inv.customer?.customer_code) || "未指定";
   const matched = lines.filter(
@@ -143,18 +132,25 @@ function TaxesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；租金扣繳、租金二代與公司二代分月各自勾選；期別可選單月。" />
+      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；租金扣繳、租金二代與公司二代分月各自勾選；依申報繳款月份查看（營業稅於次月、營所稅5月、暫繳9月、扣繳及二代於次月）。" />
 
       <div className="flex flex-wrap gap-3">
         <div className="relative w-64">
           <Search className="absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="搜尋客戶代號、名稱或項目" aria-label="搜尋稅額明細" className="pl-8" />
         </div>
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
+        <Select value={year} onValueChange={setYear}>
+          <SelectTrigger className="w-32" aria-label="年度"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全部期別</SelectItem>
-            {periods.map((p) => <SelectItem key={p.key} value={p.key}>{p.label}</SelectItem>)}
+            <SelectItem value="all">全部年度</SelectItem>
+            {years.map((y) => <SelectItem key={y} value={String(y)}>{rocYear(y)}年</SelectItem>)}
+          </SelectContent>
+        </Select>
+        <Select value={month} onValueChange={setMonth}>
+          <SelectTrigger className="w-32" aria-label="繳款月份"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">全部月份</SelectItem>
+            {Array.from({ length: 12 }, (_, i) => <SelectItem key={i + 1} value={String(i + 1)}>{i + 1}月</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={group} onValueChange={setGroup}>
