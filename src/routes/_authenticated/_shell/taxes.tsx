@@ -51,7 +51,7 @@ function TaxesPage() {
 
   const years = useMemo(() => {
     const set = new Set<number>();
-    for (const inv of invoices) for (const l of splitTaxLines(inv.items as FeeItems, inv.period_label, inv.period_month)) set.add(taxDueMonth(inv, l).year);
+    for (const inv of invoices) for (const l of splitTaxLines(inv.items as FeeItems, inv.period_label, inv.period_month, inv.item_years)) set.add(taxDueMonth(inv, l).year);
     return [...set].filter(Boolean).sort((x, y) => y - x);
   }, [invoices]);
   const [year, setYear] = useState(() => {
@@ -65,7 +65,7 @@ function TaxesPage() {
   const lines = useMemo(
     () =>
       invoices.flatMap((inv) =>
-        splitTaxLines(inv.items as FeeItems, inv.period_label, inv.period_month)
+        splitTaxLines(inv.items as FeeItems, inv.period_label, inv.period_month, inv.item_years)
           .filter((l) => {
             const d = taxDueMonth(inv, l);
             return (year === "all" || d.year === Number(year)) && (month === "all" || d.month === Number(month));
@@ -238,7 +238,7 @@ function TaxesPage() {
                                     <TableCell className="font-medium">
                     <Link to="/invoices/$id" params={{ id: l.inv.id }} className="hover:text-primary hover:underline">{l.inv.customer?.customer_code && <span className="mr-2 font-mono text-sm text-muted-foreground">{l.inv.customer.customer_code}</span>}{l.inv.customer?.name ?? "—"}</Link>
                   </TableCell>
-                  <TableCell className="text-sm">{l.half && l.months ? `${l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}${l.months[0]}月` : <>{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</>}</TableCell>
+                  <TableCell className="text-sm">{l.months ? `${l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}${l.months.join("-")}月` : <>{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</>}</TableCell>
                   <TableCell className="text-sm">{l.group}</TableCell>
                   <TableCell className="text-sm">{feeLabel(l.item)}{l.half ? <span className="ml-1 text-xs text-muted-foreground">（第{l.half}個月）</span> : null}</TableCell>
                   <TableCell className="text-right"><Money value={l.amount} /></TableCell>

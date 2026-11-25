@@ -25,7 +25,35 @@ describe("tax lines", () => {
   });
 });
 
-import { splitTaxLines } from "./receivables";
+import { splitTaxLines, taxItemMonths, withTaxItemMonths } from "./receivables";
+describe("稅款月份獨立於記帳期別", () => {
+  it("9-10月期別的A-B可收11-12月且整筆不拆", () => {
+    const items = { "2代A-B": 844 };
+    const saved = withTaxItemMonths({ 文具: 116 }, { "2代A-B": "11-12" }, items);
+    expect(taxItemMonths(JSON.parse(JSON.stringify(saved)))).toEqual({ "2代A-B": "11-12" });
+    expect(saved["文具"]).toBe(116);
+    const lines = splitTaxLines(items, "9-10", 11, saved);
+    expect(lines.map((l) => [l.key, l.amount, l.months])).toEqual([["2代A-B", 844, [11, 12]]]);
+    expect(taxDueMonth({ period_year: 2026, period_month: 11 }, lines[0] ?? { group: "", months: null })).toEqual({ year: 2027, month: 1 });
+  });
+  it("同樣9-10月期別的A-B可只收11月且整筆不拆", () => {
+    const l = splitTaxLines({ "2代A-B": 844 }, "9-10", 11, { __tax_months: { "2代A-B": "11" } });
+    expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["2代A-B", 844, [11]]]);
+    expect(taxDueMonth({ period_year: 2026, period_month: 11 }, l[0] ?? { group: "", months: null })).toEqual({ year: 2026, month: 12 });
+  });
+  it("各項扣繳與二代可填不同月份，單月不拆雙月租金才拆", () => {
+    const l = splitTaxLines({ 租金扣繳: 500, 租金2代: 100 }, "9-10", 11, { __tax_months: { 租金扣繳: "11", 租金2代: "11-12" } });
+    expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["租金扣繳", 500, [11]], ["租金2代#1", 50, [11]], ["租金2代#2", 50, [12]]]);
+  });
+  it("明確稅款月份不被上方單月期別覆蓋", () => {
+    expect(splitTaxLines({ 租金扣繳: 500 }, "9", 9, { __tax_months: { 租金扣繳: "11-12" } }).map((x) => x.months)).toEqual([[11], [12]]);
+  });
+  it("拒絕無效月份，不儲存已移除項目的月份", () => {
+    expect(() => withTaxItemMonths({}, { 租金扣繳: "13" }, { 租金扣繳: 500 })).toThrow();
+    expect(() => withTaxItemMonths({}, { 租金扣繳: "11-9" }, { 租金扣繳: 500 })).toThrow();
+    expect(withTaxItemMonths({}, { 租金扣繳: "11" }, {})).toEqual({});
+  });
+});
 describe("租金扣繳、租金二代、公司二代拆兩個月勾選", () => {
   it("租金扣繳、租金2代拆兩列，其他扣繳與二代不拆", () => {
     const l = splitTaxLines({ 營業稅: 500, 薪資扣繳: 4000, 租金扣繳: 4001, 租金2代: 100, 個人2代: 100 });

@@ -18,7 +18,7 @@ import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/quer
 import { feeItemCount, feeLabel, visibleFeeItems } from "@/lib/fee-labels";
 import { canEditInvoice } from "@/lib/permissions";
 import { allocateCredits } from "@/lib/credits";
-import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems, defaultFeeYear, isAnnualFee } from "@/lib/receivables";
+import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems, defaultFeeYear, isAnnualFee, taxItemMonths, withTaxItemMonths } from "@/lib/receivables";
 
 const PICK_GROUPS = [
   { title: "各類扣繳", items: ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳"] },
@@ -45,6 +45,7 @@ type Form = {
   vat_prior: string;
   items: Record<string, string>;
   years: Record<string, string>;
+  tax_months: Record<string, string>;
   others: { label: string; amount: string }[];
 };
 
@@ -70,6 +71,7 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
     vat_prior: inv?.vat_prior_credit != null ? String(inv.vat_prior_credit) : "",
     items,
     years: Object.fromEntries(Object.entries((inv?.item_years as Record<string, unknown>) ?? {}).map(([k, v]) => [k, String(v)])),
+    tax_months: taxItemMonths(inv?.item_years),
     others: otherEntries(inv?.items as FeeItems),
   };
 }
@@ -83,7 +85,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [form, setForm] = useState<Form>(toForm(invoice, customerId));
-  const set = (k: keyof Omit<Form, "items" | "years" | "others">) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof Omit<Form, "items" | "years" | "tax_months" | "others">) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const setItem = (k: string, v: string) => setForm((f) => ({ ...f, items: { ...f.items, [k]: v } }));
 
   function withPrior(f: Form): Form {
@@ -166,7 +168,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
         vat_input: hasVat ? Number(form.vat_input) || 0 : null,
         vat_prior_credit: hasVat ? Number(form.vat_prior) || 0 : null,
         items: numericItems,
-        item_years: Object.fromEntries(Object.keys(numericItems).filter(isAnnualFee).map((k) => [k, Number(form.years[k]) || defaultFeeYear(k, Number.isFinite(year) ? year : null)]).filter(([, v]) => v)),
+        item_years: withTaxItemMonths(Object.fromEntries(Object.keys(numericItems).filter(isAnnualFee).map((k) => [k, Number(form.years[k]) || defaultFeeYear(k, Number.isFinite(year) ? year : null)]).filter(([, v]) => v)) as Record<string, number>, form.tax_months, numericItems),
         amount: total,
       };
       if (invoice) {
@@ -243,7 +245,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="i-period">期別</Label>
-                <Input id="i-period" placeholder="例：9 或 9-10" value={form.period_label} onChange={(e) => set("period_label")(e.target.value)} maxLength={20} />
+                <Input id="i-period" placeholder="例：9-10" value={form.period_label} onChange={(e) => set("period_label")(e.target.value)} maxLength={20} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="i-issue">開立日期</Label>
@@ -333,6 +335,10 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                         {shown.map((k) => (
                           <div key={k} className="space-y-1">
                             <Label htmlFor={`item-${k}`} className="text-xs text-muted-foreground">{feeLabel(k)}</Label>
+                            <div className="flex items-center gap-2">
+                              <Label htmlFor={`tax-months-${k}`} className="shrink-0 text-xs text-muted-foreground">月份</Label>
+                              <Input id={`tax-months-${k}`} aria-label={`${feeLabel(k)}月份`} placeholder="例：11或11-12" value={form.tax_months[k] ?? ""} onChange={(e) => setForm((f) => ({ ...f, tax_months: { ...f.tax_months, [k]: e.target.value } }))} maxLength={10} className="h-8 min-w-0" />
+                            </div>
                             <div className="flex items-center gap-1">
                               <Input id={`item-${k}`} type="number" step={1} autoFocus={!hasValue(k)} value={form.items[k] ?? ""} onChange={(e) => setItem(k, e.target.value)} className="tabular h-8" />
                               <button type="button" aria-label={`移除${feeLabel(k)}`} onClick={() => togglePick(k)} className="text-muted-foreground hover:text-destructive"><X className="size-4" /></button>

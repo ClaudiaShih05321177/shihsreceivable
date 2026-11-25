@@ -366,19 +366,45 @@ export function periodMonths(label: string | null | undefined): number[] | null 
 
 export type SplitTaxLine = TaxLine & { key: string; half: 0 | 1 | 2; months: number[] | null };
 
+/** Independent tax months share the existing JSON metadata envelope, never fee amounts. */
+export function taxItemMonths(metadata: unknown): Record<string, string> {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return {};
+  const saved = (metadata as Record<string, unknown>)["__tax_months"];
+  if (!saved || typeof saved !== "object" || Array.isArray(saved)) return {};
+  return Object.fromEntries(Object.entries(saved).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+}
+
+export function parseTaxMonths(value: string): number[] | null {
+  const months = periodMonths(value);
+  if (!months || months.some((m) => m < 1 || m > 12)) return null;
+  if (months.length === 2 && months[1] !== ((months[0] ?? 0) % 12) + 1) return null;
+  return months;
+}
+
+export function withTaxItemMonths(years: Record<string, number>, months: Record<string, string>, items: FeeItems): Record<string, number | Record<string, string>> {
+  const saved = Object.fromEntries(Object.entries(months).filter(([key, value]) => Number(items[key]) && value.trim()).map(([key, value]) => {
+    const parsed = parseTaxMonths(value);
+    if (!parsed) throw new Error("稅款月份請填1至12月的單月或連續雙月，例如11或11-12");
+    return [key, parsed.join("-")];
+  }));
+  return Object.keys(saved).length ? { ...years, __tax_months: saved } : years;
+}
+
 /** 拆分後的稅額列：扣繳／二代按月繳納、一次請兩個月，歸屬月份為開立月與次月（9月收＝9、10月；11月收＝11、12月）；
  * 期別只打一個月（一次只收一個月的客戶）時不拆，整筆歸該月。key 為勾選紀錄鍵（拆分列為「項目#1」「項目#2」），奇數金額多的 1 元放第1個月。 */
-export function splitTaxLines(items: FeeItems | null | undefined, periodLabel?: string | null, periodMonth?: number | null): SplitTaxLine[] {
+export function splitTaxLines(items: FeeItems | null | undefined, periodLabel?: string | null, periodMonth?: number | null, metadata?: unknown): SplitTaxLine[] {
   const labelMonths = periodMonths(periodLabel);
   const billMonths = periodMonth ? [periodMonth, (periodMonth % 12) + 1] : null;
+  const overrides = taxItemMonths(metadata);
   return taxLines(items).flatMap((l): SplitTaxLine[] => {
-    if (!MONTHLY_TAX_ITEMS.includes(l.item)) return [{ ...l, key: l.item, half: 0, months: labelMonths }];
-    if (labelMonths?.length === 1) return [{ ...l, key: l.item, half: 0, months: labelMonths }];
-    const months = billMonths ?? labelMonths;
+    const explicit = parseTaxMonths(overrides[l.item] ?? "");
+    if (!MONTHLY_TAX_ITEMS.includes(l.item)) return [{ ...l, key: l.item, half: 0, months: explicit ?? labelMonths }];
+    const months = explicit ?? (labelMonths?.length === 1 ? labelMonths : billMonths ?? labelMonths);
+    if (months?.length === 1) return [{ ...l, key: l.item, half: 0, months }];
     const first = Math.ceil(l.amount / 2);
     return [
-      { ...l, amount: first, key: `${l.item}#1`, half: 1, months: months ? [months[0]!] : null },
-      { ...l, amount: l.amount - first, key: `${l.item}#2`, half: 2, months: months ? [months[1]!] : null },
+      { ...l, amount: first, key: `${l.item}#1`, half: 1, months: months?.[0] ? [months[0]] : null },
+      { ...l, amount: l.amount - first, key: `${l.item}#2`, half: 2, months: months?.[1] ? [months[1]] : null },
     ];
   });
 }
