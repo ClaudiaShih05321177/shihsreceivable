@@ -37,10 +37,6 @@ export const Route = createFileRoute("/_authenticated/_shell/taxes")({
 });
 
 const codeCollator = new Intl.Collator("zh-Hant", { numeric: true, sensitivity: "base" });
-/** 1月收的11-12月屬前一年度。 */
-const lineYear = (inv: { period_year: number | null; period_month: number | null }, mo: number) =>
-  (inv.period_year ?? 0) - (inv.period_month === 1 && mo >= 11 ? 1 : 0);
-
 function TaxesPage() {
   const { data: invoices } = useSuspenseQuery(invoicesQuery);
   const { data: filings } = useSuspenseQuery(taxFilingsQuery);
@@ -55,10 +51,13 @@ function TaxesPage() {
 
   const years = useMemo(() => {
     const set = new Set<number>();
-    for (const inv of invoices) for (const l of splitTaxLines(inv.items as FeeItems, inv.period_label)) set.add(taxDueMonth(inv, l).year);
+    for (const inv of invoices) for (const l of splitTaxLines(inv.items as FeeItems, inv.period_label, inv.period_month)) set.add(taxDueMonth(inv, l).year);
     return [...set].filter(Boolean).sort((x, y) => y - x);
   }, [invoices]);
-  const [year, setYear] = useState(String(years[0] ?? new Date().getFullYear()));
+  const [year, setYear] = useState(() => {
+    const cur = new Date().getFullYear();
+    return String(years.includes(cur) ? cur : (years[0] ?? cur));
+  });
   const [month, setMonth] = useState(String(new Date().getMonth() + 1));
 
   const filingMap = useMemo(() => new Map(filings.map((f) => [`${f.invoice_id}|${f.item}`, f])), [filings]);
@@ -66,7 +65,7 @@ function TaxesPage() {
   const lines = useMemo(
     () =>
       invoices.flatMap((inv) =>
-        splitTaxLines(inv.items as FeeItems, inv.period_label)
+        splitTaxLines(inv.items as FeeItems, inv.period_label, inv.period_month)
           .filter((l) => {
             const d = taxDueMonth(inv, l);
             return (year === "all" || d.year === Number(year)) && (month === "all" || d.month === Number(month));
@@ -239,7 +238,7 @@ function TaxesPage() {
                                     <TableCell className="font-medium">
                     <Link to="/invoices/$id" params={{ id: l.inv.id }} className="hover:text-primary hover:underline">{l.inv.customer?.customer_code && <span className="mr-2 font-mono text-sm text-muted-foreground">{l.inv.customer.customer_code}</span>}{l.inv.customer?.name ?? "—"}</Link>
                   </TableCell>
-                  <TableCell className="text-sm">{l.half && l.months ? `${l.inv.period_year ? `${rocYear(lineYear(l.inv, l.months[0]!))}年 ` : ""}${l.months[0]}月` : <>{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</>}</TableCell>
+                  <TableCell className="text-sm">{l.half && l.months ? `${l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}${l.months[0]}月` : <>{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</>}</TableCell>
                   <TableCell className="text-sm">{l.group}</TableCell>
                   <TableCell className="text-sm">{feeLabel(l.item)}{l.half ? <span className="ml-1 text-xs text-muted-foreground">（第{l.half}個月）</span> : null}</TableCell>
                   <TableCell className="text-right"><Money value={l.amount} /></TableCell>

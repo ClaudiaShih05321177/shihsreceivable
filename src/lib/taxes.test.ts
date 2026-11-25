@@ -39,6 +39,18 @@ describe("租金扣繳、租金二代、公司二代拆兩個月勾選", () => {
     const l = splitTaxLines({ "2代A-B": 844, 租金扣繳: 500 }, "11");
     expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["租金扣繳", 500, [11]], ["2代A-B", 844, [11]]]);
   });
+  it("9月開立的扣繳與二代歸9、10月，與記帳費期別無關", () => {
+    const l = splitTaxLines({ 租金扣繳: 4001, "2代A-B": 844 }, "7-8", 9);
+    expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["租金扣繳#1", 2001, [9]], ["租金扣繳#2", 2000, [10]], ["2代A-B#1", 422, [9]], ["2代A-B#2", 422, [10]]]);
+  });
+  it("11月開立的扣繳與二代歸11、12月", () => {
+    const l = splitTaxLines({ 租金扣繳: 500 }, "9-10", 11);
+    expect(l.map((x) => [x.key, x.months])).toEqual([["租金扣繳#1", [11]], ["租金扣繳#2", [12]]]);
+  });
+  it("有開立月時即使期別填單月仍按開立月拆兩個月", () => {
+    const l = splitTaxLines({ 租金扣繳: 500 }, "9", 9);
+    expect(l.map((x) => [x.key, x.months])).toEqual([["租金扣繳#1", [9]], ["租金扣繳#2", [10]]]);
+  });
 });
 
 import { taxDueMonth } from "./receivables";
@@ -53,5 +65,15 @@ describe("taxDueMonth 依申報繳款月", () => {
   it("營所稅5月、暫繳9月", () => {
     expect(taxDueMonth(jan, { group: "營所稅", months: null }).month).toBe(5);
     expect(taxDueMonth(jan, { group: "暫繳稅額", months: null }).month).toBe(9);
+  });
+  it("9月開立的扣繳：9月歸10月繳、10月歸11月繳", () => {
+    const sep = { period_year: 2026, period_month: 9 };
+    expect(taxDueMonth(sep, { group: "扣繳稅額", months: [9] })).toEqual({ year: 2026, month: 10 });
+    expect(taxDueMonth(sep, { group: "扣繳稅額", months: [10] })).toEqual({ year: 2026, month: 11 });
+  });
+  it("11月開立的二代：11月歸12月繳、12月歸次年1月繳", () => {
+    const nov = { period_year: 2026, period_month: 11 };
+    expect(taxDueMonth(nov, { group: "二代健保", months: [11] })).toEqual({ year: 2026, month: 12 });
+    expect(taxDueMonth(nov, { group: "二代健保", months: [12] })).toEqual({ year: 2027, month: 1 });
   });
 });
