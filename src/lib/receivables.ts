@@ -366,15 +366,15 @@ export function periodMonths(label: string | null | undefined): number[] | null 
 
 export type SplitTaxLine = TaxLine & { key: string; half: 0 | 1 | 2; months: number[] | null };
 
-/** 拆分後的稅額列：扣繳／二代按月繳納、一次請兩個月，歸屬月份為開立月與次月（9月收＝9、10月；11月收＝11、12月），與記帳費期別無關；
- * 未提供開立月時沿用舊制以期別文字判斷（單月期別不拆）。key 為勾選紀錄鍵（拆分列為「項目#1」「項目#2」），奇數金額多的 1 元放第1個月。 */
+/** 拆分後的稅額列：扣繳／二代按月繳納、一次請兩個月，歸屬月份為開立月與次月（9月收＝9、10月；11月收＝11、12月）；
+ * 期別只打一個月（一次只收一個月的客戶）時不拆，整筆歸該月。key 為勾選紀錄鍵（拆分列為「項目#1」「項目#2」），奇數金額多的 1 元放第1個月。 */
 export function splitTaxLines(items: FeeItems | null | undefined, periodLabel?: string | null, periodMonth?: number | null): SplitTaxLine[] {
   const labelMonths = periodMonths(periodLabel);
   const billMonths = periodMonth ? [periodMonth, (periodMonth % 12) + 1] : null;
   return taxLines(items).flatMap((l): SplitTaxLine[] => {
     if (!MONTHLY_TAX_ITEMS.includes(l.item)) return [{ ...l, key: l.item, half: 0, months: labelMonths }];
+    if (labelMonths?.length === 1) return [{ ...l, key: l.item, half: 0, months: labelMonths }];
     const months = billMonths ?? labelMonths;
-    if (!billMonths && months?.length === 1) return [{ ...l, key: l.item, half: 0, months }];
     const first = Math.ceil(l.amount / 2);
     return [
       { ...l, amount: first, key: `${l.item}#1`, half: 1, months: months ? [months[0]!] : null },

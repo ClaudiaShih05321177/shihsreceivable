@@ -243,7 +243,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="i-period">期別</Label>
-                <Input id="i-period" placeholder="例：1-2" value={form.period_label} onChange={(e) => set("period_label")(e.target.value)} maxLength={20} />
+                <Input id="i-period" placeholder="例：9 或 9-10" value={form.period_label} onChange={(e) => set("period_label")(e.target.value)} maxLength={20} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="i-issue">開立日期</Label>

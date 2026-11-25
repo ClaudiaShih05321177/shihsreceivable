@@ -47,9 +47,9 @@ describe("租金扣繳、租金二代、公司二代拆兩個月勾選", () => {
     const l = splitTaxLines({ 租金扣繳: 500 }, "9-10", 11);
     expect(l.map((x) => [x.key, x.months])).toEqual([["租金扣繳#1", [11]], ["租金扣繳#2", [12]]]);
   });
-  it("有開立月時即使期別填單月仍按開立月拆兩個月", () => {
-    const l = splitTaxLines({ 租金扣繳: 500 }, "9", 9);
-    expect(l.map((x) => [x.key, x.months])).toEqual([["租金扣繳#1", [9]], ["租金扣繳#2", [10]]]);
+  it("期別只打一個月（一次收一個月）時不拆，整筆歸該月", () => {
+    const l = splitTaxLines({ 租金扣繳: 500, 租金2代: 100 }, "9", 9);
+    expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["租金扣繳", 500, [9]], ["租金2代", 100, [9]]]);
   });
 });
 
