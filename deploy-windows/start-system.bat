@@ -20,6 +20,7 @@ echo [2/3] Starting database...
 call npx supabase start
 
 echo [3/3] Starting web system on port 3001...
+docker rm -f ar-web >nul 2>&1
 taskkill /F /IM node.exe >nul 2>&1
 start "AR-SYSTEM WEB" /min powershell -NoExit -Command "$env:SUPABASE_URL='%LOCAL_URL%'; $env:SUPABASE_PUBLISHABLE_KEY='%LOCAL_KEY%'; $env:VITE_SUPABASE_URL='%LOCAL_URL%'; $env:VITE_SUPABASE_PUBLISHABLE_KEY='%LOCAL_KEY%'; cd '%APP_DIR%'; npm run dev -- --port 3001 --host --strictPort"
 echo Done. http://192.168.0.2:3001

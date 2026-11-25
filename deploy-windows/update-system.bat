@@ -6,6 +6,7 @@ set LOCAL_KEY=sb_publishable_b9BmI0YGUIqtK4CFHs5raA_6TSQv8VT
 cd /d %APP_DIR%
 
 echo [1/5] Stopping old web service...
+docker rm -f ar-web >nul 2>&1
 taskkill /F /IM node.exe >nul 2>&1
 
 echo [2/5] Pulling latest code...
