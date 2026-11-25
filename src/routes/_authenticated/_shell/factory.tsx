@@ -79,7 +79,8 @@ function FactoryPage() {
   return (
     <>
       <PageHeader eyebrow="勤豐工商顧問有限公司" title="工廠登記進度表" description="環保與現場會勘為選辦；免跑環保或客戶自辦環保的案件從送件工商科開始。" actions={canProgress ? <FactoryFormDialog trigger={<Button><Plus /> 新增案件</Button>} /> : undefined} />
-      <div className="mb-3 flex flex-wrap gap-2">
+      <div className="sticky-bar">
+<div className="mb-3 flex flex-wrap gap-2">
         {btn("open", "進行中", searched.filter((r) => !isFactoryClosed(r.stage)).length)}
         {FACTORY_STAGES.map((s) => btn(s, s, searched.filter((r) => r.stage === s).length))}
         {btn(FACTORY_LOST_STAGE, FACTORY_LOST_STAGE, searched.filter((r) => r.stage === FACTORY_LOST_STAGE).length)}
@@ -94,6 +95,7 @@ function FactoryPage() {
           className="bg-card pl-9"
           aria-label="搜尋工廠案件"
         />
+      </div>
       </div>
       <div className="grid gap-3">
         {shown.length === 0 && (

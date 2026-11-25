@@ -78,7 +78,8 @@ function InvoicesPage() {
         description={`共 ${rows.length} 筆，應收餘額 ${formatTWD(total)}`}
         actions={<><BatchInvoiceDialog /><InvoiceFormDialog trigger={<Button><Plus /> 新增應收帳款</Button>} /></>}
       />
-      <div className="mb-4 flex flex-wrap gap-2">
+      <div className="sticky-bar">
+<div className="mb-4 flex flex-wrap gap-2">
         {FILTERS.map((f) => (
           <button
             key={f}
@@ -110,7 +111,7 @@ function InvoicesPage() {
       {sel.size > 0 && (() => {
         const picked = invoices.filter((i) => sel.has(i.id));
         return (
-          <div className="sticky top-2 z-10 mb-3 flex flex-wrap items-center gap-2 rounded-md border border-primary bg-card px-4 py-2 shadow">
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border border-primary bg-card px-4 py-2 shadow">
             <span className="text-sm">已選 {picked.length} 筆・未收合計 <span className="font-semibold">{formatTWD(picked.reduce((s, i) => s + outstanding(i), 0))}</span></span>
             <div className="ml-auto flex gap-2">
               <Button asChild size="sm" variant="outline"><Link to="/statement-combined" search={{ ids: picked.map((i) => i.id).join(",") }} target="_blank"><Printer /> 合併請款單</Link></Button>
@@ -120,6 +121,7 @@ function InvoicesPage() {
           </div>
         );
       })()}
+      </div>
       <InvoiceTable invoices={rows} selected={sel} onToggle={toggle} />
     </>
   );

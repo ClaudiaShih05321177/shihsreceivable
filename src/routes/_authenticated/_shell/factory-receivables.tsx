@@ -71,13 +71,15 @@ function FactoryReceivablesPage() {
         </dl>
         <p className="mt-2 text-xs text-muted-foreground">以核准結案日期所在的年度認列；已收款含簽約金與尾款。</p>
       </section>
-      <div className="relative mb-3">
+      <div className="sticky-bar">
+<div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="搜尋廠名、公司名稱、統編、申辦項目、PO…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
       </div>
       <div className="mb-4 flex gap-2">
         <Button size="sm" variant={showOpen ? "outline" : "default"} onClick={() => setShowOpen(false)}>已結案 {closedCount}</Button>
         <Button size="sm" variant={showOpen ? "default" : "outline"} onClick={() => setShowOpen(true)}>進行中 {rows.filter((r) => !isFactoryClosed(r.stage)).length}</Button>
+      </div>
       </div>
       <div className="grid gap-3">
         {base.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">{showOpen ? "沒有進行中的案件" : "尚無核准結案的案件"}</div>}

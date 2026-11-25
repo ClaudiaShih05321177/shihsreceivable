@@ -256,3 +256,15 @@
     margin: 0;
   }
 }
+
+/* 凍結窗格：頁籤與搜尋列捲動時固定在頂端 */
+.sticky-bar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  margin: 0 -0.75rem 0.75rem;
+  padding: 0.75rem 0.75rem 0.25rem;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+}
+@media print { .sticky-bar { position: static; border: 0; } }

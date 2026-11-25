@@ -170,7 +170,8 @@ function FilingsPage() {
           <p className="mt-2 text-xs text-muted-foreground">以帳款收清日所在的年度認列；只算工商代辦費，不含規費與印章。</p>
         </section>
       )}
-      <div className="relative mb-3">
+      <div className="sticky-bar">
+<div className="relative mb-3">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="搜尋統編、客戶代碼、公司名稱、案件類型…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
       </div>
@@ -179,6 +180,7 @@ function FilingsPage() {
         {me.isAdmin && filterBtn("pending", "待立帳", pendingCount)}
         {FILING_STAGES.map((s) => filterBtn(s, s, counts[s] ?? 0))}
         {filterBtn("all", "全部", filings.length)}
+      </div>
       </div>
       {/* 窄螢幕：卡片列表，避免左右捲動 */}
       <div className="flex flex-col gap-2 min-[1800px]:hidden">

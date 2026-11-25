@@ -62,7 +62,8 @@ function CustomersPage() {
         description={`共 ${customers.length} 位客戶 · 依客戶代號排序`}
         actions={<CustomerFormDialog trigger={<Button><Plus /> 新增客戶</Button>} />}
       />
-      <div className="mb-5 flex flex-wrap gap-2">
+      <div className="sticky-bar">
+<div className="mb-5 flex flex-wrap gap-2">
       <Select value={staff} onValueChange={setStaff}>
         <SelectTrigger className="w-40 bg-card" aria-label="會計專員"><SelectValue /></SelectTrigger>
         <SelectContent>
@@ -73,6 +74,7 @@ function CustomersPage() {
       <div className="relative min-w-48 flex-1">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="搜尋客戶名稱、客戶ID、統一編號、會計專員…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
+      </div>
       </div>
       </div>
       {rows.length === 0 ? (
