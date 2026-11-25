@@ -9,7 +9,7 @@ echo [1/5] Stopping old web service...
 taskkill /F /IM node.exe >nul 2>&1
 
 echo [2/5] Pulling latest code...
-git checkout -- .env >nul 2>&1
+git checkout -- .env deploy-windows >nul 2>&1
 git pull
 if errorlevel 1 (
   echo.
