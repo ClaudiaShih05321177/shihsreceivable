@@ -4,6 +4,7 @@ import { HandCoins, Plus, Printer, Search, X } from "lucide-react";
 import { CombinedPaymentDialog } from "@/components/ar/combined-payment-dialog";
 import { useMemo, useState } from "react";
 
+import { BatchDeleteDialog } from "@/components/ar/batch-delete-dialog";
 import { BatchInvoiceDialog } from "@/components/ar/batch-invoice-dialog";
 import { InvoiceFormDialog } from "@/components/ar/invoice-form-dialog";
 import { InvoiceTable } from "@/components/ar/invoice-table";
@@ -76,7 +77,7 @@ function InvoicesPage() {
         eyebrow="總帳"
         title="應收帳款"
         description={`共 ${rows.length} 筆，應收餘額 ${formatTWD(total)}`}
-        actions={<><BatchInvoiceDialog /><InvoiceFormDialog trigger={<Button><Plus /> 新增應收帳款</Button>} /></>}
+        actions={<>{me.isAdmin && <BatchDeleteDialog invoices={invoices} staffById={staffById} />}<BatchInvoiceDialog /><InvoiceFormDialog trigger={<Button><Plus /> 新增應收帳款</Button>} /></>}
       />
       <div className="sticky-bar">
 <div className="mb-4 flex flex-wrap gap-2">

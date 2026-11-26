@@ -44,7 +44,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   const [newCode, setNewCode] = useState("");
   const [extras, setExtras] = useState<{ label: string; amount: string }[]>([]);
   useEffect(() => {
-    if (open && !record) setNewCode(nextFactoryCode(customers.map((c) => c.customer_code)));
+    if (open) setNewCode(nextFactoryCode(customers.map((c) => c.customer_code)));
     if (open) { setForm(toForm(record)); setExtras(extraFees(record?.extra_fees).map((x) => ({ label: x.label, amount: String(x.amount) }))); }
   }, [open, record]); // eslint-disable-line react-hooks/exhaustive-deps
   const extraRows = (): ExtraFee[] => extraFees(extras);
@@ -79,7 +79,7 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
   const save = useMutation({
     mutationFn: async () => {
       if (!form.factory_name.trim()) throw new Error("請輸入廠名");
-      if (!record && !matchFactoryByName(customers, form.factory_name) && newCode.trim()) {
+      if (!matchFactoryByName(customers, form.factory_name) && newCode.trim()) {
         const code = newCode.trim().toUpperCase();
         if (customers.some((c) => (c.customer_code ?? "").toUpperCase() === code)) throw new Error(`客戶代碼 ${code} 已被使用，請改號`);
         const { error } = await supabase.from("factory_customers").insert({ customer_code: code, name: form.factory_name.trim(), tax_id: form.tax_id.trim() || null, address: form.factory_address.trim() || null });
@@ -160,9 +160,9 @@ export function FactoryFormDialog({ trigger, record, focus = "progress" }: { tri
               if (!c) return;
               setForm((f) => ({ ...f, factory_name: c.name, factory_address: c.address ?? f.factory_address, tax_id: c.tax_id ?? f.tax_id }));
             }} /></div>
-            <div className="grid gap-2"><Label htmlFor="fr-customer-code">客戶代碼</Label>{matched || record
+            <div className="grid gap-2"><Label htmlFor="fr-customer-code">客戶代碼</Label>{matched
               ? <Input id="fr-customer-code" readOnly value={matched?.customer_code ?? ""} />
-              : <><Input id="fr-customer-code" value={newCode} onChange={(e) => setNewCode(e.target.value)} /><p className="text-xs text-muted-foreground">新客戶：已自動帶入下一號，儲存時一併加入勤豐客戶資料</p></>}</div>
+              : <><Input id="fr-customer-code" value={newCode} onChange={(e) => setNewCode(e.target.value)} /><p className="text-xs text-muted-foreground">尚無代碼：已帶入下一號，可自行修改，儲存時加入勤豐客戶資料</p></>}</div>
             <div className="grid gap-2 sm:col-span-2">
               <Label htmlFor="fr-tax_id">統一編號</Label>
               <div className="flex gap-2">

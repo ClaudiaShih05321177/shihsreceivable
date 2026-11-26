@@ -34,11 +34,14 @@ function FactoryReceivablesPage() {
   const { data: rows } = useSuspenseQuery(factoryRegistrationsQuery);
   const { data: me } = useSuspenseQuery(meQuery);
   const [q, setQ] = useState("");
-  const [showOpen, setShowOpen] = useState(false);
+  const [tab, setTab] = useState<"closed" | "open" | "paid">("closed");
   const [statYear, setStatYear] = useState(new Date().getFullYear());
   const stats = factoryYearStats(rows, statYear);
-  const closedCount = rows.filter((r) => r.stage === "核准結案").length;
-  const base = rows.filter((r) => (showOpen ? !isFactoryClosed(r.stage) : r.stage === "核准結案"));
+  const inTab = (r: (typeof rows)[number], t: typeof tab) =>
+    t === "open" ? !isFactoryClosed(r.stage) : r.stage === "核准結案" && (t === "paid" ? projectOutstanding(r) <= 0 : projectOutstanding(r) > 0);
+  const countOf = (t: typeof tab) => rows.filter((r) => inTab(r, t)).length;
+  const showOpen = tab === "open";
+  const base = rows.filter((r) => inTab(r, tab));
   const kw = q.trim().toLowerCase();
   const filtered = kw
     ? base.filter((r) =>
@@ -77,12 +80,13 @@ function FactoryReceivablesPage() {
         <Input placeholder="搜尋廠名、公司名稱、統編、申辦項目、PO…" value={q} onChange={(e) => setQ(e.target.value)} className="bg-card pl-9" />
       </div>
       <div className="mb-4 flex gap-2">
-        <Button size="sm" variant={showOpen ? "outline" : "default"} onClick={() => setShowOpen(false)}>已結案 {closedCount}</Button>
-        <Button size="sm" variant={showOpen ? "default" : "outline"} onClick={() => setShowOpen(true)}>進行中 {rows.filter((r) => !isFactoryClosed(r.stage)).length}</Button>
+        <Button size="sm" variant={tab === "closed" ? "default" : "outline"} onClick={() => setTab("closed")}>已結案待收 {countOf("closed")}</Button>
+        <Button size="sm" variant={tab === "open" ? "default" : "outline"} onClick={() => setTab("open")}>進行中 {countOf("open")}</Button>
+        <Button size="sm" variant={tab === "paid" ? "default" : "outline"} onClick={() => setTab("paid")}>已收清 {countOf("paid")}</Button>
       </div>
       </div>
       <div className="grid gap-3">
-        {base.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">{showOpen ? "沒有進行中的案件" : "尚無核准結案的案件"}</div>}
+        {base.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">{showOpen ? "沒有進行中的案件" : tab === "paid" ? "尚無已收清的案件" : "沒有待收款的結案案件"}</div>}
         {false && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">尚無案件，請先到工廠登記進度新增</div>}
         {base.length > 0 && filtered.length === 0 && <div className="ledger-card py-10 text-center text-sm text-muted-foreground">找不到符合「{q}」的案件</div>}
         {filtered.map((r) => {
