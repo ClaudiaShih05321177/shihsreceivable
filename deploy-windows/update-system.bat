@@ -14,7 +14,8 @@ git checkout -- .env deploy-windows >nul 2>&1
 git pull
 if errorlevel 1 (
   echo.
-  echo *** git pull failed. Please send this screen to support. ***
+  echo *** git pull failed. Please send this screen for troubleshooting. ***
+  if "%~1"=="--remote" exit /b 1
   pause
   exit /b 1
 )
@@ -28,6 +29,13 @@ echo [3/5] Restoring local database settings...
 
 echo [4/5] Installing packages...
 call npm install
+if errorlevel 1 (
+  echo.
+  echo *** npm install failed. Please send this screen for troubleshooting. ***
+  if "%~1"=="--remote" exit /b 1
+  pause
+  exit /b 1
+)
 if exist node_modules\.vite rmdir /s /q node_modules\.vite
 
 echo [4b] Updating local database columns...
@@ -43,4 +51,5 @@ start "AR-SYSTEM WEB" /min powershell -NoExit -Command "$env:SUPABASE_URL='%LOCA
 
 echo.
 echo Done. Open http://192.168.0.2:3001 and press Ctrl+F5
+if "%~1"=="--remote" exit /b 0
 pause
