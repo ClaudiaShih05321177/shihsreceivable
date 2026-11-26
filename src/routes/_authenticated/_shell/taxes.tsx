@@ -86,7 +86,7 @@ function TaxesPage() {
   const matched = lines.filter(
     (l) =>
       (group === "all" || l.group === group) &&
-      (!needle || `${l.inv.customer?.customer_code ?? ""} ${l.inv.customer?.name ?? ""} ${feeLabel(l.item)} ${l.group}`.toLowerCase().includes(needle)),
+      (!needle || `${l.inv.customer?.customer_code ?? ""} ${l.inv.customer?.name ?? ""} ${feeLabel(l.item, l.inv.item_years)} ${l.group}`.toLowerCase().includes(needle)),
   );
   // 選了繳費日期時只看該日已繳，不受繳費狀態影響。
   const statusOk = (l: (typeof lines)[number]) =>
@@ -131,7 +131,7 @@ function TaxesPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；租金扣繳與租金二代分月各自勾選；依申報繳款月份查看（營業稅於次月、營所稅5月、暫繳9月、扣繳及二代於次月）。" />
+      <PageHeader title="稅額明細" description="每一期的營業稅、營所稅、暫繳、扣繳、二代健保與股利二代，勾選已繳費並填寫繳費日期；各類扣繳與二代依各自月份分月勾選（公司A-B整筆不拆）；依申報繳款月份查看（營業稅於次月、營所稅5月、暫繳9月、扣繳及二代於次月）。" />
 
       <div className="flex flex-wrap gap-3">
         <div className="relative w-64">
@@ -153,14 +153,14 @@ function TaxesPage() {
           </SelectContent>
         </Select>
         <Select value={group} onValueChange={setGroup}>
-          <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-40" aria-label="稅目"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">全部稅目</SelectItem>
             {TAX_GROUPS.map((g) => <SelectItem key={g.key} value={g.label}>{g.label}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="w-32" aria-label="繳費狀態"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">全部</SelectItem>
             <SelectItem value="unpaid">未繳費</SelectItem>
@@ -240,7 +240,7 @@ function TaxesPage() {
                   </TableCell>
                   <TableCell className="text-sm">{l.months ? `${l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}${l.months.join("-")}月` : <>{l.inv.period_year ? `${rocYear(l.inv.period_year)}年 ` : ""}{periodMonthLabel(l.inv.period_month)}{l.inv.period_label ? ` · ${l.inv.period_label}` : ""}</>}</TableCell>
                   <TableCell className="text-sm">{l.group}</TableCell>
-                  <TableCell className="text-sm">{feeLabel(l.item)}{l.half ? <span className="ml-1 text-xs text-muted-foreground">（第{l.half}個月）</span> : null}</TableCell>
+                  <TableCell className="text-sm">{feeLabel(l.item, l.inv.item_years)}{l.half ? <span className="ml-1 text-xs text-muted-foreground">（第{l.half}個月）</span> : null}</TableCell>
                   <TableCell className="text-right"><Money value={l.amount} /></TableCell>
                   <TableCell>
                     <Checkbox

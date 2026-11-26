@@ -18,7 +18,7 @@ import { customersQuery, invoicesQuery, meQuery, type Invoice } from "@/lib/quer
 import { feeItemCount, feeLabel, visibleFeeItems } from "@/lib/fee-labels";
 import { canEditInvoice } from "@/lib/permissions";
 import { allocateCredits } from "@/lib/credits";
-import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems, defaultFeeYear, isAnnualFee, taxItemMonths, withTaxItemMonths } from "@/lib/receivables";
+import { applyScheduledFees, bookkeepingCollectionMonth, formatTWD, isOtherKey, itemsTotal, otherEntries, priorVatCredit, rocYear, scheduledCustomerFees, suggestPeriod, todayISO, vatDue, withOtherItems, type FeeItems, defaultFeeYear, isAnnualFee, taxBaseItem, taxItemMonths, taxItemNotes, withTaxItemMonths } from "@/lib/receivables";
 
 const PICK_GROUPS = [
   { title: "各類扣繳", items: ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳"] },
@@ -46,6 +46,7 @@ type Form = {
   items: Record<string, string>;
   years: Record<string, string>;
   tax_months: Record<string, string>;
+  tax_notes: Record<string, string>;
   others: { label: string; amount: string }[];
 };
 
@@ -70,8 +71,9 @@ function toForm(inv?: Invoice | null, customerId?: string): Form {
     vat_input: inv?.vat_input != null ? String(inv.vat_input) : "",
     vat_prior: inv?.vat_prior_credit != null ? String(inv.vat_prior_credit) : "",
     items,
-    years: Object.fromEntries(Object.entries((inv?.item_years as Record<string, unknown>) ?? {}).map(([k, v]) => [k, String(v)])),
+    years: Object.fromEntries(Object.entries((inv?.item_years as Record<string, unknown>) ?? {}).filter(([k]) => isAnnualFee(k)).map(([k, v]) => [k, String(v)])),
     tax_months: taxItemMonths(inv?.item_years),
+    tax_notes: taxItemNotes(inv?.item_years),
     others: otherEntries(inv?.items as FeeItems),
   };
 }
@@ -85,7 +87,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   const [open, setOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [form, setForm] = useState<Form>(toForm(invoice, customerId));
-  const set = (k: keyof Omit<Form, "items" | "years" | "tax_months" | "others">) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof Omit<Form, "items" | "years" | "tax_months" | "tax_notes" | "others">) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
   const setItem = (k: string, v: string) => setForm((f) => ({ ...f, items: { ...f.items, [k]: v } }));
 
   function withPrior(f: Form): Form {
@@ -119,13 +121,25 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
   const removeOther = (i: number) => setForm((f) => ({ ...f, others: f.others.filter((_, j) => j !== i) }));
   const hasValue = (k: string) => Number(form.items[k]) > 0;
   const visible = visibleFeeItems({ showAll, common: COMMON_ITEMS, hasValue }).filter((k) => !PICK_KEYS.includes(k));
-  const [picked, setPicked] = useState<string[]>(() => PICK_KEYS.filter((k) => Number(toForm(invoice, customerId).items[k]) > 0));
-  const isPicked = (k: string) => picked.includes(k) || hasValue(k);
-  const togglePick = (k: string) => {
-    if (isPicked(k)) {
-      setPicked((p) => p.filter((x) => x !== k));
-      setItem(k, "");
-    } else setPicked((p) => [...p, k]);
+  const [picked, setPicked] = useState<string[]>(() => Object.keys(toForm(invoice, customerId).items).filter((k) => PICK_KEYS.includes(taxBaseItem(k))));
+  const addTaxItem = (base: string) => {
+    const active = [...new Set([...picked, ...Object.keys(form.items).filter((k) => taxBaseItem(k) === base && hasValue(k))])];
+    let key = base;
+    if (active.includes(base)) {
+      let n = 2;
+      while (active.includes(`${base}::${n}`)) n++;
+      key = `${base}::${n}`;
+    }
+    setPicked((rows) => rows.includes(key) ? rows : [...rows, key]);
+    if (!(key in form.items)) setItem(key, "");
+  };
+  const removeTaxItem = (key: string) => {
+    setPicked((rows) => rows.filter((k) => k !== key));
+    setForm((f) => {
+      const items = { ...f.items };
+      delete items[key];
+      return { ...f, items };
+    });
   };
 
   function pickCustomer(id: string) {
@@ -168,7 +182,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
         vat_input: hasVat ? Number(form.vat_input) || 0 : null,
         vat_prior_credit: hasVat ? Number(form.vat_prior) || 0 : null,
         items: numericItems,
-        item_years: withTaxItemMonths(Object.fromEntries(Object.keys(numericItems).filter(isAnnualFee).map((k) => [k, Number(form.years[k]) || defaultFeeYear(k, Number.isFinite(year) ? year : null)]).filter(([, v]) => v)) as Record<string, number>, form.tax_months, numericItems),
+        item_years: withTaxItemMonths(Object.fromEntries(Object.keys(numericItems).filter(isAnnualFee).map((k) => [k, Number(form.years[k]) || defaultFeeYear(k, Number.isFinite(year) ? year : null)]).filter(([, v]) => v)) as Record<string, number>, form.tax_months, numericItems, form.tax_notes),
         amount: total,
       };
       if (invoice) {
@@ -200,6 +214,7 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
           const c = customers.find((x) => x.id === fresh.customer_id);
           if (c && !invoice) fresh.items = applyScheduledFees(fresh.items, {}, scheduledCustomerFees(c, Number(fresh.month), "individual"));
           setForm(withPrior(fresh));
+          setPicked(Object.keys(fresh.items).filter((k) => PICK_KEYS.includes(taxBaseItem(k))));
           setShowAll(false);
         }
       }}
@@ -310,8 +325,11 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                 ))}
               </div>
               {PICK_GROUPS.map((g) => {
-                const sub = g.items.reduce((t, k) => t + (Math.round(Number(form.items[k]) || 0)), 0);
-                const shown = g.items.filter(isPicked);
+                const sub = Object.entries(form.items).reduce((t, [key, value]) => t + ((g.items as readonly string[]).includes(taxBaseItem(key)) ? Math.round(Number(value) || 0) : 0), 0);
+                const shown = g.items.flatMap((base) => [...new Set([
+                  ...picked.filter((key) => taxBaseItem(key) === base),
+                  ...Object.keys(form.items).filter((key) => taxBaseItem(key) === base && hasValue(key)),
+                ])]);
                 return (
                   <div key={g.title} className="mt-4 rounded-md border border-border bg-card p-3">
                     <div className="mb-2 flex items-center justify-between gap-3">
@@ -319,11 +337,11 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                       <p className="tabular text-xs text-muted-foreground">小計：{formatTWD(sub)}</p>
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs text-muted-foreground">點擊加選：</span>
+                      <span className="text-xs text-muted-foreground">點擊加選（可重複新增同類項目）：</span>
                       {g.items.map((k) => {
-                        const on = isPicked(k);
+                        const on = shown.some((key) => taxBaseItem(key) === k);
                         return (
-                          <button key={k} type="button" aria-pressed={on} onClick={() => togglePick(k)}
+                          <button key={k} type="button" aria-label={`新增${shortLabel(k)}`} aria-pressed={on} onClick={() => addTaxItem(k)}
                             className={`flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs transition-colors ${on ? "border-primary bg-primary text-primary-foreground" : "border-border text-foreground hover:bg-accent"}`}>
                             {on ? <Check className="size-3" /> : <Plus className="size-3" />}{shortLabel(k)}
                           </button>
@@ -331,17 +349,30 @@ export function InvoiceFormDialog({ invoice, customerId, trigger }: { invoice?: 
                       })}
                     </div>
                     {shown.length > 0 && (
-                      <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
                         {shown.map((k) => (
-                          <div key={k} className="space-y-1">
-                            <Label htmlFor={`item-${k}`} className="text-xs text-muted-foreground">{feeLabel(k)}</Label>
-                            <div className="flex items-center gap-2">
-                              <Label htmlFor={`tax-months-${k}`} className="shrink-0 text-xs text-muted-foreground">月份</Label>
-                              <Input id={`tax-months-${k}`} aria-label={`${feeLabel(k)}月份`} placeholder="例：11或11-12" value={form.tax_months[k] ?? ""} onChange={(e) => setForm((f) => ({ ...f, tax_months: { ...f.tax_months, [k]: e.target.value } }))} maxLength={10} className="h-8 min-w-0" />
+                          <div key={k} className="space-y-2 rounded-md border border-border bg-background p-3">
+                            <div className="flex items-center justify-between gap-2">
+                              <Label htmlFor={`item-${k}`} className="text-xs font-semibold text-muted-foreground">{feeLabel(taxBaseItem(k))}</Label>
+                              <button type="button" aria-label={`移除${feeLabel(taxBaseItem(k))}${form.tax_notes[k] ? ` ${form.tax_notes[k]}` : ""}`} onClick={() => removeTaxItem(k)} className="text-muted-foreground hover:text-destructive"><X className="size-4" /></button>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Input id={`item-${k}`} type="number" step={1} autoFocus={!hasValue(k)} value={form.items[k] ?? ""} onChange={(e) => setItem(k, e.target.value)} className="tabular h-8" />
-                              <button type="button" aria-label={`移除${feeLabel(k)}`} onClick={() => togglePick(k)} className="text-muted-foreground hover:text-destructive"><X className="size-4" /></button>
+                            <Input
+                              aria-label={`${feeLabel(taxBaseItem(k))}備註 ${k}`}
+                              placeholder="備註（例：房東／顧問姓名）"
+                              value={form.tax_notes[k] ?? ""}
+                              onChange={(e) => setForm((f) => ({ ...f, tax_notes: { ...f.tax_notes, [k]: e.target.value } }))}
+                              maxLength={60}
+                              className="h-8"
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label htmlFor={`tax-months-${k}`} className="text-xs text-muted-foreground">月份</Label>
+                                <Input id={`tax-months-${k}`} aria-label={`${feeLabel(taxBaseItem(k))}月份 ${k}`} placeholder="例：11或11-12" value={form.tax_months[k] ?? ""} onChange={(e) => setForm((f) => ({ ...f, tax_months: { ...f.tax_months, [k]: e.target.value } }))} maxLength={10} className="h-8 min-w-0" />
+                              </div>
+                              <div className="space-y-1">
+                                <Label htmlFor={`item-${k}`} className="text-xs text-muted-foreground">金額</Label>
+                                <Input id={`item-${k}`} aria-label={`${feeLabel(taxBaseItem(k))}金額 ${k}`} type="number" step={1} value={form.items[k] ?? ""} onChange={(e) => setItem(k, e.target.value)} className="tabular h-8" />
+                              </div>
                             </div>
                           </div>
                         ))}

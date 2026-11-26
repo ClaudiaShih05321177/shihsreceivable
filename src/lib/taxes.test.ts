@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { taxLines, taxSummary } from "./receivables";
+import { itemEntries, itemsTotal, taxItemNotes, taxLines, taxSummary } from "./receivables";
 
 describe("tax lines", () => {
   it("groups withholding and 二代健保 items and skips non-tax fees", () => {
@@ -41,7 +41,7 @@ describe("稅款月份獨立於記帳期別", () => {
     expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["2代A-B", 844, [11]]]);
     expect(taxDueMonth({ period_year: 2026, period_month: 11 }, l[0] ?? { group: "", months: null })).toEqual({ year: 2026, month: 12 });
   });
-  it("各項扣繳與二代可填不同月份，單月不拆雙月租金才拆", () => {
+  it("各項扣繳與二代可填不同月份，單月不拆、雙月拆半", () => {
     const l = splitTaxLines({ 租金扣繳: 500, 租金2代: 100 }, "9-10", 11, { __tax_months: { 租金扣繳: "11", 租金2代: "11-12" } });
     expect(l.map((x) => [x.key, x.amount, x.months])).toEqual([["租金扣繳", 500, [11]], ["租金2代#1", 50, [11]], ["租金2代#2", 50, [12]]]);
   });
@@ -54,10 +54,10 @@ describe("稅款月份獨立於記帳期別", () => {
     expect(withTaxItemMonths({}, { 租金扣繳: "11" }, {})).toEqual({});
   });
 });
-describe("租金扣繳、租金二代、公司二代拆兩個月勾選", () => {
-  it("租金扣繳、租金2代拆兩列，其他扣繳與二代不拆", () => {
-    const l = splitTaxLines({ 營業稅: 500, 薪資扣繳: 4000, 租金扣繳: 4001, 租金2代: 100, 個人2代: 100 });
-    expect(l.map((x) => [x.key, x.amount])).toEqual([["營業稅", 500], ["租金扣繳#1", 2001], ["租金扣繳#2", 2000], ["薪資扣繳", 4000], ["租金2代#1", 50], ["租金2代#2", 50], ["個人2代", 100]]);
+describe("各類扣繳與二代依月份拆兩個月勾選", () => {
+  it("雙月期別的各類扣繳與二代都拆兩列", () => {
+    const l = splitTaxLines({ 營業稅: 500, 薪資扣繳: 4000, 租金扣繳: 4001, 租金2代: 100, 個人2代: 100 }, "11-12");
+    expect(l.map((x) => [x.key, x.amount])).toEqual([["營業稅", 500], ["租金扣繳#1", 2001], ["租金扣繳#2", 2000], ["薪資扣繳#1", 2000], ["薪資扣繳#2", 2000], ["租金2代#1", 50], ["租金2代#2", 50], ["個人2代#1", 50], ["個人2代#2", 50]]);
   });
   it("公司二代 2代A-B 不拆月，整筆一列", () => {
     const l = splitTaxLines({ "2代A-B": 844 }, "11-12", 11);
@@ -82,6 +82,32 @@ describe("租金扣繳、租金二代、公司二代拆兩個月勾選", () => {
 });
 
 import { taxDueMonth } from "./receivables";
+describe("AD15 與同類多筆稅款", () => {
+  it("AD15 薪資扣繳247800元填11-12月，12月與次年1月各123900元", () => {
+    const lines = splitTaxLines({ 薪資扣繳: 247800 }, "9-10", 11, { __tax_months: { 薪資扣繳: "11-12" } });
+    expect(lines.map((l) => [l.key, l.amount, l.months])).toEqual([["薪資扣繳#1", 123900, [11]], ["薪資扣繳#2", 123900, [12]]]);
+    expect(lines.map((l) => taxDueMonth({ period_year: 2026, period_month: 11 }, l))).toEqual([{ year: 2026, month: 12 }, { year: 2027, month: 1 }]);
+  });
+  it("薪資扣繳247800元只填11月，整筆247800元歸12月繳", () => {
+    const lines = splitTaxLines({ 薪資扣繳: 247800 }, "9-10", 11, { __tax_months: { 薪資扣繳: "11" } });
+    expect(lines.map((l) => [l.key, l.amount, l.months])).toEqual([["薪資扣繳", 247800, [11]]]);
+    expect(taxDueMonth({ period_year: 2026, period_month: 11 }, lines[0]!)).toEqual({ year: 2026, month: 12 });
+  });
+  it("兩位房東的租金扣繳各自保存備註、月份、金額與獨立勾選鍵", () => {
+    const items = { 租金扣繳: 1000, "租金扣繳::2": 4001 };
+    const metadata = withTaxItemMonths({}, { 租金扣繳: "11", "租金扣繳::2": "11-12" }, items, { 租金扣繳: "房東甲", "租金扣繳::2": "房東乙" });
+    expect(taxItemNotes(metadata)).toEqual({ 租金扣繳: "房東甲", "租金扣繳::2": "房東乙" });
+    expect(itemsTotal(items)).toBe(5001);
+    expect(itemEntries(items).map((l) => l.name)).toEqual(["租金扣繳", "租金扣繳::2"]);
+    expect(taxLines(items).map((l) => [l.group, l.item])).toEqual([["扣繳稅額", "租金扣繳"], ["扣繳稅額", "租金扣繳::2"]]);
+    expect(splitTaxLines(items, "9-10", 11, metadata).map((l) => [l.key, l.amount, l.months])).toEqual([
+      ["租金扣繳", 1000, [11]],
+      ["租金扣繳::2#1", 2001, [11]],
+      ["租金扣繳::2#2", 2000, [12]],
+    ]);
+  });
+});
+
 describe("taxDueMonth 依申報繳款月", () => {
   const jan = { period_year: 2026, period_month: 1 };
   it("前期11-12月營業稅歸1月", () => expect(taxDueMonth(jan, { group: "營業稅", months: [11, 12] })).toEqual({ year: 2026, month: 1 }));

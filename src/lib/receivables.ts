@@ -258,12 +258,20 @@ export function itemsTotal(items: FeeItems | null | undefined): number {
   return Object.values(items ?? {}).reduce<number>((sum, v) => sum + (Number(v) || 0), 0);
 }
 
-/** Non-zero fee items in ledger order. */
+/** Repeated tax rows keep a stable item key; their editable note lives in item_years metadata. */
+export function taxBaseItem(key: string): string {
+  return key.replace(/::\d+$/, "");
+}
+
+/** Non-zero fee items in ledger order, including repeated withholding/NHI rows. */
 export function itemEntries(items: FeeItems | null | undefined): { name: string; amount: number }[] {
   const src = items ?? {};
-  const known = FEE_ITEMS.filter((k) => Number(src[k]) ? true : false).map((k) => ({ name: k, amount: Number(src[k]) }));
+  const known = FEE_ITEMS.flatMap((base) => Object.keys(src)
+    .filter((k) => taxBaseItem(k) === base && Number(src[k]))
+    .sort((a, b) => a.localeCompare(b, "zh-Hant", { numeric: true }))
+    .map((k) => ({ name: k, amount: Number(src[k]) })));
   const extra = Object.keys(src)
-    .filter((k) => !(FEE_ITEMS as readonly string[]).includes(k) && Number(src[k]))
+    .filter((k) => !(FEE_ITEMS as readonly string[]).includes(taxBaseItem(k)) && Number(src[k]))
     .map((k) => ({ name: k, amount: Number(src[k]) }));
   return [...known, ...extra];
 }
@@ -346,14 +354,15 @@ export type TaxLine = { group: string; item: string; amount: number };
 
 /** Non-zero tax lines of one billing row, in TAX_GROUPS order. */
 export function taxLines(items: FeeItems | null | undefined): TaxLine[] {
-  const src = items ?? {};
+  const entries = itemEntries(items);
   return TAX_GROUPS.flatMap((g) =>
-    g.items.filter((i) => Number(src[i])).map((i) => ({ group: g.label, item: i, amount: Number(src[i]) })),
+    entries.filter((line) => (g.items as readonly string[]).includes(taxBaseItem(line.name)))
+      .map((line) => ({ group: g.label, item: line.name, amount: line.amount })),
   );
 }
 
-/** 每月繳納、一次請兩個月的項目：稅額明細拆成第1個月／第2個月各自勾選（公司二代 2代A-B 不拆，整筆一次勾選）。 */
-export const MONTHLY_TAX_ITEMS: readonly string[] = ["租金扣繳", "租金2代"];
+/** 各類扣繳及二代依月份拆月；公司二代 2代A-B 依既有規則整筆不拆。 */
+export const MONTHLY_TAX_ITEMS: readonly string[] = ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳", "租金2代", "個人2代", "2代-4X獎金"];
 
 /** 期別文字解析為月份：「11-12」→[11,12]，「11」或「11月」→[11]，無法判斷→null。 */
 export function periodMonths(label: string | null | undefined): number[] | null {
@@ -381,13 +390,25 @@ export function parseTaxMonths(value: string): number[] | null {
   return months;
 }
 
-export function withTaxItemMonths(years: Record<string, number>, months: Record<string, string>, items: FeeItems): Record<string, number | Record<string, string>> {
+export function taxItemNotes(metadata: unknown): Record<string, string> {
+  if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) return {};
+  const saved = (metadata as Record<string, unknown>)["__tax_notes"];
+  if (!saved || typeof saved !== "object" || Array.isArray(saved)) return {};
+  return Object.fromEntries(Object.entries(saved).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+}
+
+export function withTaxItemMonths(years: Record<string, number>, months: Record<string, string>, items: FeeItems, notes: Record<string, string> = {}): Record<string, number | Record<string, string>> {
   const saved = Object.fromEntries(Object.entries(months).filter(([key, value]) => Number(items[key]) && value.trim()).map(([key, value]) => {
     const parsed = parseTaxMonths(value);
     if (!parsed) throw new Error("稅款月份請填1至12月的單月或連續雙月，例如11或11-12");
     return [key, parsed.join("-")];
   }));
-  return Object.keys(saved).length ? { ...years, __tax_months: saved } : years;
+  const savedNotes = Object.fromEntries(Object.entries(notes).filter(([key, value]) => Number(items[key]) && value.trim()).map(([key, value]) => [key, value.trim()]));
+  return {
+    ...years,
+    ...(Object.keys(saved).length ? { __tax_months: saved } : {}),
+    ...(Object.keys(savedNotes).length ? { __tax_notes: savedNotes } : {}),
+  };
 }
 
 /** 拆分後的稅額列：扣繳／二代按月繳納、一次請兩個月，歸屬月份為開立月與次月（9月收＝9、10月；11月收＝11、12月）；
@@ -398,9 +419,9 @@ export function splitTaxLines(items: FeeItems | null | undefined, periodLabel?: 
   const overrides = taxItemMonths(metadata);
   return taxLines(items).flatMap((l): SplitTaxLine[] => {
     const explicit = parseTaxMonths(overrides[l.item] ?? "");
-    if (!MONTHLY_TAX_ITEMS.includes(l.item)) return [{ ...l, key: l.item, half: 0, months: explicit ?? labelMonths }];
+    if (!MONTHLY_TAX_ITEMS.includes(taxBaseItem(l.item))) return [{ ...l, key: l.item, half: 0, months: explicit ?? labelMonths }];
     const months = explicit ?? (labelMonths?.length === 1 ? labelMonths : billMonths ?? labelMonths);
-    if (months?.length === 1) return [{ ...l, key: l.item, half: 0, months }];
+    if (!months || months.length === 1) return [{ ...l, key: l.item, half: 0, months }];
     const first = Math.ceil(l.amount / 2);
     return [
       { ...l, amount: first, key: `${l.item}#1`, half: 1, months: months?.[0] ? [months[0]] : null },

@@ -189,7 +189,7 @@ function InvoiceDetail() {
           <dl className="mt-4 divide-y divide-dashed divide-border text-sm">
             {items.map((it) => (
               <div key={it.name} className="flex justify-between py-2">
-                <dt className="text-muted-foreground">{feeLabel(it.name)}</dt>
+                <dt className="text-muted-foreground">{feeLabel(it.name, inv.item_years)}</dt>
                 <dd><Money value={it.amount} /></dd>
               </div>
             ))}

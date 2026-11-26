@@ -28,10 +28,14 @@ export const FEE_LABELS: Record<string, string> = {
 /** 不出現在費用項目裡的欄位；已經填過金額的仍會顯示，不會漏帳。 */
 export const HIDDEN_FEE_ITEMS: readonly string[] = ["前期餘額"];
 
-/** 顯示名稱：預設名稱 > 欄位代碼；自訂「其他：說明」項目顯示說明文字。 */
-export function feeLabel(key: string): string {
-  const k = key.startsWith("其他：") ? key.slice(3) : key;
-  return FEE_LABELS[k] ?? k;
+/** 顯示名稱：預設名稱 > 欄位代碼；重複稅款項目附上各自的備註。 */
+export function feeLabel(key: string, metadata?: unknown): string {
+  const k = key.startsWith("其他：") ? key.slice(3) : key.replace(/::\d+$/, "");
+  const label = FEE_LABELS[k] ?? k;
+  const root = metadata && typeof metadata === "object" && !Array.isArray(metadata) ? metadata as Record<string, unknown> : {};
+  const notes = root["__tax_notes"];
+  const note = notes && typeof notes === "object" && !Array.isArray(notes) ? (notes as Record<string, unknown>)[key] : undefined;
+  return typeof note === "string" && note.trim() ? `${label}（${note.trim()}）` : label;
 }
 
 export function isFeeHidden(key: string): boolean {

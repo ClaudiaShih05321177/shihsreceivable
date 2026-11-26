@@ -71,7 +71,7 @@ function StatementPage() {
         <table className="mt-3 w-full">
           <tbody>
             {items.map((i) => (
-              <tr key={i.name}><td className="py-1.5 pl-6"><input aria-label={`${feeLabel(i.name)}項目名稱`} className="w-full bg-transparent outline-none" defaultValue={`${statementItemPrefix(inv, i.name)}${feeLabel(i.name)}：`} /></td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
+              <tr key={i.name}><td className="py-1.5 pl-6"><input aria-label={`${feeLabel(i.name, inv.item_years)}項目名稱`} className="w-full bg-transparent outline-none" defaultValue={`${statementItemPrefix(inv, i.name)}${feeLabel(i.name, inv.item_years)}：`} /></td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
             ))}
             {prior > 0 && <tr><td className="py-1.5 pl-6">前期未收餘額：</td><td className="text-right font-mono">{formatTWD(prior)}</td></tr>}
             {credit > 0 && <tr><td className="py-1.5 pl-6">前期溢繳折抵：</td><td className="text-right font-mono">−{formatTWD(credit)}</td></tr>}

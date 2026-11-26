@@ -15,6 +15,12 @@ describe("feeLabel", () => {
     expect(feeLabel("年度加收")).toBe("年度加收");
   });
 
+  it("shows each repeated tax row's note without exposing its storage suffix", () => {
+    const metadata = { __tax_notes: { "租金扣繳::2": "房東乙" } };
+    expect(feeLabel("租金扣繳::2", metadata)).toBe("扣繳-租金（房東乙）");
+    expect(feeLabel("租金扣繳::2")).toBe("扣繳-租金");
+  });
+
   it("leaves no fee field without a name", () => {
     expect(FEE_ITEMS.filter((k) => feeLabel(k).trim() === "")).toEqual([]);
   });

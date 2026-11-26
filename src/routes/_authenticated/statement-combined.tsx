@@ -68,7 +68,7 @@ function CombinedStatement() {
               <table className="w-full">
                 <tbody>
                   {itemEntries(inv.items as FeeItems).map((i) => (
-                    <tr key={i.name}><td className="py-0.5 pl-6"><input aria-label={`${feeLabel(i.name)}項目名稱`} className="w-full bg-transparent outline-none" defaultValue={`${statementItemPrefix(inv, i.name)}${feeLabel(i.name)}：`} /></td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
+                    <tr key={i.name}><td className="py-0.5 pl-6"><input aria-label={`${feeLabel(i.name, inv.item_years)}項目名稱`} className="w-full bg-transparent outline-none" defaultValue={`${statementItemPrefix(inv, i.name)}${feeLabel(i.name, inv.item_years)}：`} /></td><td className="text-right font-mono">{formatTWD(i.amount)}</td></tr>
                   ))}
                   {paid > 0 && <tr><td className="py-0.5 pl-6">已收：</td><td className="text-right font-mono">−{formatTWD(paid)}</td></tr>}
                   {credit > 0 && <tr><td className="py-0.5 pl-6">前期溢繳折抵：</td><td className="text-right font-mono">−{formatTWD(credit)}</td></tr>}
