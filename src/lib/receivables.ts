@@ -361,8 +361,8 @@ export function taxLines(items: FeeItems | null | undefined): TaxLine[] {
   );
 }
 
-/** 各類扣繳及二代依月份拆月；公司二代 2代A-B 依既有規則整筆不拆。 */
-export const MONTHLY_TAX_ITEMS: readonly string[] = ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳", "租金2代", "個人2代", "2代-4X獎金"];
+/** 所有扣繳及二代（含公司 A-B、股利二代）均依各自月份拆月。 */
+export const MONTHLY_TAX_ITEMS: readonly string[] = ["租金扣繳", "薪資扣繳", "勞務扣繳", "其他扣繳", "2代A-B", "2代-4X獎金", "租金2代", "個人2代", "股利2代"];
 
 /** 期別文字解析為月份：「11-12」→[11,12]，「11」或「11月」→[11]，無法判斷→null。 */
 export function periodMonths(label: string | null | undefined): number[] | null {
